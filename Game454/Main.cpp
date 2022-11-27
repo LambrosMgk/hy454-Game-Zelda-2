@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 
+
 #define DISPLAY_W 640
 #define DISPLAY_H 480
 
@@ -22,6 +23,7 @@
 using namespace std;
 
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
+float cameraX = 0, cameraY = 0;
 
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
@@ -80,10 +82,54 @@ vector<vector<int>> ReadTextMap(string TileMapFileName)
 	return content;
 }
 
+/*Creates and returns a bitmap from an CSV and a Tileset*/
+ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
+{
+	assert(CSV.size != 0);
+	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size()*TILE_WIDTH, CSV.size()*TILE_HEIGHT);
+	int TileSetIndex;
+
+	//cout << "Create_Bitmap_From_CSV() height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
+	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
+	for (auto y = 0; y < CSV.size(); y++)
+	{
+		for (auto x = 0; x < CSV[0].size(); x++)
+		{
+			TileSetIndex = CSV[y][x];
+			if (TileSetIndex != -1)
+				al_draw_bitmap_region(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, x * TILE_WIDTH, y * TILE_HEIGHT, 0);
+		}
+	}
+
+	al_set_target_bitmap(al_get_backbuffer(display));/*Select the backbuffer to return to drawing to the screen normally.*/
+	return bitmap;
+}
+
+/*Paints over the given bitmap, useful for maps with multiple layers*/
+void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
+{
+	assert(CSV.size != 0);
+	int TileSetIndex;
+
+	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
+	for (auto y = 0; y < CSV.size(); y++)
+	{
+		for (auto x = 0; x < CSV[0].size(); x++)
+		{
+			TileSetIndex = CSV[y][x];
+			if (TileSetIndex != -1)
+				al_draw_bitmap_region(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, x * TILE_WIDTH, y * TILE_HEIGHT, 0);
+		}
+	}
+
+	al_set_target_bitmap(al_get_backbuffer(display));/*Select the backbuffer to return to drawing to the screen normally.*/
+}
+
 /*uses the indeces from the CSV file which are stored in the CSV vector and uses them to blit from the given Tileset*/
 void Draw_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset)
 {
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());	/*ligo prosoxh me to .size() gia seg fault*/
+	assert(CSV.size != 0);
+	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());
 	int TileSetIndex;
 
 	//cout << "height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
@@ -102,11 +148,10 @@ void Draw_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset)
 /*uses the indeces from the CSV file which are stored in the CSV vector and uses them to blit from the given Tileset with the given scaling*/
 void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, float scaleWidth, float scaleHeight)
 {
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());	/*ligo prosoxh me to .size() gia seg fault*/
+	assert(CSV.size != 0);
+	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());
 	int TileSetIndex;
 
-	//cout << "height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
-	//cout << "CSV[0].size() = " << CSV[0].size() << " CSV.size() = " << CSV.size() << "\n";
 	for (auto y = 0; y < al_get_bitmap_height(bitmap); y++)
 	{
 		for (auto x = 0; x < al_get_bitmap_width(bitmap); x++)
@@ -117,16 +162,35 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 	}
 }
 
-void Scroll()
+/*Checks for keyboard input and repaints the bitmap*/
+void Scroll(ALLEGRO_BITMAP* bitmap, ALLEGRO_DISPLAY* display, float scrollDistance)
 {
-	/*check if you want to go out of boundary*/
+	assert(scrollDistance > 0);		/*scrollDistance <= 0 doesn't make sense*/
+	ALLEGRO_KEYBOARD_STATE KbState;
+	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
+
+	al_get_keyboard_state(&KbState);
+	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN) && cameraY < TotalHeight-200) /*check if you want to go out of boundary*/
+	{
+		cameraY += scrollDistance;
+	}
+	if (al_key_down(&KbState, ALLEGRO_KEY_UP) && cameraY > -100)	/*"if" is not connected with "else" so if played presses up and down nothing will happen*/
+	{
+		cameraY -= scrollDistance;
+	}
+	al_draw_bitmap(bitmap, 0, -cameraY, 0);
+	al_flip_display();
+}
+
+/*for now just checks if "esc" is pressed*/
+void UserInput(unsigned char * done)
+{
 	ALLEGRO_KEYBOARD_STATE KbState;
 
 	al_get_keyboard_state(&KbState);
-	while (al_key_down(&KbState, ALLEGRO_KEY_DOWN))
+	if (al_key_down(&KbState, ALLEGRO_KEY_ESCAPE))
 	{
-
-		al_get_keyboard_state(&KbState);
+		*done = 1;
 	}
 }
 
@@ -135,6 +199,7 @@ int main(int argc, char* argv[])
 	ALLEGRO_DISPLAY* display = NULL;
 	ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
 	vector<vector<int>> TileMapCSV, TileMapCSV_l2;
+	unsigned char done = 0;
 
 	if (!al_init() || !al_init_image_addon() || !al_init_primitives_addon())
 	{
@@ -155,8 +220,8 @@ int main(int argc, char* argv[])
 	}
 	al_set_window_title(display, "Zelda II: The Adventure of Link");
 
-	TileSet = load_tileset("UnitTests\\overworld_tileset_grass.png");
 
+	TileSet = load_tileset("UnitTests\\overworld_tileset_grass.png");
 
 	TileMapCSV = ReadTextMap("UnitTests\\map1_Kachelebene 1.csv");
 	TileMapCSV_l2 = ReadTextMap("UnitTests\\map1_Tile Layer 2.csv");
@@ -166,23 +231,24 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	bitmap = al_create_bitmap(DISPLAY_W, DISPLAY_H);
-	Draw_BitMap_From_CSV(TileMapCSV, TileSet);
-	Draw_BitMap_From_CSV(TileMapCSV_l2, TileSet);	/*layer 2 of map*/
-	//Draw_Scaled_BitMap_From_CSV(TileMapCSV, TileSet, 1.5, 1.5);
-	//al_set_target_bitmap(TileSet);
-	//al_draw_bitmap(TileSet, 0, 0, 0); /*Note: The current target bitmap must be a different bitmap*/
-	//al_clear_to_color(al_map_rgb(61, 61, 61));
+	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
+	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
+	
 
-
-
-
-
-	al_flip_display();
-	/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
+	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
 	respectively, although their contents may have changed.*/
-	al_rest(10.0);
+
+
+	while (!done)
+	{
+		Sleep(25);	/*need to change this later for smoother scrolling*/
+		UserInput(&done);
+		Scroll(bitmap, display, 5);
+	}
+
+	
+	al_rest(1.0);
 	al_destroy_display(display);
 
 	return 0;
