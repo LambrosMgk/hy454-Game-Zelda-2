@@ -45,7 +45,7 @@ ALLEGRO_BITMAP* load_tileset(const char* filepath)
 	return TileSet;
 }
 
-/*returns a vector<vector<int>> of indeces that corresponde to a TileSet*/
+/*Given the path of a .csv file, returns a vector<vector<int>> of indeces that correspondes to a TileSet*/
 vector<vector<int>> ReadTextMap(string TileMapFileName)
 {
 	ifstream TileMap(TileMapFileName);	
@@ -82,7 +82,7 @@ vector<vector<int>> ReadTextMap(string TileMapFileName)
 	return content;
 }
 
-/*Creates and returns a bitmap from an CSV and a Tileset*/
+/*Creates and returns a bitmap from an CSV and a Tileset, WILL NOT WORK IF A TILESET IS NOT LOADED (tileset width and height vars will have a value of 0)*/
 ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
 {
 	assert(CSV.size != 0);
