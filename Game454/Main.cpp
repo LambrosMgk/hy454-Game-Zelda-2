@@ -167,7 +167,7 @@ void Scroll(ALLEGRO_BITMAP* bitmap, ALLEGRO_DISPLAY* display, float scrollDistan
 {
 	assert(scrollDistance > 0);		/*scrollDistance <= 0 doesn't make sense*/
 	ALLEGRO_KEYBOARD_STATE KbState;
-	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
+	unsigned int TotalHeight = al_get_bitmap_height(bitmap), TotalWidth = al_get_bitmap_width(bitmap);
 
 	al_get_keyboard_state(&KbState);
 	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN) && cameraY < TotalHeight-200) /*check if you want to go out of boundary*/
@@ -178,7 +178,15 @@ void Scroll(ALLEGRO_BITMAP* bitmap, ALLEGRO_DISPLAY* display, float scrollDistan
 	{
 		cameraY -= scrollDistance;
 	}
-	al_draw_bitmap(bitmap, 0, -cameraY, 0);
+	if (al_key_down(&KbState, ALLEGRO_KEY_RIGHT) && cameraX < TotalWidth - 200)
+	{
+		cameraX += scrollDistance;
+	}
+	if (al_key_down(&KbState, ALLEGRO_KEY_LEFT) && cameraX > -100)
+	{
+		cameraX -= scrollDistance;
+	}
+	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();
 }
 
@@ -221,10 +229,10 @@ int main(int argc, char* argv[])
 	al_set_window_title(display, "Zelda II: The Adventure of Link");
 
 
-	TileSet = load_tileset("UnitTests\\overworld_tileset_grass.png");
+	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");
 
-	TileMapCSV = ReadTextMap("UnitTests\\map1_Kachelebene 1.csv");
-	TileMapCSV_l2 = ReadTextMap("UnitTests\\map1_Tile Layer 2.csv");
+	TileMapCSV = ReadTextMap("UnitTests\\Media\\map1_Kachelebene 1.csv");
+	TileMapCSV_l2 = ReadTextMap("UnitTests\\Media\\map1_Tile Layer 2.csv");
 	if (TileMapCSV.size() == 0)
 	{
 		fprintf(stderr, "ReadTextMap(string TileMapFileName) returned empty vector.\n");

@@ -26,28 +26,42 @@ namespace app
 			}
 	};
 
-	class Game { // app::Game namespace, the mother application
-	public:
-		using Action = std::function<void(void)>;
-		using Pred = std::function<bool(void)>;
-	private:
-		Action render, anim, input, ai, physics, destruct, collisions, user;
-		Pred done;
-		void Invoke(const Action& f) { if (f) f(); }
-	public:
-		void SetRender(const Action& f) { render = f; }
-		// rest of setters are similary defined
-		void Render(void) { Invoke(render); }
-		void ProgressAnimations(void) { Invoke(anim); }
-		void Input(void) { Invoke(input); }
-		void AI(void) { Invoke(ai); }
-		void Physics(void) { Invoke(physics); }
-		void CollisionChecking(void) { Invoke(collisions); }
-		void CommitDestructions(void) { Invoke(destruct); }
-		void UserCode(void) { Invoke(user); }
-		bool IsFinished(void) const { return !done(); }
-		void MainLoop(void);
-		void MainLoopIteration(void);
+	class Game  { // app::Game namespace, the mother application
+		public:
+			using Action = std::function<void(void)>;
+			using Pred = std::function<bool(void)>;
+		private:
+			Action render, anim, input, ai, physics, destruct, collisions, user;
+			Pred done;
+			void Invoke(const Action& f) { if (f) f(); }
+		public:
+			void SetRender(const Action& f) { render = f; } // rest of setters are similary defined
+			void Render(void) { Invoke(render); }
+
+			void SetProgressAnimations(const Action& f) { anim = f; }
+			void ProgressAnimations(void) { Invoke(anim); }
+
+			void SetInput(const Action& f) { input = f; }
+			void Input(void) { Invoke(input); }
+
+			void SetAI(const Action& f) { ai = f; }
+			void AI(void) { Invoke(ai); }
+
+			void SetPhysics(const Action& f) { physics = f; }
+			void Physics(void) { Invoke(physics); }
+
+			void SetCollisionChecking(const Action& f) { collisions = f; }
+			void CollisionChecking(void) { Invoke(collisions); }
+
+			void SetCommitDestructions(const Action& f) { destruct = f; }
+			void CommitDestructions(void) { Invoke(destruct); }
+
+			void SetUserCode(const Action& f) { user = f; }
+			void UserCode(void) { Invoke(user); }
+
+			bool IsFinished(void) const { return !done(); }
+			void MainLoop(void);
+			void MainLoopIteration(void);
 	};
 	
 	void app::Game::MainLoop(void) 
