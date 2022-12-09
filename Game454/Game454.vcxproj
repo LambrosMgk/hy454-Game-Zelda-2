@@ -143,8 +143,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\App.h" />
-    <ClInclude Include="Render.h" />
-    <ClInclude Include="User_Input.h" />
+    <ClInclude Include="Headers\Render.h" />
+    <ClInclude Include="Headers\User_Input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

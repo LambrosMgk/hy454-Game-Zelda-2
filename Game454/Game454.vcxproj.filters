@@ -23,10 +23,10 @@
     <ClInclude Include="Headers\App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="User_Input.h">
+    <ClInclude Include="Headers\Render.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render.h">
+    <ClInclude Include="Headers\User_Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
