@@ -23,5 +23,11 @@
     <ClInclude Include="Headers\App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="User_Input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Render.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

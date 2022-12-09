@@ -1,4 +1,7 @@
 #pragma once
+#include <functional>	/*need this for "using Action = std::function<void(void)>;" to work*/
+#include "Render.h"
+#include "User_Input.h"
 
 namespace app
 {
@@ -26,7 +29,8 @@ namespace app
 			}
 	};
 
-	class Game  { // app::Game namespace, the mother application
+	class Game : App
+	{ // app::Game namespace, the mother application
 		public:
 			using Action = std::function<void(void)>;
 			using Pred = std::function<bool(void)>;
@@ -59,21 +63,51 @@ namespace app
 			void SetUserCode(const Action& f) { user = f; }
 			void UserCode(void) { Invoke(user); }
 
+			void Initialise();
+			void Load();
+			void Clear();
+
 			bool IsFinished(void) const { return !done(); }
 			void MainLoop(void);
 			void MainLoopIteration(void);
 	};
+
+	void Game::Initialise()
+	{
+		SetRender(&Renderer);
+		Render_init();
+		//SetProgressAnimations();		fill these later
+		SetInput(&UserInput);
+		User_Input_init();
+		//SetAI();
+		//SetPhysics();
+		//SetCollisionChecking();
+		//SetCommitDestructions();
+		//SetUserCode();
+
+		done = &isDone;
+	}
+
+	void Game::Load()
+	{
+
+	}
+
+	void Game::Clear()
+	{
+
+	}
 	
-	void app::Game::MainLoop(void) 
+	void Game::MainLoop(void) 
 	{
 		while (!IsFinished())
 			MainLoopIteration();
 	}
 
-	void app::Game::MainLoopIteration(void)
+	void Game::MainLoopIteration(void)
 	{
-		//Render();
-		//Input();
+		Render();
+		Input();
 		//ProgressAnimations();
 		//AI();
 		//Physics();
@@ -81,4 +115,6 @@ namespace app
 		//UserCode(); // hook for custom code at end
 		//CommitDestructions();
 	}
+
+
 }
