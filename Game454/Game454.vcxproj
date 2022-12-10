@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\App.h" />
+    <ClInclude Include="Headers\Event_Queue.h" />
     <ClInclude Include="Headers\Render.h" />
     <ClInclude Include="Headers\User_Input.h" />
   </ItemGroup>

@@ -3,8 +3,11 @@
 #include "Render.h"
 #include "User_Input.h"
 
+
 namespace app
 {
+	class Game;
+
 	class App
 	{
 		protected:
@@ -25,11 +28,11 @@ namespace app
 				Initialise();
 				Load();
 				Run();
-				//Clear();
+				Clear();
 			}
 	};
 
-	class Game : App
+	class Game : public App
 	{ // app::Game namespace, the mother application
 		public:
 			using Action = std::function<void(void)>;
@@ -75,17 +78,19 @@ namespace app
 	void Game::Initialise()
 	{
 		SetRender(&Renderer);
-		Render_init();
 		//SetProgressAnimations();		fill these later
 		SetInput(&UserInput);
-		User_Input_init();
 		//SetAI();
 		//SetPhysics();
 		//SetCollisionChecking();
 		//SetCommitDestructions();
-		//SetUserCode();
+		//SetUserCode();	//add fps calculation
+
+		Render_init();
+		User_Input_init();
 
 		done = &isDone;
+		game = this;
 	}
 
 	void Game::Load()
@@ -95,7 +100,8 @@ namespace app
 
 	void Game::Clear()
 	{
-
+		al_rest(1.0);
+		//al_destroy_display(display);
 	}
 	
 	void Game::MainLoop(void) 
@@ -106,6 +112,7 @@ namespace app
 
 	void Game::MainLoopIteration(void)
 	{
+		Sleep(25);	/*need to change this later for smoother scrolling*/
 		Render();
 		Input();
 		//ProgressAnimations();

@@ -6,9 +6,12 @@
 #include <string>
 #include <vector>
 #include <sstream>
+
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
+
+#include "Event_Queue.h"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -22,18 +25,12 @@
 
 using namespace std;
 
-
+ALLEGRO_DISPLAY* display = NULL;
+ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
+vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 float cameraX = 0, cameraY = 0;
 
-void Render_init()
-{
-	if (!al_init() || !al_init_image_addon() || !al_init_primitives_addon())
-	{
-		fprintf(stderr, "Cannot initialise the Allegro library");
-		exit(-1);
-	}
-}
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
 in case of bad file path exits program with -1*/
@@ -171,7 +168,74 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 	}
 }
 
+void Render_init()
+{
+	if (!al_init() || !al_init_image_addon() || !al_init_primitives_addon())
+	{
+		fprintf(stderr, "Cannot initialise the Allegro library");
+		exit(-1);
+	}
+
+
+	display = al_create_display(DISPLAY_W, DISPLAY_H);
+	if (!display)
+	{
+		fprintf(stderr, "failed to create display!\n");
+		exit(-1);
+	}
+	al_set_window_title(display, "Zelda II: The Adventure of Link");
+
+
+	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");
+
+	TileMapCSV = ReadTextMap("UnitTests\\Media\\map1_Kachelebene 1.csv");
+	TileMapCSV_l2 = ReadTextMap("UnitTests\\Media\\map1_Tile Layer 2.csv");
+	if (TileMapCSV.size() == 0)
+	{
+		fprintf(stderr, "ReadTextMap(string TileMapFileName) returned empty vector.\n");
+		exit(-1);
+	}
+
+	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
+	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
+
+
+	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
+	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
+	respectively, although their contents may have changed.*/
+}
+
+void Scroll(float scrollDistanceX, float scrollDistanceY)
+{	
+	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
+	unsigned int TotalWidth = al_get_bitmap_width(bitmap);
+
+
+	if (cameraY < TotalHeight - 200) /*check if you want to go out of boundary*/
+	{
+		cameraY += scrollDistanceY;
+	}
+	if (cameraY > -100)	/*"if" is not connected with "else" so if played presses "up" and "down" nothing will happen*/
+	{
+		cameraY -= scrollDistanceY;
+	}
+	if (cameraX < TotalWidth - 200)
+	{
+		cameraX += scrollDistanceX;
+	}
+	if (cameraX > -100)
+	{
+		cameraX -= scrollDistanceX;
+	}
+
+	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
+	al_flip_display();
+}
+
 void Renderer()
 {
-
+	//if (EventQueue.empty())
+		//return;
+	//Event e = EventQueue.pop();	//isws exw polla push opote isws prepei na kanw while(!empty())
+	//Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
 }
