@@ -3,12 +3,10 @@
 #include <queue>
 
 
-class Event;	//forward declaration
-
-std::queue<Event> EventQueue;
-
 class Event
 {
 	public :
 		float ScrollDistanceX, ScrollDistanceY;
 };
+
+std::queue<Event> EventQueue;

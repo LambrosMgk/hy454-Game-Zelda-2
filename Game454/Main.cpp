@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-	app::Game app;
+	app::App app;
 	app.Main();
 	//app.Initialise();
 	//app.Load();

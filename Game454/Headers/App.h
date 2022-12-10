@@ -90,7 +90,6 @@ namespace app
 		User_Input_init();
 
 		done = &isDone;
-		game = this;
 	}
 
 	void Game::Load()
