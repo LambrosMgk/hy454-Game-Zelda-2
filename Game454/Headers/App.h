@@ -121,7 +121,7 @@ namespace app
 
 	void Game::MainLoopIteration(void)
 	{
-		Sleep(30);	/*need to change this later for smoother scrolling*/
+		Sleep(25);	/*need to change this later for smoother scrolling*/
 		Render();
 		Input();
 		//ProgressAnimations();

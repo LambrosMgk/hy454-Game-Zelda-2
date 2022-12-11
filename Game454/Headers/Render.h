@@ -199,7 +199,7 @@ void Render_init()
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
 
-
+	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
 	respectively, although their contents may have changed.*/
@@ -210,22 +210,14 @@ void Scroll(float scrollDistanceX, float scrollDistanceY)
 	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
 	unsigned int TotalWidth = al_get_bitmap_width(bitmap);
 
-
-	if (cameraY < TotalHeight - 200) /*check if you want to go out of boundary*/
+	/*check if you want to go out of boundary*/
+	if ((scrollDistanceY > 0 && cameraY < TotalHeight - 200) || (scrollDistanceY < 0 && cameraY > -100))
 	{
 		cameraY += scrollDistanceY;
 	}
-	if (cameraY > -100)	/*"if" is not connected with "else" so if played presses "up" and "down" nothing will happen*/
-	{
-		cameraY -= scrollDistanceY;
-	}
-	if (cameraX < TotalWidth - 200)
+	if ((scrollDistanceX > 0 && cameraX < TotalWidth - 200) || (scrollDistanceX < 0 && cameraX > -100))
 	{
 		cameraX += scrollDistanceX;
-	}
-	if (cameraX > -100)
-	{
-		cameraX -= scrollDistanceX;
 	}
 
 	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
@@ -242,6 +234,7 @@ void Renderer()
 		cout << '\n';
 		Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
 	}
+	al_flip_display();
 }
 
 /*might be useful to have this in the future*/

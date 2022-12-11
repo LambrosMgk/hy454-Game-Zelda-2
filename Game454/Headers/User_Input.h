@@ -49,6 +49,11 @@ void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 
 	cout << "CheckScroll : " << e->ScrollDistanceX << " Y :" << e->ScrollDistanceY;
 	cout << '\n';
+	if (e->ScrollDistanceX == 0 && e->ScrollDistanceY == 0)	//if no input no need to fill the queue with zeros
+	{
+		delete e;	//delete calls the destructor while free() does not
+		return;
+	}
 	EventQueue.push(*e);	//des an ontws kanei push to "e" kai den kanei free epeidh einai ektos tou block
 }
 
