@@ -176,7 +176,7 @@ void Render_init()
 		exit(-1);
 	}
 
-
+	al_set_new_display_flags(ALLEGRO_WINDOWED);
 	display = al_create_display(DISPLAY_W, DISPLAY_H);
 	if (!display)
 	{
