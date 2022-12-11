@@ -11,18 +11,15 @@ namespace app
 	class App
 	{
 		protected:
-			Game game;
+			Game *game;
 
 		public:
 			virtual void	Initialise(void) = 0;
 			virtual void	Load(void) = 0;
-			virtual void	Run(void) { game.MainLoop(); }
-			virtual void	RunIteration(void)
-			{
-				game.MainLoopIteration();
-			}
-			Game& GetGame(void) { return game; }
-			const Game& GetGame(void) const { return game; }
+			virtual void	Run(void);
+			virtual void	RunIteration(void);
+			Game& GetGame(void);
+			const Game& GetGame(void) const;
 			virtual void	Clear(void) = 0;
 			void Main(void) {
 				Initialise();
@@ -30,6 +27,12 @@ namespace app
 				Run();
 				Clear();
 			}
+
+			App()
+			{
+
+			}
+			App(const App&) = default;
 	};
 
 	class Game : public App
@@ -74,6 +77,12 @@ namespace app
 			void MainLoop(void);
 			void MainLoopIteration(void);
 	};
+
+	//implementation after definition of Game class
+	void App::Run(void) { game->MainLoop(); }
+	void App::RunIteration(void){ game->MainLoopIteration(); }
+	Game& App::GetGame(void) { return *game; }
+	const Game& App::GetGame(void) const { return *game; }
 
 	void Game::Initialise()
 	{

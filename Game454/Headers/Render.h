@@ -97,9 +97,9 @@ ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* 
 
 	//cout << "Create_Bitmap_From_CSV() height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
 	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
-	for (auto y = 0; y < CSV.size(); y++)
+	for (size_t y = 0; y < CSV.size(); y++)
 	{
-		for (auto x = 0; x < CSV[0].size(); x++)
+		for (size_t x = 0; x < CSV[0].size(); x++)
 		{
 			TileSetIndex = CSV[y][x];
 			if (TileSetIndex != -1)
@@ -118,9 +118,9 @@ void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BI
 	int TileSetIndex;
 
 	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
-	for (auto y = 0; y < CSV.size(); y++)
+	for (size_t y = 0; y < CSV.size(); y++)
 	{
-		for (auto x = 0; x < CSV[0].size(); x++)
+		for (size_t x = 0; x < CSV[0].size(); x++)
 		{
 			TileSetIndex = CSV[y][x];
 			if (TileSetIndex != -1)
