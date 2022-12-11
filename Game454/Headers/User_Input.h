@@ -5,7 +5,7 @@
 #define scrollDistanceX 5.0
 #define scrollDistanceY 5.0
 
-bool done = false;
+bool User_input_done = false;
 
 void User_Input_init()
 {
@@ -18,36 +18,38 @@ void User_Input_init()
 
 bool isDone()
 {
-	return done;
+	return User_input_done;
 }
 
 /*Checks for keyboard input and pushes "move" events in the event queue*/
 void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 {
 	//assert(scrollDistanceX > 0 && scrollDistanceY > 0);		/*scrollDistance <= 0 doesn't make sense*/
-	Event e;
+	Event *e = new Event;
 
-	e.ScrollDistanceX = 0;
-	e.ScrollDistanceY = 0;
+	e->ScrollDistanceX = 0;
+	e->ScrollDistanceY = 0;
 	al_get_keyboard_state(&KbState);
 	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN)) /*"if" is not connected with "else" so if played presses "up" and "down" nothing will happen*/
 	{
-		e.ScrollDistanceY += scrollY;
+		e->ScrollDistanceY += scrollY;
 	}
 	if (al_key_down(&KbState, ALLEGRO_KEY_UP))	
 	{
-		e.ScrollDistanceY -= scrollY;
+		e->ScrollDistanceY -= scrollY;
 	}
 	if (al_key_down(&KbState, ALLEGRO_KEY_RIGHT))
 	{
-		e.ScrollDistanceX += scrollX;
+		e->ScrollDistanceX += scrollX;
 	}
 	if (al_key_down(&KbState, ALLEGRO_KEY_LEFT))
 	{
-		e.ScrollDistanceX -= scrollX;
+		e->ScrollDistanceX -= scrollX;
 	}
 
-	EventQueue.push(e);	//des an ontws kanei push to "e" kai den kanei free epeidh einai ektos tou block
+	cout << "CheckScroll : " << e->ScrollDistanceX << " Y :" << e->ScrollDistanceY;
+	cout << '\n';
+	EventQueue.push(*e);	//des an ontws kanei push to "e" kai den kanei free epeidh einai ektos tou block
 }
 
 /*Handles all user input*/
@@ -58,7 +60,7 @@ void UserInput(void)
 	al_get_keyboard_state(&KbState);
 	if (al_key_down(&KbState, ALLEGRO_KEY_ESCAPE))
 	{
-		done = true;
+		User_input_done = true;
 	}
 	CheckScroll(KbState, scrollDistanceX, scrollDistanceY);
 }

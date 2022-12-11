@@ -73,7 +73,7 @@ namespace app
 			void Load();
 			void Clear();
 
-			bool IsFinished(void) const { return !done(); }
+			bool IsFinished(void) const { return done(); }
 			void MainLoop(void);
 			void MainLoopIteration(void);
 	};
@@ -98,7 +98,8 @@ namespace app
 		Render_init();
 		User_Input_init();
 
-		done = &isDone;
+		Game::done = isDone;
+		game = this;
 	}
 
 	void Game::Load()
@@ -109,7 +110,7 @@ namespace app
 	void Game::Clear()
 	{
 		al_rest(1.0);
-		//al_destroy_display(display);
+		al_destroy_display(display);
 	}
 	
 	void Game::MainLoop(void) 
@@ -120,7 +121,7 @@ namespace app
 
 	void Game::MainLoopIteration(void)
 	{
-		Sleep(25);	/*need to change this later for smoother scrolling*/
+		Sleep(30);	/*need to change this later for smoother scrolling*/
 		Render();
 		Input();
 		//ProgressAnimations();

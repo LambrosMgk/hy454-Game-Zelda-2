@@ -234,8 +234,18 @@ void Scroll(float scrollDistanceX, float scrollDistanceY)
 
 void Renderer()
 {
-	//if (EventQueue.empty())
-		//return;
-	//Event e = EventQueue.pop();	//isws exw polla push opote isws prepei na kanw while(!empty())
-	//Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
+	while (!EventQueue.empty()) //Check all the user input in a frame
+	{
+		Event e = EventQueue.front();	
+		EventQueue.pop();	//des gia memory leak logw twn pointer
+		cout << "Testing renderer : " << e.ScrollDistanceX << " Y :" << e.ScrollDistanceY;
+		cout << '\n';
+		Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
+	}
+}
+
+/*might be useful to have this in the future*/
+void Render_Clear()
+{
+
 }
