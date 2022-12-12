@@ -32,7 +32,7 @@ namespace app
 			{
 
 			}
-			App(const App&) = default;
+			App(const App&) = default;	//otherwise constructor gets deleted and cannot instantiate Game object in the main function
 	};
 
 	class Game : public App
@@ -45,7 +45,7 @@ namespace app
 			Pred done;
 			void Invoke(const Action& f) { if (f) f(); }
 		public:
-			void SetRender(const Action& f) { render = f; } // rest of setters are similary defined
+			void SetRender(const Action& f) { render = f; }
 			void Render(void) { Invoke(render); }
 
 			void SetProgressAnimations(const Action& f) { anim = f; }

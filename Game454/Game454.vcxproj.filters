@@ -32,5 +32,8 @@
     <ClInclude Include="Headers\Event_Queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\Render_Grid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

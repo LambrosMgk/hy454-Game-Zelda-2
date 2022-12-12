@@ -54,7 +54,7 @@ void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 		delete e;	//delete calls the destructor while free() does not
 		return;
 	}
-	EventQueue.push(*e);	//des an ontws kanei push to "e" kai den kanei free epeidh einai ektos tou block
+	EventQueue.push(*e);
 }
 
 /*Handles all user input*/

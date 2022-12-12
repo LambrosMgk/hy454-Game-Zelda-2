@@ -18,9 +18,24 @@
 
 #define TILE_WIDTH 16
 #define TILE_HEIGHT 16
-#define COL_SHIFT 4
-#define ROW_MASK 0x0C
-#define COL_MASK 0xF0
+
+#define GRID_THIN_AIR_MASK 0x0000 // element is ignored
+#define GRID_LEFT_SOLID_MASK 0x0001 // bit 0
+#define GRID_RIGHT_SOLID_MASK 0x0002 // bit 1
+#define GRID_TOP_SOLID_MASK 0x0004 // bit 2
+#define GRID_BOTTOM_SOLID_MASK 0x0008 // bit 3
+#define GRID_GROUND_MASK 0x0010 // bit 4, keep objects top / bottom (gravity)
+#define GRID_FLOATING_MASK 0x0020 // bit 5, keep objects anywhere inside (gravity)
+#define GRID_EMPTY_TILE GRID_THIN_AIR_MASK
+#define GRID_SOLID_TILE \
+(GRID_LEFT_SOLID_MASK | GRID_RIGHT_SOLID_MASK | GRID_TOP_SOLID_MASK | GRID_BOTTOM_SOLID_MASK)
+
+/*#define MAX_PIXEL_WIDTH MUL_TILE_WIDTH(MAX_WIDTH)
+#define MAX_PIXEL_HEIGHT MUL_TILE_HEIGHT(MAX_HEIGHT)
+#define DIV_GRID_ELEMENT_WIDTH(i) ((i)>>2)
+#define DIV_GRID_ELEMENT_HEIGHT(i) ((i)>>2)
+#define MUL_GRID_ELEMENT_WIDTH(i) ((i)<<2)
+#define MUL_GRID_ELEMENT_HEIGHT(i) ((i)<<2)*/
 
 
 using namespace std;
@@ -30,6 +45,147 @@ ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
 vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 float cameraX = 0, cameraY = 0;
+
+/*typedef unsigned short Dim;
+struct Rect { int x, y, w, h; };
+struct Point { int x, y; };
+*/
+class Grid
+{
+public:
+	unsigned int Grid_Element_Width, Grid_Element_Height;	//subdivisions of our tiles (TILE_WIDTH and TILE_HEIGHT)
+	unsigned int Grid_Block_Columns, Grid_Block_Rows;
+	unsigned int Grid_Elements_Per_Tile;
+	unsigned int Grid_Max_Width, Grid_Max_Height;
+
+	byte** grid;	// 2D Array that holds our grid
+
+	Grid(unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
+	{
+		if (TILE_WIDTH % Grid_Element_Width != 0)
+		{
+			cout << "TILE_WIDTH % GRID_ELEMENT_WIDTH must be zero!";
+			exit(-1);
+		}
+		if (TILE_HEIGHT % Grid_Element_Height != 0)
+		{
+			cout << "TILE_HEIGHT % GRID_ELEMENT_HEIGHT must be zero!";
+			exit(-1);
+		}
+		Grid_Element_Width = _Grid_Element_Width;
+		Grid_Element_Height = _Grid_Element_Height;
+
+		Grid_Block_Columns = TILE_WIDTH / Grid_Element_Width;
+		Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
+		Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
+		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap
+		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap
+
+		grid = new byte*[Grid_Max_Height];
+		for (int i = 0; i < Grid_Max_Height; i++)
+			grid[i] = new byte[Grid_Max_Width];
+	}
+
+	~Grid()	//Destructor
+	{
+		//Free the memory for the grid array
+		for (int i = 0; i < Grid_Max_Height; i++)
+			delete [] grid[i];
+		delete [] grid;
+	}
+
+	
+	void SetGridTile(unsigned short col, unsigned short row, byte index)
+	{
+		grid[row][col] = index;
+	}
+
+	byte GetGridTile(unsigned short col, unsigned short row)
+	{
+		return grid[row][col];
+	}
+
+	void SetSolidGridTile(unsigned short col, unsigned short row)
+	{
+		SetGridTile(col, row, GRID_SOLID_TILE);
+	}
+	void SetEmptyGridTile(unsigned short col, unsigned short row)
+	{
+		SetGridTile(col, row, GRID_EMPTY_TILE);
+	}
+	void SetGridTileFlags(unsigned short col, unsigned short row, byte flags)
+	{
+		SetGridTile(col, row, flags);
+	}
+	void SetGridTileTopSolidOnly(unsigned short col, unsigned short row)
+	{
+		SetGridTileFlags(row, col, GRID_TOP_SOLID_MASK);
+	}
+	bool CanPassGridTile(unsigned short col, unsigned short row, byte flags) // i.e. checks if flags set
+	{
+		return (GetGridTile(row, col) & flags) != 0;
+	}
+
+	void FilterGridMotion(GridMap* m, const Rect& r, int* dx, int* dy)
+	{
+		assert(abs(*dx) <= GRID_ELEMENT_WIDTH && abs(*dy) <= GRID_ELEMENT_HEIGHT);
+
+		// try horizontal move
+		if (*dx < 0)
+			FilterGridMotionLeft(m, r, dx);
+		else if (*dx > 0)
+			FilterGridMotionRight(m, r, dx);
+
+		// try vertical move
+		if (*dy < 0)
+			FilterGridMotionUp(m, r, dy);
+		else if (*dy > 0)
+			FilterGridMotionDown(m, r, dy);
+	}
+
+	void FilterGridMotionLeft(GridMap* m, const Rect& r, int* dx) {
+		auto x1_next = r.x + *dx;
+		if (x1_next < 0)
+			*dx = -r.x;
+		else {
+			auto newCol = DIV_GRID_ELEMENT_WIDTH(x1_next);
+			auto currCol = DIV_GRID_ELEMENT_WIDTH(r.x);
+			if (newCol != currCol) {
+				assert(newCol + 1 == currCol); // we really move left
+				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
+				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
+				for (auto row = startRow; row <= endRow; ++row)
+					if (!CanPassGridTile(m, newCol, row, GRID_RIGHT_SOLID_MASK)) {
+						*dx = MUL_GRID_ELEMENT_WIDTH(currCol) - r.x;
+						break;
+					}
+			}
+		}
+	}
+
+	void FilterGridMotionRight(GridMap* m, const Rect& r, int* dx) {
+		auto x2 = r.x + r.w - 1;
+		auto x2_next = x2 + *dx;
+		if (x2_next >= MAX_PIXEL_WIDTH)
+			*dx = (MAX_PIXEL_WIDTH – 1) - x2;
+		else {
+			auto newCol = DIV_GRID_ELEMENT_WIDTH(x2_next);
+			auto currCol = DIV_GRID_ELEMENT_WIDTH(x2);
+			if (newCol != currCol) {
+				assert(newCol - 1 == currCol); // we really move right
+				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
+				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
+				for (auto row = startRow; row <= endRow; ++row)
+					if (!CanPassGridTile(m, newCol, row, GRID_LEFT_SOLID_MASK)) {
+						*dx = (MUL_GRID_ELEMENT_WIDTH(newCol) – 1) - x2;
+						break;
+					}
+			}
+		}
+	}
+};
+
+Grid* grid;
 
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
@@ -229,10 +385,19 @@ void Renderer()
 	while (!EventQueue.empty()) //Check all the user input in a frame
 	{
 		Event e = EventQueue.front();	
-		EventQueue.pop();	//des gia memory leak logw twn pointer
-		cout << "Testing renderer : " << e.ScrollDistanceX << " Y :" << e.ScrollDistanceY;
-		cout << '\n';
-		Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
+		EventQueue.pop();
+		if (e.eventType == EventType_Scroll)
+		{
+			Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
+		}
+		else if (e.eventType == EventType_ShowGrid)
+		{
+
+		}
+		else if (e.eventType == EventType_HideGrid)
+		{
+
+		}
 	}
 	al_flip_display();
 }
