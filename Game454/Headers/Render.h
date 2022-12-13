@@ -431,6 +431,7 @@ void Renderer()
 {
 	while (!EventQueue.empty()) //Check all the user input in a frame
 	{
+		cout << "Render..\n";
 		Event e = EventQueue.front();	
 		EventQueue.pop();
 		if (e.eventType == EventType_Scroll)
@@ -439,6 +440,7 @@ void Renderer()
 		}
 		else if (e.eventType == EventType_Action)	//check if im at the starting screen and if i need to load other bitmaps
 		{
+			al_clear_to_color(al_map_rgb(0,0,0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
 			al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 		}
 		else if (e.eventType == EventType_ShowGrid)
