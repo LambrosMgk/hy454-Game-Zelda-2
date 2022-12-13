@@ -19,6 +19,14 @@
 #define TILE_WIDTH 16
 #define TILE_HEIGHT 16
 
+#define MUL_TILE_WIDTH(i) ((i)<<4)
+#define MUL_TILE_HEIGHT(i)((i)<<4)
+#define DIV_TILE_WIDTH(i) ((i)>>4)
+#define DIV_TILE_HEIGHT(i)((i)>>4)
+#define MOD_TILE_WIDTH(i) ((i)&15)
+#define MOD_TILE_HEIGHT(i)((i)&15)
+
+
 #define GRID_THIN_AIR_MASK 0x0000 // element is ignored
 #define GRID_LEFT_SOLID_MASK 0x0001 // bit 0
 #define GRID_RIGHT_SOLID_MASK 0x0002 // bit 1
@@ -30,15 +38,17 @@
 #define GRID_SOLID_TILE \
 (GRID_LEFT_SOLID_MASK | GRID_RIGHT_SOLID_MASK | GRID_TOP_SOLID_MASK | GRID_BOTTOM_SOLID_MASK)
 
-/*#define MAX_PIXEL_WIDTH MUL_TILE_WIDTH(MAX_WIDTH)
-#define MAX_PIXEL_HEIGHT MUL_TILE_HEIGHT(MAX_HEIGHT)
 #define DIV_GRID_ELEMENT_WIDTH(i) ((i)>>2)
 #define DIV_GRID_ELEMENT_HEIGHT(i) ((i)>>2)
 #define MUL_GRID_ELEMENT_WIDTH(i) ((i)<<2)
-#define MUL_GRID_ELEMENT_HEIGHT(i) ((i)<<2)*/
+#define MUL_GRID_ELEMENT_HEIGHT(i) ((i)<<2)
 
 
 using namespace std;
+
+typedef unsigned short Dim;
+struct Rect { int x, y, w, h; };
+struct Point { int x, y; };
 
 ALLEGRO_DISPLAY* display = NULL;
 ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
@@ -46,10 +56,8 @@ vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 float cameraX = 0, cameraY = 0;
 
-/*typedef unsigned short Dim;
-struct Rect { int x, y, w, h; };
-struct Point { int x, y; };
-*/
+
+
 class Grid
 {
 public:
@@ -58,8 +66,12 @@ public:
 	unsigned int Grid_Elements_Per_Tile;
 	unsigned int Grid_Max_Width, Grid_Max_Height;
 
+	unsigned int MAX_PIXEL_WIDTH, MAX_PIXEL_HEIGHT;
+
 	byte** grid;	// 2D Array that holds our grid
 
+	/*Parameters _Grid_Element_Width and _Grid_Element_Height are for the size of each element in the grid.
+	MAX_WIDTH and MAX_HEIGHT are the size of the tilemap you want to apply the grid*/
 	Grid(unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
 	{
 		if (TILE_WIDTH % Grid_Element_Width != 0)
@@ -84,6 +96,9 @@ public:
 		grid = new byte*[Grid_Max_Height];
 		for (int i = 0; i < Grid_Max_Height; i++)
 			grid[i] = new byte[Grid_Max_Width];
+
+		MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
+		MAX_PIXEL_HEIGHT = MUL_TILE_HEIGHT(MAX_HEIGHT);
 	}
 
 	~Grid()	//Destructor
@@ -126,36 +141,40 @@ public:
 		return (GetGridTile(row, col) & flags) != 0;
 	}
 
-	void FilterGridMotion(GridMap* m, const Rect& r, int* dx, int* dy)
+	void FilterGridMotion(const Rect& r, int* dx, int* dy)
 	{
-		assert(abs(*dx) <= GRID_ELEMENT_WIDTH && abs(*dy) <= GRID_ELEMENT_HEIGHT);
+		assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);
 
 		// try horizontal move
 		if (*dx < 0)
-			FilterGridMotionLeft(m, r, dx);
+			FilterGridMotionLeft(r, dx);
 		else if (*dx > 0)
-			FilterGridMotionRight(m, r, dx);
+			FilterGridMotionRight(r, dx);
 
 		// try vertical move
 		if (*dy < 0)
-			FilterGridMotionUp(m, r, dy);
+			FilterGridMotionUp(r, dy);
 		else if (*dy > 0)
-			FilterGridMotionDown(m, r, dy);
+			FilterGridMotionDown(r, dy);
 	}
 
-	void FilterGridMotionLeft(GridMap* m, const Rect& r, int* dx) {
+	void FilterGridMotionLeft(const Rect& r, int* dx) 
+	{
 		auto x1_next = r.x + *dx;
 		if (x1_next < 0)
 			*dx = -r.x;
-		else {
+		else 
+		{
 			auto newCol = DIV_GRID_ELEMENT_WIDTH(x1_next);
 			auto currCol = DIV_GRID_ELEMENT_WIDTH(r.x);
-			if (newCol != currCol) {
+			if (newCol != currCol) 
+			{
 				assert(newCol + 1 == currCol); // we really move left
 				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
 				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(m, newCol, row, GRID_RIGHT_SOLID_MASK)) {
+					if (!CanPassGridTile(newCol, row, GRID_RIGHT_SOLID_MASK)) 
+					{
 						*dx = MUL_GRID_ELEMENT_WIDTH(currCol) - r.x;
 						break;
 					}
@@ -163,29 +182,43 @@ public:
 		}
 	}
 
-	void FilterGridMotionRight(GridMap* m, const Rect& r, int* dx) {
+	void FilterGridMotionRight(const Rect& r, int* dx) 
+	{
 		auto x2 = r.x + r.w - 1;
 		auto x2_next = x2 + *dx;
 		if (x2_next >= MAX_PIXEL_WIDTH)
-			*dx = (MAX_PIXEL_WIDTH – 1) - x2;
-		else {
+			*dx = (MAX_PIXEL_WIDTH - 1) - x2;
+		else 
+		{
 			auto newCol = DIV_GRID_ELEMENT_WIDTH(x2_next);
 			auto currCol = DIV_GRID_ELEMENT_WIDTH(x2);
-			if (newCol != currCol) {
+			if (newCol != currCol)
+			{
 				assert(newCol - 1 == currCol); // we really move right
 				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
 				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(m, newCol, row, GRID_LEFT_SOLID_MASK)) {
-						*dx = (MUL_GRID_ELEMENT_WIDTH(newCol) – 1) - x2;
+					if (!CanPassGridTile(newCol, row, GRID_LEFT_SOLID_MASK)) 
+					{
+						*dx = (MUL_GRID_ELEMENT_WIDTH(newCol) - 1) - x2;
 						break;
 					}
 			}
 		}
 	}
+
+	void FilterGridMotionUp(const Rect& r, int* dx)
+	{
+
+	}
+
+	void FilterGridMotionDown(const Rect& r, int* dx)
+	{
+
+	}
 };
 
-Grid* grid;
+Grid* grid = NULL;
 
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
@@ -355,10 +388,24 @@ void Render_init()
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
 
-	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
+	//al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
 	respectively, although their contents may have changed.*/
+}
+
+void Load_Start_Screen(const char* filepath)
+{
+	ALLEGRO_BITMAP* Start_bitmap = al_load_bitmap(filepath);
+	if (Start_bitmap == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize Start_bitmap (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+	al_draw_bitmap(Start_bitmap, 0, 0, 0);
+	al_flip_display();
+
+	//maybe have a global var to set to the state "START SCREEN" or something
 }
 
 void Scroll(float scrollDistanceX, float scrollDistanceY)
@@ -377,7 +424,7 @@ void Scroll(float scrollDistanceX, float scrollDistanceY)
 	}
 
 	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
-	al_flip_display();
+	//al_flip_display();
 }
 
 void Renderer()
@@ -389,6 +436,10 @@ void Renderer()
 		if (e.eventType == EventType_Scroll)
 		{
 			Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
+		}
+		else if (e.eventType == EventType_Action)	//check if im at the starting screen and if i need to load other bitmaps
+		{
+			al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 		}
 		else if (e.eventType == EventType_ShowGrid)
 		{

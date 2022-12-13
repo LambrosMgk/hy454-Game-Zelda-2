@@ -47,8 +47,7 @@ void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 		e->ScrollDistanceX -= scrollX;
 	}
 
-	cout << "CheckScroll : " << e->ScrollDistanceX << " Y :" << e->ScrollDistanceY;
-	cout << '\n';
+	
 	if (e->ScrollDistanceX == 0 && e->ScrollDistanceY == 0)	//if no input no need to fill the queue with zeros
 	{
 		delete e;	//delete calls the destructor while free() does not
@@ -66,6 +65,12 @@ void UserInput(void)
 	if (al_key_down(&KbState, ALLEGRO_KEY_ESCAPE))
 	{
 		User_input_done = true;
+	}
+	if (al_key_down(&KbState, ALLEGRO_KEY_ENTER))	//Later i might need a Finite State Machine to know whats going on in the game
+	{
+		Event* e = new Event;
+		e->eventType = EventType_Action;
+		EventQueue.push(*e);
 	}
 	CheckScroll(KbState, scrollDistanceX, scrollDistanceY);
 }

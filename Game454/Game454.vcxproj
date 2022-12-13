@@ -145,7 +145,6 @@
     <ClInclude Include="Headers\App.h" />
     <ClInclude Include="Headers\Event_Queue.h" />
     <ClInclude Include="Headers\Render.h" />
-    <ClInclude Include="Headers\Render_Grid.h" />
     <ClInclude Include="Headers\User_Input.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
