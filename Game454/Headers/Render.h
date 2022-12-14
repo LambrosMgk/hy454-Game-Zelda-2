@@ -11,7 +11,8 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 
-#include "Event_Queue.h"
+#include "User_Input.h"
+
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -44,6 +45,10 @@
 #define MUL_GRID_ELEMENT_HEIGHT(i) ((i)<<2)
 
 
+#define scrollDistanceX 5.0
+#define scrollDistanceY 5.0
+
+
 using namespace std;
 
 typedef unsigned short Dim;
@@ -52,9 +57,12 @@ struct Point { int x, y; };
 
 ALLEGRO_DISPLAY* display = NULL;
 ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
+unsigned char *divIndex;
+unsigned char *modIndex;
 vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 float cameraX = 0, cameraY = 0;
+bool Toggle_Grid = false;
 
 
 
@@ -74,6 +82,10 @@ public:
 	MAX_WIDTH and MAX_HEIGHT are the size of the tilemap you want to apply the grid*/
 	Grid(unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
 	{
+		Grid_Element_Width = _Grid_Element_Width;
+		Grid_Element_Height = _Grid_Element_Height;
+
+
 		if (TILE_WIDTH % Grid_Element_Width != 0)
 		{
 			cout << "TILE_WIDTH % GRID_ELEMENT_WIDTH must be zero!";
@@ -84,14 +96,16 @@ public:
 			cout << "TILE_HEIGHT % GRID_ELEMENT_HEIGHT must be zero!";
 			exit(-1);
 		}
-		Grid_Element_Width = _Grid_Element_Width;
-		Grid_Element_Height = _Grid_Element_Height;
 
 		Grid_Block_Columns = TILE_WIDTH / Grid_Element_Width;
 		Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
 		Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
 		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap
 		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap
+
+		cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
+		cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
+		cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
 
 		grid = new byte*[Grid_Max_Height];
 		for (int i = 0; i < Grid_Max_Height; i++)
@@ -216,10 +230,48 @@ public:
 	{
 
 	}
+
+	/*void ComputeTileGridBlocks2(ALLEGRO_BITMAP* map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
+	{
+		auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);
+		auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);
+
+		for (auto row = 0; row < al_get_bitmap_height(map); ++row)	//might need to change the step to row+= TILE_HEIGHT
+			for (auto col = 0; col < al_get_bitmap_width(map); ++col) 
+			{
+				auto index = GetTile(map, col, row);
+				PutTile(tileElem, 0, 0, tileSet, index);
+
+				if (IsTileIndexAssumedEmpty(index)) 
+				{
+					emptyTileColors.Insert(tileElem, index); // assume tile colors to be empty
+					memset(grid, GRID_EMPTY_TILE, Grid_Elements_Per_Tile);
+					grid += Grid_Elements_Per_Tile;
+				}
+				else// auto increments grid as T*&
+					ComputeGridBlock(grid, index, tileElem, gridElem, tileSet, transColor, solidThreshold);
+			}
+
+		al_destroy_bitmap(tileElem);
+		al_destroy_bitmap(gridElem);
+	}*/
 };
 
 Grid* grid = NULL;
 
+//pre-caching tileset indexes for better perfomance, this function should be called at the start of the programm
+void Calculate_Tileset_Indexes(unsigned short TILESET_WIDTH, unsigned short TILESET_HEIGHT)
+{
+	divIndex = new unsigned char[TILESET_WIDTH*TILESET_HEIGHT];
+	modIndex = new unsigned char[TILESET_WIDTH * TILESET_HEIGHT];
+	if (divIndex == NULL || modIndex == NULL)
+	{
+		cout << "Failed to allocate memory for tileset indexes\n";
+		exit(-1);
+	}
+	for (unsigned short i = 0; i < TILESET_WIDTH* TILESET_HEIGHT; ++i)
+		divIndex[i] = i / TILESET_WIDTH, modIndex[i] = i % TILESET_WIDTH;
+}
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
 in case of bad file path exits program with -1*/
@@ -292,7 +344,7 @@ ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* 
 		{
 			TileSetIndex = CSV[y][x];
 			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, x * TILE_WIDTH, y * TILE_HEIGHT, 0);
+				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
 		}
 	}
 
@@ -313,7 +365,7 @@ void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BI
 		{
 			TileSetIndex = CSV[y][x];
 			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, x * TILE_WIDTH, y * TILE_HEIGHT, 0);
+				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
 		}
 	}
 
@@ -335,7 +387,7 @@ void Draw_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset)
 		{
 			TileSetIndex = CSV[y][x];
 			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, x * TILE_WIDTH, y * TILE_HEIGHT, 0);
+				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
 		}
 	}
 }
@@ -352,7 +404,7 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 		for (auto x = 0; x < al_get_bitmap_width(bitmap); x++)
 		{
 			TileSetIndex = CSV[y][x];
-			al_draw_scaled_bitmap(Tileset, (TileSetIndex % TILESET_WIDTH) * TILE_WIDTH, (TileSetIndex / TILESET_WIDTH) * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT, scaleWidth * x * TILE_WIDTH, scaleHeight * y * TILE_HEIGHT, scaleWidth * TILE_WIDTH, scaleHeight * TILE_HEIGHT, 0);
+			al_draw_scaled_bitmap(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, scaleWidth * MUL_TILE_WIDTH(x), scaleHeight * MUL_TILE_HEIGHT(y), scaleWidth * TILE_WIDTH, scaleHeight * TILE_HEIGHT, 0);
 		}
 	}
 }
@@ -375,7 +427,8 @@ void Render_init()
 	al_set_window_title(display, "Zelda II: The Adventure of Link");
 
 
-	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");
+	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");	//pre-caching
+	Calculate_Tileset_Indexes(TILESET_WIDTH, TILESET_HEIGHT);
 
 	TileMapCSV = ReadTextMap("UnitTests\\Media\\map1_Kachelebene 1.csv");
 	TileMapCSV_l2 = ReadTextMap("UnitTests\\Media\\map1_Tile Layer 2.csv");
@@ -407,56 +460,183 @@ void Load_Start_Screen(const char* filepath)
 
 	//maybe have a global var to set to the state "START SCREEN" or something
 }
+//might be useful
+/*int allegro_startup(void)
+{
+	if (al_init())
+	{
+		if (al_init_primitives_addon())
+		{
+			if (al_install_keyboard())
+			{
+				if (al_install_mouse())
+				{
+					if (al_init_image_addon())
+					{
+						al_init_font_addon();   //Void
+						if (al_init_ttf_addon())
+						{
+							if (al_install_audio())
+							{
+								if (al_init_acodec_addon())
+								{
+									if (al_reserve_samples(1))
+									{
 
-void Scroll(float scrollDistanceX, float scrollDistanceY)
+										return AL_STARTUP_SUCCESS;
+
+
+									}
+									else
+										fprintf(stderr, "ERROR: Failed to reserve samples:(\n");
+									//al_shutdown_acodec_addon(); Does not exist
+								}
+								else
+									fprintf(stderr, "ERROR: Failed to initialize acodec addon\n");
+								al_uninstall_audio();
+							}
+							else
+								fprintf(stderr, "ERROR: Failed to install audio\n");
+							al_shutdown_ttf_addon();
+						}
+						else
+							fprintf(stderr, "ERROR: Failed to initialize ttf addon\n");
+						al_shutdown_font_addon();
+						al_shutdown_image_addon();
+					}
+					else
+						fprintf(stderr, "ERROR: Failed to initialize image addon\n");
+					al_uninstall_mouse();
+				}
+				else
+					fprintf(stderr, "ERROR: Failed to install mouse\n");
+				al_uninstall_keyboard();
+			}
+			else
+				fprintf(stderr, "ERROR: Failed to load primitives addon\n");
+			al_shutdown_primitives_addon();
+		}
+		else
+			fprintf(stderr, "ERROR: Failed to install keyboard\n");
+		al_uninstall_system();
+	}
+	else
+		fprintf(stderr, "ERROR: Failed to initialize allegro system\n");
+	return AL_STARTUP_ERROR;
+}
+
+void allegro_shut_down(ALLEGRO_DISPLAY* display, ALLEGRO_EVENT_QUEUE* event_queue)
+{
+	al_destroy_display(display);
+	al_destroy_event_queue(event_queue);
+	al_uninstall_audio();
+	al_shutdown_ttf_addon();
+	al_shutdown_font_addon();
+	al_shutdown_image_addon();
+	al_uninstall_mouse();
+	al_uninstall_keyboard();
+	al_shutdown_primitives_addon();
+	al_uninstall_system();
+
+}*/
+
+void Scroll(float ScrollDistanceX, float ScrollDistanceY)
 {	
 	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
 	unsigned int TotalWidth = al_get_bitmap_width(bitmap);
 
 	/*check if you want to go out of boundary*/
-	if ((scrollDistanceY > 0 && cameraY < TotalHeight - 200) || (scrollDistanceY < 0 && cameraY > -100))
+	if ((ScrollDistanceY > 0 && cameraY < TotalHeight - 200) || (ScrollDistanceY < 0 && cameraY > -100))
 	{
-		cameraY += scrollDistanceY;
+		cameraY += ScrollDistanceY;
 	}
-	if ((scrollDistanceX > 0 && cameraX < TotalWidth - 200) || (scrollDistanceX < 0 && cameraX > -100))
+	if ((ScrollDistanceX > 0 && cameraX < TotalWidth - 200) || (ScrollDistanceX < 0 && cameraX > -100))
 	{
-		cameraX += scrollDistanceX;
+		cameraX += ScrollDistanceX;
 	}
 
 	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	//al_flip_display();
 }
 
-void Renderer()
+/*might be useless*/
+void Draw_Grid()
 {
-	while (!EventQueue.empty()) //Check all the user input in a frame
+	if (grid == NULL)
 	{
-		cout << "Render..\n";
-		Event e = EventQueue.front();	
-		EventQueue.pop();
-		if (e.eventType == EventType_Scroll)
-		{
-			Scroll(e.ScrollDistanceX, e.ScrollDistanceY);
-		}
-		else if (e.eventType == EventType_Action)	//check if im at the starting screen and if i need to load other bitmaps
-		{
-			al_clear_to_color(al_map_rgb(0,0,0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
-			al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
-		}
-		else if (e.eventType == EventType_ShowGrid)
-		{
+		grid = new Grid(16,16,al_get_bitmap_width(bitmap), al_get_bitmap_height(bitmap));
+	}
 
-		}
-		else if (e.eventType == EventType_HideGrid)
+	//not a perfect grid but will do for now. (left over lines at the end of the grid)
+	for (int x = 0; x < grid->Grid_Max_Width; x += grid->Grid_Element_Width)
+	{
+		for (int y = 0; y < grid->Grid_Max_Height; y += grid->Grid_Element_Height)
 		{
-
+			al_draw_line(x, y, x, y + grid->Grid_Element_Height, al_map_rgb(255,0,0), 1);
+			al_draw_line(x, y, x + grid->Grid_Element_Width, y, al_map_rgb(255, 0, 0), 1);
 		}
 	}
-	al_flip_display();
+}
+
+void Renderer()
+{
+	while (!al_is_event_queue_empty(EventQueue)) //Check all the user input in a frame
+	{
+		ALLEGRO_EVENT event;
+
+		if (!al_get_next_event(EventQueue, &event))
+		{
+			cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
+			exit(-1);
+		}
+		
+		
+		if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			switch (event.keyboard.keycode)
+			{
+				case ALLEGRO_KEY_ESCAPE:
+					User_input_done = true;		//ends the game for now
+					break;
+				case ALLEGRO_KEY_UP :
+					Scroll(0, -scrollDistanceY);
+					break;
+				case ALLEGRO_KEY_DOWN:
+					Scroll(0, scrollDistanceY);
+					break;
+				case ALLEGRO_KEY_LEFT:
+					Scroll(-scrollDistanceX, 0);
+					break;
+				case ALLEGRO_KEY_RIGHT:
+					Scroll(scrollDistanceX, 0);
+					break;
+				case ALLEGRO_KEY_A:			//"A" will be the action key for now. check if im at the starting screen and if i need to load other bitmaps
+					al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
+					al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
+					break;
+				case ALLEGRO_KEY_LCTRL:
+					ALLEGRO_EVENT NextEvent;
+					al_peek_next_event(EventQueue, &NextEvent);
+					if(NextEvent.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_G)
+						Toggle_Grid = Toggle_Grid ? false : true;
+					al_drop_next_event(EventQueue);		//drop the "G" key
+					break;
+			}
+		}
+		
+		/*if (Toggle_Grid)
+		{
+			Draw_Grid();
+		}*/
+		
+		al_flip_display();
+	}
 }
 
 /*might be useful to have this in the future*/
 void Render_Clear()
 {
-
+	delete grid;
+	delete divIndex;
+	delete modIndex;
 }

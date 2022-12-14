@@ -104,7 +104,7 @@ namespace app
 
 	void Game::Load()
 	{
-		//Load_Start_Screen("UnitTests\\Media\\Start_Screen.png");
+		Load_Start_Screen("UnitTests\\Media\\Start_Screen.png");
 	}
 
 	void Game::Clear()

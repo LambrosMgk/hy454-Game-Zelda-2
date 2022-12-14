@@ -1,11 +1,8 @@
 #pragma once
 
-#include "Event_Queue.h"
-
-#define scrollDistanceX 5.0
-#define scrollDistanceY 5.0
-
+ALLEGRO_EVENT_QUEUE *EventQueue;
 bool User_input_done = false;
+
 
 void User_Input_init()
 {
@@ -14,6 +11,9 @@ void User_Input_init()
 		fprintf(stderr, "failed to install keyboard().\n");
 		exit(-1);
 	}
+
+	EventQueue = al_create_event_queue();
+	al_register_event_source(EventQueue, al_get_keyboard_event_source());
 }
 
 bool isDone()
@@ -22,15 +22,22 @@ bool isDone()
 }
 
 /*Checks for keyboard input and pushes "move" events in the event queue*/
-void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
+/*void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 {
-	//assert(scrollDistanceX > 0 && scrollDistanceY > 0);		/*scrollDistance <= 0 doesn't make sense*/
+	//assert(scrollDistanceX > 0 && scrollDistanceY > 0);
 	Event *e = new Event;
+
+	if (e == NULL)
+	{
+		cout << "Failed to allocate memory for Event object.\n";
+		exit(-1);
+	}
 
 	e->ScrollDistanceX = 0;
 	e->ScrollDistanceY = 0;
+	e->eventType = EventType_Scroll;
 	al_get_keyboard_state(&KbState);
-	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN)) /*"if" is not connected with "else" so if played presses "up" and "down" nothing will happen*/
+	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN))
 	{
 		e->ScrollDistanceY += scrollY;
 	}
@@ -53,13 +60,13 @@ void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
 		delete e;	//delete calls the destructor while free() does not
 		return;
 	}
-	EventQueue.push(*e);
-}
+	EventQueue.push(e);
+}*/
 
 /*Handles all user input*/
 void UserInput(void)
 {
-	ALLEGRO_KEYBOARD_STATE KbState;
+	/*ALLEGRO_KEYBOARD_STATE KbState;
 
 	al_get_keyboard_state(&KbState);
 	if (al_key_down(&KbState, ALLEGRO_KEY_ESCAPE))
@@ -70,7 +77,14 @@ void UserInput(void)
 	{
 		Event* e = new Event;
 		e->eventType = EventType_Action;
-		EventQueue.push(*e);
+		EventQueue.push(e);
+	}
+	if (al_key_down(&KbState, ALLEGRO_KEY_ALT) && al_key_down(&KbState, ALLEGRO_KEY_G))	// Ctrl + g combination to toggle the grid
+	{
+		Event* e = new Event;
+		e->eventType = EventType_ToggleGrid;
+		EventQueue.push(e);
 	}
 	CheckScroll(KbState, scrollDistanceX, scrollDistanceY);
+	*/
 }
