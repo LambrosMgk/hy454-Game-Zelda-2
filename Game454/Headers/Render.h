@@ -100,16 +100,16 @@ public:
 		Grid_Block_Columns = TILE_WIDTH / Grid_Element_Width;
 		Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
 		Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
-		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap
+		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap (bitmap, our level not the tileset)
 		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap
 
 		cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
 		cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
 		cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
 
-		grid = new byte*[Grid_Max_Height];
-		for (int i = 0; i < Grid_Max_Height; i++)
-			grid[i] = new byte[Grid_Max_Width];
+		grid = new byte*[Grid_Max_Width];
+		for (int i = 0; i < Grid_Max_Width; i++)
+			grid[i] = new byte[Grid_Max_Height];
 
 		MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
 		MAX_PIXEL_HEIGHT = MUL_TILE_HEIGHT(MAX_HEIGHT);
@@ -231,7 +231,21 @@ public:
 
 	}
 
-	/*void ComputeTileGridBlocks2(ALLEGRO_BITMAP* map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
+	void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
+	{
+		for (auto row = 0; row < al_get_bitmap_height(map); ++row)
+			for (auto col = 0; col < MAX_WIDTH; ++col) 
+			{
+				memset(
+					grid,
+					IsTileIndexAssumedEmpty(GetTile(map, col, row)) ? GRID_EMPTY_TILE : GRID_SOLID_TILE,
+					GRID_ELEMENTS_PER_TILE
+				);
+				//grid += GRID_ELEMENTS_PER_TILE;
+			}
+	}
+
+	void ComputeTileGridBlocks2(ALLEGRO_BITMAP* map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
 	{
 		auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);
 		auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);
@@ -254,7 +268,7 @@ public:
 
 		al_destroy_bitmap(tileElem);
 		al_destroy_bitmap(gridElem);
-	}*/
+	}
 };
 
 Grid* grid = NULL;
@@ -409,6 +423,20 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 	}
 }
 
+void Load_Start_Screen(const char* filepath)
+{
+	ALLEGRO_BITMAP* Start_bitmap = al_load_bitmap(filepath);
+	if (Start_bitmap == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize Start_bitmap (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+	al_draw_bitmap(Start_bitmap, 0, 0, 0);
+	al_flip_display();
+	//cout << "Drawing " << filepath << '\n';
+	//maybe have a global var to set to the state "START SCREEN" or something
+}
+
 void Render_init()
 {
 	if (!al_init() || !al_init_image_addon() || !al_init_primitives_addon())
@@ -440,26 +468,13 @@ void Render_init()
 
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
-
+	
 	//al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
 	respectively, although their contents may have changed.*/
 }
 
-void Load_Start_Screen(const char* filepath)
-{
-	ALLEGRO_BITMAP* Start_bitmap = al_load_bitmap(filepath);
-	if (Start_bitmap == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize Start_bitmap (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
-	al_draw_bitmap(Start_bitmap, 0, 0, 0);
-	al_flip_display();
-
-	//maybe have a global var to set to the state "START SCREEN" or something
-}
 //might be useful
 /*int allegro_startup(void)
 {
@@ -611,19 +626,18 @@ void Renderer()
 				case ALLEGRO_KEY_RIGHT:
 					scrollRight = true;
 					break;
-				case ALLEGRO_KEY_A:			//"A" will be the action key for now. check if im at the starting screen and if i need to load other bitmaps
+				case ALLEGRO_KEY_ENTER:			//"ENTER" will be the action key for now. check if im at the starting screen and if i need to load other bitmaps
 					al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
 					al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 					break;
 				case ALLEGRO_KEY_LCTRL:
-					ALLEGRO_EVENT NextEvent;
-					al_peek_next_event(EventQueue, &NextEvent);
+					ALLEGRO_KEYBOARD_STATE KbState;
 					cout << "LCTRL\n";
-					if (NextEvent.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_G)
+					al_get_keyboard_state(&KbState);
+					if (al_key_down(&KbState, ALLEGRO_KEY_G))
 					{
 						Toggle_Grid = Toggle_Grid ? false : true;
 						cout << "Grid troggled\n";
-						al_drop_next_event(EventQueue);		//drop the "G" key
 					}
 					break;
 			}
