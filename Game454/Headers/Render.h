@@ -580,10 +580,11 @@ void Draw_Grid()
 
 void Renderer()
 {
+	float scrollx = 0, scrolly = 0;
+	static bool scrollUp = false, scrollDown = false, scrollLeft = false, scrollRight = false;
 	while (!al_is_event_queue_empty(EventQueue)) //Check all the user input in a frame
 	{
 		ALLEGRO_EVENT event;
-
 		if (!al_get_next_event(EventQueue, &event))
 		{
 			cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
@@ -599,16 +600,16 @@ void Renderer()
 					User_input_done = true;		//ends the game for now
 					break;
 				case ALLEGRO_KEY_UP :
-					Scroll(0, -scrollDistanceY);
+					scrollUp = true;
 					break;
 				case ALLEGRO_KEY_DOWN:
-					Scroll(0, scrollDistanceY);
+					scrollDown = true;
 					break;
 				case ALLEGRO_KEY_LEFT:
-					Scroll(-scrollDistanceX, 0);
+					scrollLeft = true;
 					break;
 				case ALLEGRO_KEY_RIGHT:
-					Scroll(scrollDistanceX, 0);
+					scrollRight = true;
 					break;
 				case ALLEGRO_KEY_A:			//"A" will be the action key for now. check if im at the starting screen and if i need to load other bitmaps
 					al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
@@ -617,20 +618,54 @@ void Renderer()
 				case ALLEGRO_KEY_LCTRL:
 					ALLEGRO_EVENT NextEvent;
 					al_peek_next_event(EventQueue, &NextEvent);
-					if(NextEvent.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_G)
+					cout << "LCTRL\n";
+					if (NextEvent.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_G)
+					{
 						Toggle_Grid = Toggle_Grid ? false : true;
-					al_drop_next_event(EventQueue);		//drop the "G" key
+						cout << "Grid troggled\n";
+						al_drop_next_event(EventQueue);		//drop the "G" key
+					}
 					break;
 			}
 		}
+		else if (event.type == ALLEGRO_EVENT_KEY_UP)
+		{
+			switch (event.keyboard.keycode)
+			{
+				case ALLEGRO_KEY_UP:
+					scrollUp = false;
+					break;
+				case ALLEGRO_KEY_DOWN:
+					scrollDown = false;
+					break;
+				case ALLEGRO_KEY_LEFT:
+					scrollLeft = false;
+					break;
+				case ALLEGRO_KEY_RIGHT:
+					scrollRight = false;
+					break;			
+			}
+		}
 		
-		/*if (Toggle_Grid)
+		if (Toggle_Grid)
 		{
 			Draw_Grid();
-		}*/
-		
-		al_flip_display();
+		}
 	}
+
+
+	if(scrollUp == true) 
+		scrolly -= scrollDistanceY;
+	if(scrollDown == true)
+		scrolly += scrollDistanceY;
+	if(scrollLeft == true )
+		scrollx -= scrollDistanceX;
+	if(scrollRight == true)
+		scrollx += scrollDistanceX;
+		
+	if(scrollx != 0 || scrolly != 0)
+		Scroll(scrollx, scrolly);
+	al_flip_display();
 }
 
 /*might be useful to have this in the future*/
