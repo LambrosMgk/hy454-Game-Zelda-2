@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <set>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -45,8 +46,8 @@
 #define MUL_GRID_ELEMENT_HEIGHT(i) ((i)<<2)
 
 
-#define scrollDistanceX 5.0
-#define scrollDistanceY 5.0
+#define scrollDistanceX 5
+#define scrollDistanceY 5
 
 
 using namespace std;
@@ -54,16 +55,54 @@ using namespace std;
 typedef unsigned short Dim;
 struct Rect { int x, y, w, h; };
 struct Point { int x, y; };
+typedef unsigned short Index;
 
 ALLEGRO_DISPLAY* display = NULL;
 ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
+vector<int> *EmptyTiles = NULL;
+vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned char *divIndex;
 unsigned char *modIndex;
-vector<vector<int>> TileMapCSV, TileMapCSV_l2;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
-float cameraX = 0, cameraY = 0;
+int cameraX = 0, cameraY = 0;
 bool Toggle_Grid = false;
 
+
+class TileColorsHolder final 
+{
+	private:
+		std::set<Index> indices;
+		std::set<ALLEGRO_COLOR> colors;
+	public:
+		void Insert(ALLEGRO_BITMAP *bmp, Index index) 
+		{
+			if (indices.find(index) == indices.end()) 
+			{
+				indices.insert(index);
+				al_lock_bitmap(bmp, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+				auto width = al_get_bitmap_width(bmp), height = al_get_bitmap_height(bmp);
+				for (auto i = 0; i < width; i++)
+				{
+					for (auto j = 0; j < height; j++)
+					{
+						colors.insert(al_get_pixel(bmp, i, j));
+					}
+				}
+				al_unlock_bitmap(bmp);
+			}
+		}
+		bool In(ALLEGRO_COLOR c) const
+		{
+			return colors.find(c) != colors.end();
+		}
+};
+// keeps colors that are assumed to be empty
+static TileColorsHolder emptyTileColors;
+
+bool IsTileColorEmpty(ALLEGRO_COLOR c)
+{
+	return emptyTileColors.In(c);
+} // return false to disable
 
 
 class Grid
@@ -79,7 +118,7 @@ public:
 	byte** grid;	// 2D Array that holds our grid
 
 	/*Parameters _Grid_Element_Width and _Grid_Element_Height are for the size of each element in the grid.
-	MAX_WIDTH and MAX_HEIGHT are the size of the tilemap you want to apply the grid*/
+	MAX_WIDTH and MAX_HEIGHT are the number of tiles of the tilemap you want to apply the grid*/
 	Grid(unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
 	{
 		Grid_Element_Width = _Grid_Element_Width;
@@ -103,9 +142,10 @@ public:
 		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap (bitmap, our level not the tileset)
 		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap
 
-		cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
+		/*cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
 		cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
 		cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
+		*/
 
 		grid = new byte*[Grid_Max_Width];
 		for (int i = 0; i < Grid_Max_Width; i++)
@@ -138,18 +178,22 @@ public:
 	{
 		SetGridTile(col, row, GRID_SOLID_TILE);
 	}
+
 	void SetEmptyGridTile(unsigned short col, unsigned short row)
 	{
 		SetGridTile(col, row, GRID_EMPTY_TILE);
 	}
+
 	void SetGridTileFlags(unsigned short col, unsigned short row, byte flags)
 	{
 		SetGridTile(col, row, flags);
 	}
+
 	void SetGridTileTopSolidOnly(unsigned short col, unsigned short row)
 	{
 		SetGridTileFlags(row, col, GRID_TOP_SOLID_MASK);
 	}
+
 	bool CanPassGridTile(unsigned short col, unsigned short row, byte flags) // i.e. checks if flags set
 	{
 		return (GetGridTile(row, col) & flags) != 0;
@@ -231,7 +275,7 @@ public:
 
 	}
 
-	void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
+	/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
 	{
 		for (auto row = 0; row < al_get_bitmap_height(map); ++row)
 			for (auto col = 0; col < MAX_WIDTH; ++col) 
@@ -243,29 +287,73 @@ public:
 				);
 				//grid += GRID_ELEMENTS_PER_TILE;
 			}
+	}*/
+	
+	bool ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, ALLEGRO_COLOR transColor, byte solidThreshold)
+	{
+		auto n = 0;
+
+		//al_lock_bitmap(gridElement, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+		for(byte i = 0; i < Grid_Element_Width; i++)
+		{
+			for (byte j = 0; j < Grid_Element_Height; j++)
+			{
+				ALLEGRO_COLOR c = al_get_pixel(gridElement, i, j);
+				byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
+				byte rt = 0, gt = 0, bt = 0;//, at = 0;
+				al_unmap_rgb(c, &r, &g, &b);
+				al_unmap_rgb(transColor, &rt, &gt, &bt);
+
+				if ((r != rt && g != gt && b != bt) && !IsTileColorEmpty(c))
+					++n;
+			}
+		}
+		//al_unlock_bitmap(gridElement);
+
+		return n <= solidThreshold;
 	}
 
-	void ComputeTileGridBlocks2(ALLEGRO_BITMAP* map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
+	/*Computes the grid elements (solid or empty) based on the given map. (map argument is a vector with the values of the csv of the tilemap,
+	those values will be used to get the corresponding tile from the tileset)*/
+	void ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
 	{
-		auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);
-		auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);
+		if (map.size() == 0)
+		{
+			cout << "ComputeTileGridBlocks2 got called with bad argument \"map\".";
+			return;
+		}
+		auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);		//e.g. 16x16
+		auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);	//e.g. 8x8
 
-		for (auto row = 0; row < al_get_bitmap_height(map); ++row)	//might need to change the step to row+= TILE_HEIGHT
-			for (auto col = 0; col < al_get_bitmap_width(map); ++col) 
+		for (auto row = 0; row < map.size(); ++row)
+			for (auto col = 0; col < map[0].size(); ++col)
 			{
-				auto index = GetTile(map, col, row);
-				PutTile(tileElem, 0, 0, tileSet, index);
+				auto index = map[row][col];
+				//PutTile(tileElem, 0, 0, tileSet, index);//copy the tile
+				al_set_target_bitmap(tileElem);	//set as target the tileElem and copy/paint the tile onto it
+				al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(modIndex[index]), MUL_TILE_HEIGHT(divIndex[index]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
+				al_set_target_bitmap(al_get_backbuffer(display));	//reset the target back to the display
 
-				if (IsTileIndexAssumedEmpty(index)) 
+				if (IsTileIndexAssumedEmpty(index))
 				{
 					emptyTileColors.Insert(tileElem, index); // assume tile colors to be empty
-					memset(grid, GRID_EMPTY_TILE, Grid_Elements_Per_Tile);
-					grid += Grid_Elements_Per_Tile;
+					this->grid[row][col] = GRID_EMPTY_TILE;
 				}
-				else// auto increments grid as T*&
-					ComputeGridBlock(grid, index, tileElem, gridElem, tileSet, transColor, solidThreshold);
+				else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
+				{
+					for (auto i = 0; i < Grid_Elements_Per_Tile; ++i)
+					{
+						auto x = i % Grid_Block_Rows;
+						auto y = i / Grid_Block_Rows;
+						al_set_target_bitmap(gridElem);
+						al_draw_bitmap_region(tileSet, x * Grid_Element_Width, y * Grid_Element_Height, Grid_Element_Width, Grid_Element_Height, 0, 0, 0);
+						al_set_target_bitmap(al_get_backbuffer(display));
+						auto isEmpty = ComputeIsGridIndexEmpty(gridElem, transColor, solidThreshold);
+						this->grid[row][col] = isEmpty ? GRID_EMPTY_TILE : GRID_SOLID_TILE;
+					}
+				}
 			}
-
+		
 		al_destroy_bitmap(tileElem);
 		al_destroy_bitmap(gridElem);
 	}
@@ -285,6 +373,11 @@ void Calculate_Tileset_Indexes(unsigned short TILESET_WIDTH, unsigned short TILE
 	}
 	for (unsigned short i = 0; i < TILESET_WIDTH* TILESET_HEIGHT; ++i)
 		divIndex[i] = i / TILESET_WIDTH, modIndex[i] = i % TILESET_WIDTH;
+}
+
+bool IsTileIndexAssumedEmpty(Index index)
+{
+
 }
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
@@ -469,6 +562,8 @@ void Render_init()
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
 	
+	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV.size(), TileMapCSV[0].size());		//initialize the grid for the tilemap
+	grid->ComputeTileGridBlocks2(TileMapCSV, TileSet, transColor, 50);
 	//al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
@@ -574,28 +669,61 @@ void Scroll(float ScrollDistanceX, float ScrollDistanceY)
 	//al_flip_display();
 }
 
-/*might be useless*/
-void Draw_Grid()
+void init_Grid(unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
+{
+	assert(grid == NULL);
+	grid = new Grid(Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight);
+}
+
+// use this to render grid (toggle on / off), used only for development time testing -
+// a tile grid block is consecutive GRID_BLOCK_ROWS x GRID_BLOCK_COLUMNS block of grid indices
+void DisplayGrid()
 {
 	if (grid == NULL)
 	{
-		grid = new Grid(16,16,al_get_bitmap_width(bitmap), al_get_bitmap_height(bitmap));
+		return;
 	}
 
-	//not a perfect grid but will do for now. (left over lines at the end of the grid)
-	for (int x = 0; x < grid->Grid_Max_Width; x += grid->Grid_Element_Width)
+	auto startCol = DIV_TILE_WIDTH(cameraX);
+	auto startRow = DIV_TILE_HEIGHT(cameraY);
+	auto endCol = DIV_TILE_WIDTH(cameraX + DISPLAY_W - 1);
+	auto endRow = DIV_TILE_HEIGHT(cameraY + DISPLAY_H - 1);
+
+	//in case of a bitmap smaller than the screen (e.g. when testing the engine)
+	if (endCol > grid->Grid_Max_Width)
+		endCol = grid->Grid_Max_Width/ grid->Grid_Block_Columns;	//divide with block cols and rows to get the max width and height for tiles
+	if (endRow > grid->Grid_Max_Height)
+		endRow = grid->Grid_Max_Height/ grid->Grid_Block_Rows;
+
+	for (Dim rowTile = startRow; rowTile <= endRow; ++rowTile)
 	{
-		for (int y = 0; y < grid->Grid_Max_Height; y += grid->Grid_Element_Height)
+		for (Dim colTile = startCol; colTile <= endCol; ++colTile)
 		{
-			al_draw_line(x, y, x, y + grid->Grid_Element_Height, al_map_rgb(255,0,0), 1);
-			al_draw_line(x, y, x + grid->Grid_Element_Width, y, al_map_rgb(255, 0, 0), 1);
+			auto sx = colTile - startCol;
+			auto sy = rowTile - startRow;
+			
+			for (auto rowElem = 0; rowElem < grid->Grid_Block_Rows; ++rowElem)
+			{
+				for (auto colElem = 0; colElem < grid->Grid_Block_Columns; ++colElem)
+				{
+					if (grid->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
+					{
+						auto x = (rowTile + rowElem)* grid->Grid_Element_Width;
+						auto y = (colTile + colElem)* grid->Grid_Element_Height;
+						auto w = grid->Grid_Element_Width;
+						auto h = grid->Grid_Element_Height;
+						al_draw_filled_rectangle(x, y, x+w, y+h, al_map_rgb(255, 0, 0));
+					}
+				}
+			}
+				
 		}
 	}
 }
 
 void Renderer()
 {
-	float scrollx = 0, scrolly = 0;
+	int scrollx = 0, scrolly = 0;
 	static bool scrollUp = false, scrollDown = false, scrollLeft = false, scrollRight = false;
 	while (!al_is_event_queue_empty(EventQueue)) //Check all the user input in a frame
 	{
@@ -633,6 +761,7 @@ void Renderer()
 				case ALLEGRO_KEY_LCTRL:
 					ALLEGRO_KEYBOARD_STATE KbState;
 					cout << "LCTRL\n";
+					//try a loop through the event queue till empty or find G
 					al_get_keyboard_state(&KbState);
 					if (al_key_down(&KbState, ALLEGRO_KEY_G))
 					{
@@ -663,7 +792,7 @@ void Renderer()
 		
 		if (Toggle_Grid)
 		{
-			Draw_Grid();
+			DisplayGrid();
 		}
 	}
 
