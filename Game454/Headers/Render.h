@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <set>
+#include <unordered_set>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -67,12 +68,33 @@ unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 int cameraX = 0, cameraY = 0;
 bool Toggle_Grid = false;
 
+/*added these 3 overloards so that set<ALLEGRO_COLOR> could work*/
+bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
+{
+	return (c1.r == c2.r && c1.g == c2.g && c1.b == c2.b);
+}
+
+bool operator != (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
+{
+	return (c1.r != c2.r || c1.g != c2.g || c1.b != c2.b);
+}
+
+bool operator < (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
+{
+	if (c1.r < c2.r)
+		return true;
+	if (c1.r == c2.r && c1.g < c2.g)
+		return true;
+	if (c1.r == c2.r && c1.g == c2.g && c1.b < c2.b)
+		return true;
+	return false;
+}
 
 class TileColorsHolder final 
 {
 	private:
 		std::set<Index> indices;
-		std::set<ALLEGRO_COLOR> colors;
+		set<ALLEGRO_COLOR> colors;
 	public:
 		void Insert(ALLEGRO_BITMAP *bmp, Index index) 
 		{
@@ -85,15 +107,32 @@ class TileColorsHolder final
 				{
 					for (auto j = 0; j < height; j++)
 					{
+						/*ALLEGRO_COLOR* color = new ALLEGRO_COLOR;
+						*color =*/ 
 						colors.insert(al_get_pixel(bmp, i, j));
 					}
 				}
 				al_unlock_bitmap(bmp);
 			}
 		}
-		bool In(ALLEGRO_COLOR c) const
+		bool ColorIn(ALLEGRO_COLOR c) const
 		{
-			return colors.find(c) != colors.end();
+			set<ALLEGRO_COLOR>::iterator ptr = colors.begin();
+
+			while(ptr != colors.end())
+			{
+				if (ptr->r == c.r && ptr->g == c.g && ptr->b == c.b)
+				{
+					return true;
+				}
+				ptr = next(ptr);
+			}
+
+			return false;
+		}
+		bool IndexIn(Index index)
+		{
+			return indices.find(index) != indices.end();
 		}
 };
 // keeps colors that are assumed to be empty
@@ -101,9 +140,43 @@ static TileColorsHolder emptyTileColors;
 
 bool IsTileColorEmpty(ALLEGRO_COLOR c)
 {
-	return emptyTileColors.In(c);
+	return emptyTileColors.ColorIn(c);
 } // return false to disable
 
+bool IsTileIndexAssumedEmpty(Index index)
+{
+	return emptyTileColors.IndexIn(index);
+}
+
+/*Opens the file at "filepath" for reading, reads the indices of tiles that are considered empty in the tileset.
+The format of the file should be numbers seperated by commas*/
+void Init_emptyTileColorsHolder(const char* filepath)
+{
+	ifstream file;
+	file.open(filepath);
+	if (!file.is_open())
+	{
+		cout << "Error Init_emptyTileColorsHolder could not open file.\n";
+		exit(-1);
+	}
+
+	ALLEGRO_BITMAP* bmp = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);
+	al_set_target_bitmap(bmp);
+	while (!file.eof())
+	{
+		string line;
+		getline(file, line, ',');
+		//cout << "Init_emptyTileColorsHolder testing : " << line << "\n";
+		Index x = stoi(line);
+		
+		al_draw_bitmap_region(TileSet, MUL_TILE_WIDTH(modIndex[x]), MUL_TILE_HEIGHT(divIndex[x]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
+		emptyTileColors.Insert(bmp, x);
+	}
+
+	al_set_target_bitmap(al_get_backbuffer(display));
+	al_destroy_bitmap(bmp);
+	file.close();
+}
 
 class Grid
 {
@@ -289,12 +362,12 @@ public:
 			}
 	}*/
 	
-	bool ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, ALLEGRO_COLOR transColor, byte solidThreshold)
+	bool ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, byte solidThreshold)
 	{
 		auto n = 0;
 
-		//al_lock_bitmap(gridElement, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
-		for(byte i = 0; i < Grid_Element_Width; i++)
+		al_lock_bitmap(gridElement, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+		for (byte i = 0; i < Grid_Element_Width; i++)
 		{
 			for (byte j = 0; j < Grid_Element_Height; j++)
 			{
@@ -302,20 +375,20 @@ public:
 				byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
 				byte rt = 0, gt = 0, bt = 0;//, at = 0;
 				al_unmap_rgb(c, &r, &g, &b);
-				al_unmap_rgb(transColor, &rt, &gt, &bt);
+				/*al_unmap_rgb(transColor, &rt, &gt, &bt);*/
 
-				if ((r != rt && g != gt && b != bt) && !IsTileColorEmpty(c))
+				if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(c))
 					++n;
 			}
-		}
-		//al_unlock_bitmap(gridElement);
+		}cout << "n = " << n << '\n';
+		al_unlock_bitmap(gridElement);
 
 		return n <= solidThreshold;
 	}
 
 	/*Computes the grid elements (solid or empty) based on the given map. (map argument is a vector with the values of the csv of the tilemap,
 	those values will be used to get the corresponding tile from the tileset)*/
-	void ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, ALLEGRO_COLOR transColor, byte solidThreshold)
+	void ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold)
 	{
 		if (map.size() == 0)
 		{
@@ -336,21 +409,24 @@ public:
 
 				if (IsTileIndexAssumedEmpty(index))
 				{
-					emptyTileColors.Insert(tileElem, index); // assume tile colors to be empty
 					this->grid[row][col] = GRID_EMPTY_TILE;
 				}
 				else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
 				{
+					al_set_target_bitmap(gridElem);
 					for (auto i = 0; i < Grid_Elements_Per_Tile; ++i)
 					{
 						auto x = i % Grid_Block_Rows;
 						auto y = i / Grid_Block_Rows;
-						al_set_target_bitmap(gridElem);
-						al_draw_bitmap_region(tileSet, x * Grid_Element_Width, y * Grid_Element_Height, Grid_Element_Width, Grid_Element_Height, 0, 0, 0);
-						al_set_target_bitmap(al_get_backbuffer(display));
-						auto isEmpty = ComputeIsGridIndexEmpty(gridElem, transColor, solidThreshold);
+						
+						al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(modIndex[index]) + x * Grid_Element_Width, MUL_TILE_HEIGHT(divIndex[index]) + y * Grid_Element_Height, Grid_Element_Width, Grid_Element_Height, 0, 0, 0);
+						
+						auto isEmpty = ComputeIsGridIndexEmpty(gridElem, solidThreshold);
 						this->grid[row][col] = isEmpty ? GRID_EMPTY_TILE : GRID_SOLID_TILE;
+						cout << "this->grid[" << row << "][" << col << "] = " << this->grid[row][col] << "    ";
 					}
+					cout << "\n";
+					al_set_target_bitmap(al_get_backbuffer(display));
 				}
 			}
 		
@@ -360,6 +436,12 @@ public:
 };
 
 Grid* grid = NULL;
+
+void init_Grid(unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
+{
+	assert(grid == NULL);
+	grid = new Grid(Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight);
+}
 
 //pre-caching tileset indexes for better perfomance, this function should be called at the start of the programm
 void Calculate_Tileset_Indexes(unsigned short TILESET_WIDTH, unsigned short TILESET_HEIGHT)
@@ -373,11 +455,6 @@ void Calculate_Tileset_Indexes(unsigned short TILESET_WIDTH, unsigned short TILE
 	}
 	for (unsigned short i = 0; i < TILESET_WIDTH* TILESET_HEIGHT; ++i)
 		divIndex[i] = i / TILESET_WIDTH, modIndex[i] = i % TILESET_WIDTH;
-}
-
-bool IsTileIndexAssumedEmpty(Index index)
-{
-
 }
 
 /*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
@@ -548,8 +625,10 @@ void Render_init()
 	al_set_window_title(display, "Zelda II: The Adventure of Link");
 
 
-	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");	//pre-caching
-	Calculate_Tileset_Indexes(TILESET_WIDTH, TILESET_HEIGHT);
+	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");
+	Calculate_Tileset_Indexes(TILESET_WIDTH, TILESET_HEIGHT);//pre-caching
+	//add initalize for the colors of the tileset
+	Init_emptyTileColorsHolder("UnitTests\\Media\\Assumed_Empty_Tiles_indices.txt");
 
 	TileMapCSV = ReadTextMap("UnitTests\\Media\\map1_Kachelebene 1.csv");
 	TileMapCSV_l2 = ReadTextMap("UnitTests\\Media\\map1_Tile Layer 2.csv");
@@ -563,7 +642,7 @@ void Render_init()
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
 	
 	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV.size(), TileMapCSV[0].size());		//initialize the grid for the tilemap
-	grid->ComputeTileGridBlocks2(TileMapCSV, TileSet, transColor, 50);
+	grid->ComputeTileGridBlocks2(TileMapCSV, TileSet, 30);
 	//al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
@@ -667,12 +746,6 @@ void Scroll(float ScrollDistanceX, float ScrollDistanceY)
 
 	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	//al_flip_display();
-}
-
-void init_Grid(unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
-{
-	assert(grid == NULL);
-	grid = new Grid(Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight);
 }
 
 // use this to render grid (toggle on / off), used only for development time testing -
