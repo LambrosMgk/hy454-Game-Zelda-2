@@ -141,7 +141,7 @@ static TileColorsHolder emptyTileColors;
 bool IsTileColorEmpty(ALLEGRO_COLOR c)
 {
 	return emptyTileColors.ColorIn(c);
-} // return false to disable
+}
 
 bool IsTileIndexAssumedEmpty(Index index)
 {
@@ -149,7 +149,7 @@ bool IsTileIndexAssumedEmpty(Index index)
 }
 
 /*Opens the file at "filepath" for reading, reads the indices of tiles that are considered empty in the tileset.
-The format of the file should be numbers seperated by commas*/
+The format of the file should be numbers (indices) seperated by commas*/
 void Init_emptyTileColorsHolder(const char* filepath)
 {
 	ifstream file;
@@ -220,9 +220,9 @@ public:
 		cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
 		*/
 
-		grid = new byte*[Grid_Max_Width];
-		for (int i = 0; i < Grid_Max_Width; i++)
-			grid[i] = new byte[Grid_Max_Height];
+		grid = new byte*[Grid_Max_Height];
+		for (int i = 0; i < Grid_Max_Height; i++)
+			grid[i] = new byte[Grid_Max_Width];
 
 		MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
 		MAX_PIXEL_HEIGHT = MUL_TILE_HEIGHT(MAX_HEIGHT);
@@ -372,15 +372,15 @@ public:
 			for (byte j = 0; j < Grid_Element_Height; j++)
 			{
 				ALLEGRO_COLOR c = al_get_pixel(gridElement, i, j);
-				byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
-				byte rt = 0, gt = 0, bt = 0;//, at = 0;
-				al_unmap_rgb(c, &r, &g, &b);
+				//byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
+				//byte rt = 0, gt = 0, bt = 0;//, at = 0;
+				//al_unmap_rgb(c, &r, &g, &b);
 				/*al_unmap_rgb(transColor, &rt, &gt, &bt);*/
 
 				if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(c))
 					++n;
 			}
-		}cout << "n = " << n << '\n';
+		}//cout << "\nn = " << n << '\n';
 		al_unlock_bitmap(gridElement);
 
 		return n <= solidThreshold;
@@ -402,19 +402,19 @@ public:
 			for (auto col = 0; col < map[0].size(); ++col)
 			{
 				auto index = map[row][col];
-				//PutTile(tileElem, 0, 0, tileSet, index);//copy the tile
 				al_set_target_bitmap(tileElem);	//set as target the tileElem and copy/paint the tile onto it
 				al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(modIndex[index]), MUL_TILE_HEIGHT(divIndex[index]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
 				al_set_target_bitmap(al_get_backbuffer(display));	//reset the target back to the display
 
 				if (IsTileIndexAssumedEmpty(index))
 				{
+					//printf("this->grid[%d][%d] = %d\n", row, col, this->grid[row][col]);
 					this->grid[row][col] = GRID_EMPTY_TILE;
 				}
 				else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
 				{
 					al_set_target_bitmap(gridElem);
-					for (auto i = 0; i < Grid_Elements_Per_Tile; ++i)
+					for (auto i = 0; i < Grid_Elements_Per_Tile; i++)
 					{
 						auto x = i % Grid_Block_Rows;
 						auto y = i / Grid_Block_Rows;
@@ -423,9 +423,10 @@ public:
 						
 						auto isEmpty = ComputeIsGridIndexEmpty(gridElem, solidThreshold);
 						this->grid[row][col] = isEmpty ? GRID_EMPTY_TILE : GRID_SOLID_TILE;
-						cout << "this->grid[" << row << "][" << col << "] = " << this->grid[row][col] << "    ";
+						//printf("\nthis->grid[%d][%d] = %d", row, col, this->grid[row][col]);
+						//cout << "this->grid[" << row << "][" << col << "] = " << this->grid[row][col] << " .";
 					}
-					cout << "\n";
+					//cout << "\n";
 					al_set_target_bitmap(al_get_backbuffer(display));
 				}
 			}
@@ -627,7 +628,7 @@ void Render_init()
 
 	TileSet = load_tileset("UnitTests\\Media\\overworld_tileset_grass.png");
 	Calculate_Tileset_Indexes(TILESET_WIDTH, TILESET_HEIGHT);//pre-caching
-	//add initalize for the colors of the tileset
+	//initalize the empty colors of the tileset
 	Init_emptyTileColorsHolder("UnitTests\\Media\\Assumed_Empty_Tiles_indices.txt");
 
 	TileMapCSV = ReadTextMap("UnitTests\\Media\\map1_Kachelebene 1.csv");
@@ -641,8 +642,8 @@ void Render_init()
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV, TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV_l2, TileSet, display);
 	
-	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV.size(), TileMapCSV[0].size());		//initialize the grid for the tilemap
-	grid->ComputeTileGridBlocks2(TileMapCSV, TileSet, 30);
+	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV[0].size(), TileMapCSV.size());		//initialize the grid for the tilemap
+	grid->ComputeTileGridBlocks2(TileMapCSV, TileSet, 128);
 	//al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
 	al_flip_display();/*Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible
 	on screen. Pointers to the special back and front buffer bitmaps remain valid and retain their semantics as back and front buffers
@@ -731,20 +732,21 @@ void allegro_shut_down(ALLEGRO_DISPLAY* display, ALLEGRO_EVENT_QUEUE* event_queu
 
 void Scroll(float ScrollDistanceX, float ScrollDistanceY)
 {	
-	unsigned int TotalHeight = al_get_bitmap_height(bitmap);
-	unsigned int TotalWidth = al_get_bitmap_width(bitmap);
+	//unsigned int TotalHeight = al_get_bitmap_height(bitmap);
+	//unsigned int TotalWidth = al_get_bitmap_width(bitmap);
 
 	/*check if you want to go out of boundary*/
-	if ((ScrollDistanceY > 0 && cameraY < TotalHeight - 200) || (ScrollDistanceY < 0 && cameraY > -100))
+	if ((ScrollDistanceY > 0 && cameraY < 200) || (ScrollDistanceY < 0 && cameraY > -100))
 	{
 		cameraY += ScrollDistanceY;
 	}
-	if ((ScrollDistanceX > 0 && cameraX < TotalWidth - 200) || (ScrollDistanceX < 0 && cameraX > -100))
+	if ((ScrollDistanceX > 0 && cameraX < 150) || (ScrollDistanceX < 0 && cameraX > -100))
 	{
 		cameraX += ScrollDistanceX;
 	}
 
-	al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
+	al_draw_bitmap(bitmap, cameraX, cameraY, 0);
+	cout << "CameraX : " << cameraX << " , CameraY : " << cameraY << '\n';
 	//al_flip_display();
 }
 
@@ -757,35 +759,42 @@ void DisplayGrid()
 		return;
 	}
 
-	auto startCol = DIV_TILE_WIDTH(cameraX);
-	auto startRow = DIV_TILE_HEIGHT(cameraY);
-	auto endCol = DIV_TILE_WIDTH(cameraX + DISPLAY_W - 1);
-	auto endRow = DIV_TILE_HEIGHT(cameraY + DISPLAY_H - 1);
+	auto startCol = 0;
+	auto startRow = 0;
+	auto endCol = 0;// = DIV_TILE_WIDTH(cameraX + DISPLAY_W - 1);
+	auto endRow = 0;// = DIV_TILE_HEIGHT(cameraY + DISPLAY_H - 1);
+
+	//if some part of the bitmap is not showing on the screen because of scrolling skip that part
+	if(cameraX < 0)
+		startCol += DIV_TILE_WIDTH(abs(cameraX)) + 1;
+	if (cameraY < 0)
+		startRow += DIV_TILE_WIDTH(abs(cameraY)) + 1;
 
 	//in case of a bitmap smaller than the screen (e.g. when testing the engine)
-	if (endCol > grid->Grid_Max_Width)
+	//if (endCol > grid->Grid_Max_Width)
 		endCol = grid->Grid_Max_Width/ grid->Grid_Block_Columns;	//divide with block cols and rows to get the max width and height for tiles
-	if (endRow > grid->Grid_Max_Height)
+	//if (endRow > grid->Grid_Max_Height)
 		endRow = grid->Grid_Max_Height/ grid->Grid_Block_Rows;
-
-	for (Dim rowTile = startRow; rowTile <= endRow; ++rowTile)
+	
+	//cout << "StartCol : " << startCol << " , StarRow : " << startRow << ", endCol : " << endCol << " , endrow : " << endRow << '\n';
+	for (Dim rowTile = startRow; rowTile < endRow; rowTile++)
 	{
-		for (Dim colTile = startCol; colTile <= endCol; ++colTile)
+		for (Dim colTile = startCol; colTile < endCol; colTile++)
 		{
-			auto sx = colTile - startCol;
-			auto sy = rowTile - startRow;
-			
 			for (auto rowElem = 0; rowElem < grid->Grid_Block_Rows; ++rowElem)
 			{
 				for (auto colElem = 0; colElem < grid->Grid_Block_Columns; ++colElem)
 				{
+					//printf("grid[rowTile + rowElem][colTile + colElem] : [%d + %d][%d + %d]\n", rowTile, rowElem, colTile, colElem);
 					if (grid->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
 					{
-						auto x = (rowTile + rowElem)* grid->Grid_Element_Width;
-						auto y = (colTile + colElem)* grid->Grid_Element_Height;
-						auto w = grid->Grid_Element_Width;
-						auto h = grid->Grid_Element_Height;
-						al_draw_filled_rectangle(x, y, x+w, y+h, al_map_rgb(255, 0, 0));
+						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;
+						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;
+						auto w = grid->Grid_Element_Width-1;
+						auto h = grid->Grid_Element_Height-1;
+						//printf("(x + cameraX) && (y + cameraY) = : %d + %d , %d + %d\n", x, cameraX, y, cameraY);
+						//if (cameraX >= 0 && cameraY >= 0)
+							al_draw_filled_rectangle(x + cameraX, y + cameraY, x+w + cameraX, y+h + cameraY, al_map_rgba(255, 0, 0, 64));
 					}
 				}
 			}
@@ -829,7 +838,7 @@ void Renderer()
 					break;
 				case ALLEGRO_KEY_ENTER:			//"ENTER" will be the action key for now. check if im at the starting screen and if i need to load other bitmaps
 					al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
-					al_draw_bitmap(bitmap, -cameraX, -cameraY, 0);
+					al_draw_bitmap(bitmap, cameraX, cameraY, 0);
 					break;
 				case ALLEGRO_KEY_LCTRL:
 					ALLEGRO_KEYBOARD_STATE KbState;
@@ -862,25 +871,29 @@ void Renderer()
 					break;			
 			}
 		}
-		
-		if (Toggle_Grid)
+		else
 		{
-			DisplayGrid();
+			//cout << "Event type : " << event.type << "\n";
 		}
 	}
-
 
 	if(scrollUp == true) 
 		scrolly -= scrollDistanceY;
 	if(scrollDown == true)
 		scrolly += scrollDistanceY;
-	if(scrollLeft == true )
+	if(scrollLeft == true)
 		scrollx -= scrollDistanceX;
 	if(scrollRight == true)
 		scrollx += scrollDistanceX;
 		
 	if(scrollx != 0 || scrolly != 0)
 		Scroll(scrollx, scrolly);
+	
+	if (Toggle_Grid)
+	{
+		DisplayGrid();
+	}
+	
 	al_flip_display();
 }
 
