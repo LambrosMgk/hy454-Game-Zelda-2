@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>	/*need this for "using Action = std::function<void(void)>;" to work*/
+#include "al_init.h"
 #include "Render.h"
 #include "User_Input.h"
 
@@ -95,6 +96,7 @@ namespace app
 		//SetCommitDestructions();
 		//SetUserCode();	//add fps calculation
 
+		allegro_startup();	//from custom header file al_init.h
 		Render_init();
 		User_Input_init();
 
@@ -104,11 +106,12 @@ namespace app
 
 	void Game::Load()
 	{
-		Load_Start_Screen("UnitTests\\Media\\Start_Screen.png");
+		Load_Start_Screen();
 	}
 
 	void Game::Clear()
 	{
+		Render_Clear();
 		al_rest(1.0);
 		al_destroy_display(display);
 	}
@@ -121,7 +124,6 @@ namespace app
 
 	void Game::MainLoopIteration(void)
 	{
-		Sleep(25);	/*need to change this later for smoother scrolling*/
 		Render();
 		Input();
 		//ProgressAnimations();

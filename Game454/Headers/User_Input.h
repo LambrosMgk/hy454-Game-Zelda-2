@@ -1,19 +1,35 @@
 #pragma once
 
+#define scrollDistanceX 5
+#define scrollDistanceY 5
+
+
 ALLEGRO_EVENT_QUEUE *EventQueue;
 bool User_input_done = false;
+bool scrollUp = false, scrollDown = false, scrollLeft = false, scrollRight = false;
+bool Toggle_Grid = false;
 
+enum Game_State {StartingScreen, PlayingLevel1, Paused};
+Game_State GameState;
+enum Player_Direction {left, right};
+
+class GameLogic
+{
+
+};
+
+class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
+{
+public:
+	Player_Direction direction;
+	int positionX, positionY; // position based on the screen or the tilemap?????
+};
 
 void User_Input_init()
 {
-	if (!al_install_keyboard())
-	{
-		fprintf(stderr, "failed to install keyboard().\n");
-		exit(-1);
-	}
-
 	EventQueue = al_create_event_queue();
 	al_register_event_source(EventQueue, al_get_keyboard_event_source());
+	GameState = StartingScreen;
 }
 
 bool isDone()
@@ -21,70 +37,87 @@ bool isDone()
 	return User_input_done;
 }
 
-/*Checks for keyboard input and pushes "move" events in the event queue*/
-/*void CheckScroll(ALLEGRO_KEYBOARD_STATE KbState, float scrollX, float scrollY)
-{
-	//assert(scrollDistanceX > 0 && scrollDistanceY > 0);
-	Event *e = new Event;
-
-	if (e == NULL)
-	{
-		cout << "Failed to allocate memory for Event object.\n";
-		exit(-1);
-	}
-
-	e->ScrollDistanceX = 0;
-	e->ScrollDistanceY = 0;
-	e->eventType = EventType_Scroll;
-	al_get_keyboard_state(&KbState);
-	if (al_key_down(&KbState, ALLEGRO_KEY_DOWN))
-	{
-		e->ScrollDistanceY += scrollY;
-	}
-	if (al_key_down(&KbState, ALLEGRO_KEY_UP))	
-	{
-		e->ScrollDistanceY -= scrollY;
-	}
-	if (al_key_down(&KbState, ALLEGRO_KEY_RIGHT))
-	{
-		e->ScrollDistanceX += scrollX;
-	}
-	if (al_key_down(&KbState, ALLEGRO_KEY_LEFT))
-	{
-		e->ScrollDistanceX -= scrollX;
-	}
-
-	
-	if (e->ScrollDistanceX == 0 && e->ScrollDistanceY == 0)	//if no input no need to fill the queue with zeros
-	{
-		delete e;	//delete calls the destructor while free() does not
-		return;
-	}
-	EventQueue.push(e);
-}*/
-
 /*Handles all user input*/
 void UserInput(void)
 {
-	/*ALLEGRO_KEYBOARD_STATE KbState;
+	while (!al_is_event_queue_empty(EventQueue)) //Check all the user input
+	{
+		ALLEGRO_EVENT event;
+		if (!al_get_next_event(EventQueue, &event))
+		{
+			std::cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
+			exit(-1);
+		}
 
-	al_get_keyboard_state(&KbState);
-	if (al_key_down(&KbState, ALLEGRO_KEY_ESCAPE))
-	{
-		User_input_done = true;
+		if (GameState == StartingScreen)
+		{
+			if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+			{
+				switch (event.keyboard.keycode)
+				{
+				case ALLEGRO_KEY_ENTER:			//Enter == continue, load first level
+					GameState = PlayingLevel1;
+					//Load_Level(1);
+					break;
+				}
+			}
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_DOWN)	//maybe add a check that you are currently playing a level
+		{
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_ESCAPE:
+				User_input_done = true;		//ends the game for now
+				break;
+			case ALLEGRO_KEY_UP:
+				scrollUp = true;
+				break;
+			case ALLEGRO_KEY_DOWN:
+				scrollDown = true;
+				break;
+			case ALLEGRO_KEY_LEFT:
+				scrollLeft = true;
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				scrollRight = true;
+				break;
+			case ALLEGRO_KEY_A:			// Action key. e.g. slash with sword
+				break;
+			case ALLEGRO_KEY_LCTRL:
+				ALLEGRO_KEYBOARD_STATE KbState;
+				std::cout << "LCTRL\n";
+				//try a loop through the event queue till empty or find G
+				al_get_keyboard_state(&KbState);
+				if (al_key_down(&KbState, ALLEGRO_KEY_G))
+				{
+					Toggle_Grid = Toggle_Grid ? false : true;
+					std::cout << "Grid troggled\n";
+				}
+				break;
+			}
+		}
+		else if (event.type == ALLEGRO_EVENT_KEY_UP)
+		{
+			switch (event.keyboard.keycode)
+			{
+			case ALLEGRO_KEY_UP:
+				scrollUp = false;
+				break;
+			case ALLEGRO_KEY_DOWN:
+				scrollDown = false;
+				break;
+			case ALLEGRO_KEY_LEFT:
+				scrollLeft = false;
+				break;
+			case ALLEGRO_KEY_RIGHT:
+				scrollRight = false;
+				break;
+			}
+		}
+		else
+		{
+			//isws piasei san constant char event alla meta isws einai polu grhgoro to scroll
+			//cout << "Event type : " << event.type << "\n";
+		}
 	}
-	if (al_key_down(&KbState, ALLEGRO_KEY_ENTER))	//Later i might need a Finite State Machine to know whats going on in the game
-	{
-		Event* e = new Event;
-		e->eventType = EventType_Action;
-		EventQueue.push(e);
-	}
-	if (al_key_down(&KbState, ALLEGRO_KEY_ALT) && al_key_down(&KbState, ALLEGRO_KEY_G))	// Ctrl + g combination to toggle the grid
-	{
-		Event* e = new Event;
-		e->eventType = EventType_ToggleGrid;
-		EventQueue.push(e);
-	}
-	CheckScroll(KbState, scrollDistanceX, scrollDistanceY);
-	*/
 }

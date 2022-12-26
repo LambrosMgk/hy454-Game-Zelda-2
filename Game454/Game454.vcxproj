@@ -142,6 +142,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Headers\al_init.h" />
     <ClInclude Include="Headers\App.h" />
     <ClInclude Include="Headers\Render.h" />
     <ClInclude Include="Headers\User_Input.h" />

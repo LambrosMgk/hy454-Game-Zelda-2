@@ -29,5 +29,8 @@
     <ClInclude Include="Headers\User_Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\al_init.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
