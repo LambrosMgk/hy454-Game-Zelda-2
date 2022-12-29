@@ -88,7 +88,7 @@ namespace app
 	void Game::Initialise()
 	{
 		SetRender(&Renderer);
-		//SetProgressAnimations();		fill these later
+		SetProgressAnimations(&Animator);
 		SetInput(&UserInput);
 		//SetAI();
 		//SetPhysics();
@@ -99,6 +99,7 @@ namespace app
 		allegro_startup();	//from custom header file al_init.h
 		Render_init();
 		User_Input_init();
+		Animator_Init();
 
 		Game::done = isDone;
 		game = this;
@@ -126,7 +127,7 @@ namespace app
 	{
 		Render();
 		Input();
-		//ProgressAnimations();
+		ProgressAnimations();
 		//AI();
 		//Physics();
 		//CollisionChecking();

@@ -32,5 +32,8 @@
     <ClInclude Include="Headers\al_init.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\ProgressAnimations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

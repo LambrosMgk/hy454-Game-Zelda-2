@@ -10,10 +10,12 @@
 
 #include "al_init.h"
 #include "User_Input.h"
+#include "ProgressAnimations.h"
 
 #define START_SCREEN_PATH "UnitTests\\Media\\Start_Screen.png"
 #define TILESET_PATH "UnitTests\\Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
 #define ASSUMED_EMPTY_LAYER1_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer1.txt"
+#define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -50,18 +52,12 @@
 
 using namespace std;
 
-typedef unsigned short Dim;
-struct Rect { int x, y, w, h; };
-struct Point { int x, y; };
-typedef unsigned short Index;
-
 
 ALLEGRO_DISPLAY* display = NULL;
-ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL, *Start_Screen_bitmap = NULL, *PlayerSpriteSheet = NULL;
+ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL, * Start_Screen_bitmap = NULL, * PlayerSpriteSheet = NULL;
 vector<vector<vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 unsigned char* divIndex, * modIndex;
 unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
-int cameraX = 0, cameraY = 0;
 bool draw = false;
 ALLEGRO_TIMER* FPStimer;
 ALLEGRO_EVENT_QUEUE* timerQueue;
@@ -212,7 +208,7 @@ public:
 		Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
 		Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
 		Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap (bitmap, our level not the tileset)
-		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap
+		Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap (number of tiles)
 
 		/*cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
 		cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
@@ -236,113 +232,138 @@ public:
 	}
 
 	
-	void SetGridTile(unsigned short col, unsigned short row, byte index)
+	void SetGridTile(unsigned short row, unsigned short col, byte index)
 	{
 		grid[row][col] = index;
 	}
 
-	byte GetGridTile(unsigned short col, unsigned short row)
+	byte GetGridTile(unsigned short row, unsigned short col)
 	{
 		return grid[row][col];
 	}
 
-	void SetSolidGridTile(unsigned short col, unsigned short row)
+	void SetSolidGridTile(unsigned short row, unsigned short col)
 	{
-		SetGridTile(col, row, GRID_SOLID_TILE);
+		SetGridTile(row, col, GRID_SOLID_TILE);
 	}
 
-	void SetEmptyGridTile(unsigned short col, unsigned short row)
+	void SetEmptyGridTile(unsigned short row, unsigned short col)
 	{
-		SetGridTile(col, row, GRID_EMPTY_TILE);
+		SetGridTile(row, col, GRID_EMPTY_TILE);
 	}
 
-	void SetGridTileFlags(unsigned short col, unsigned short row, byte flags)
+	void SetGridTileFlags(unsigned short row, unsigned short col, byte flags)
 	{
-		SetGridTile(col, row, flags);
+		SetGridTile(row, col, flags);
 	}
 
-	void SetGridTileTopSolidOnly(unsigned short col, unsigned short row)
+	void SetGridTileTopSolidOnly(unsigned short row, unsigned short col)
 	{
 		SetGridTileFlags(row, col, GRID_TOP_SOLID_MASK);
 	}
 
-	bool CanPassGridTile(unsigned short col, unsigned short row, byte flags) // i.e. checks if flags set
+	bool CanPassGridTile(unsigned short row, unsigned short col, byte flags) // i.e. checks if flags set
 	{
-		return (GetGridTile(row, col) & flags) != 0;
+		return (GetGridTile(row, col) & flags) == 0;	//changed from != 0
 	}
 
-	void FilterGridMotion(const Rect& r, int* dx, int* dy)
+	void FilterGridMotion(Player *player, int* dx, int* dy)
 	{
-		assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);
+		assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);	//can't have the player pass 2 blocks instead of 1 and bypass some random wall
 
 		// try horizontal move
 		if (*dx < 0)
-			FilterGridMotionLeft(r, dx);
+			FilterGridMotionLeft(player, dx);
 		else if (*dx > 0)
-			FilterGridMotionRight(r, dx);
+			FilterGridMotionRight(player, dx);
 
 		// try vertical move
 		if (*dy < 0)
-			FilterGridMotionUp(r, dy);
+			FilterGridMotionUp(player, dy);
 		else if (*dy > 0)
-			FilterGridMotionDown(r, dy);
+			FilterGridMotionDown(player, dy);
 	}
 
-	void FilterGridMotionLeft(const Rect& r, int* dx) 
+	void FilterGridMotionLeft(Player* player, int* dx)
 	{
-		auto x1_next = r.x + *dx;
+		auto x1_next = player->positionX + player->screenX*DISPLAY_W + *dx;
 		if (x1_next < 0)
-			*dx = -r.x;
+			*dx = -player->positionX;
 		else
 		{
-			auto newCol = DIV_GRID_ELEMENT_WIDTH(x1_next);
-			auto currCol = DIV_GRID_ELEMENT_WIDTH(r.x);
+			auto newCol = (x1_next)/Grid_Element_Width;
+			auto currCol = (player->positionX + player->screenX * DISPLAY_W)/ Grid_Element_Width;
 			if (newCol != currCol) 
 			{
 				assert(newCol + 1 == currCol); // we really move left
-				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
-				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
+				auto startRow = (player->positionY)/Grid_Element_Height;
+				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1)/Grid_Element_Height;
+				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(newCol, row, GRID_RIGHT_SOLID_MASK)) 
+					if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
 					{
-						*dx = MUL_GRID_ELEMENT_WIDTH(currCol) - r.x;
+						*dx = Grid_Element_Width *(currCol) - (player->positionX + player->screenX * DISPLAY_W);
+						//cout << "*dx = " << *dx << "\n";
 						break;
 					}
 			}
 		}
 	}
 
-	void FilterGridMotionRight(const Rect& r, int* dx) 
+	void FilterGridMotionRight(Player* player, int* dx)
 	{
-		auto x2 = r.x + r.w - 1;
+		auto x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH - 1;
 		auto x2_next = x2 + *dx;
 		if (x2_next >= MAX_PIXEL_WIDTH)
 			*dx = (MAX_PIXEL_WIDTH - 1) - x2;
 		else 
 		{
-			auto newCol = DIV_GRID_ELEMENT_WIDTH(x2_next);
-			auto currCol = DIV_GRID_ELEMENT_WIDTH(x2);
+			auto newCol = (x2_next)/Grid_Element_Width;
+			auto currCol = (x2)/Grid_Element_Width;
 			if (newCol != currCol)
 			{
 				assert(newCol - 1 == currCol); // we really move right
-				auto startRow = DIV_GRID_ELEMENT_HEIGHT(r.y);
-				auto endRow = DIV_GRID_ELEMENT_HEIGHT(r.y + r.h - 1);
+				auto startRow = (player->positionY)/Grid_Element_Height;
+				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1)/Grid_Element_Height;
+				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(newCol, row, GRID_LEFT_SOLID_MASK)) 
+					if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
 					{
-						*dx = (MUL_GRID_ELEMENT_WIDTH(newCol) - 1) - x2;
+						*dx = (Grid_Element_Width*(newCol) - 1) - (x2);
+						//cout << "*dx = " << *dx << "\n";
 						break;
 					}
 			}
 		}
 	}
 
-	void FilterGridMotionUp(const Rect& r, int* dx)
+	void FilterGridMotionUp(Player* player, int* dx)
 	{
-
+		auto x1_next = player->positionX + player->screenX * DISPLAY_W + *dx;
+		if (x1_next < 0)
+			*dx = -player->positionX;
+		else
+		{
+			auto newCol = (x1_next) / Grid_Element_Width;
+			auto currCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+			if (newCol != currCol)
+			{
+				assert(newCol + 1 == currCol); // we really move left
+				auto startRow = (player->positionY) / Grid_Element_Height;
+				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1) / Grid_Element_Height;
+				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
+				for (auto row = startRow; row <= endRow; ++row)
+					if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
+					{
+						*dx = Grid_Element_Width * (currCol)-(player->positionX + player->screenX * DISPLAY_W);
+						//cout << "*dx = " << *dx << "\n";
+						break;
+					}
+			}
+		}
 	}
 
-	void FilterGridMotionDown(const Rect& r, int* dx)
+	void FilterGridMotionDown(Player* player, int* dx)
 	{
 
 	}
@@ -597,6 +618,24 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 	}
 }
 
+/*By screen i mean the target bitmap*/
+void Paint_Player_to_Screen()
+{
+	if (player->direction == dir_left)
+	{
+		al_draw_bitmap_region(PlayerSpriteSheet, player->FramesWalkingLeft[player->LinkSpriteNum].x, player->FramesWalkingLeft[player->LinkSpriteNum].y, player->FramesWalkingLeft[player->LinkSpriteNum].w, player->FramesWalkingLeft[player->LinkSpriteNum].h, player->positionX, player->positionY, 0);
+	}
+	else if (player->direction == dir_right)
+	{
+		al_draw_bitmap_region(PlayerSpriteSheet, player->FramesWalkingRight[player->LinkSpriteNum].x, player->FramesWalkingRight[player->LinkSpriteNum].y, player->FramesWalkingRight[player->LinkSpriteNum].w, player->FramesWalkingRight[player->LinkSpriteNum].h, player->positionX, player->positionY, 0);
+	}
+	else
+	{
+		fprintf(stderr, "Error with player direction : invalid value %d.\n", player->direction);
+		exit(-1);
+	}
+}
+
 void Load_Start_Screen()
 {
 	Start_Screen_bitmap = al_load_bitmap(START_SCREEN_PATH);
@@ -608,6 +647,16 @@ void Load_Start_Screen()
 	al_draw_bitmap(Start_Screen_bitmap, 0, 0, 0);
 	al_flip_display();
 	//cout << "Drawing " << filepath << '\n';
+}
+
+void Load_Player_Spiresheet()
+{
+	PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
+	if (PlayerSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
 }
 
 void Load_Level(unsigned short levelNum)
@@ -627,18 +676,12 @@ void Load_Level(unsigned short levelNum)
 	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV[0][0].size(), TileMapCSV[0].size());		//initialize the grid for the tilemap
 	grid->ComputeTileGridBlocks2(TileMapCSV[0], TileSet, 128);
 	cout << "Created the whole grid\n";
-}
 
-void Load_Player_Spiresheet(const char* filepath)
-{
-	PlayerSpriteSheet = al_load_bitmap(filepath);
 	if (PlayerSpriteSheet == NULL)
 	{
-		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
+		Load_Player_Spiresheet();
+		Init_Player(5*TILE_WIDTH, 10*TILE_HEIGHT);
 	}
-	al_draw_bitmap(PlayerSpriteSheet, 0, 0, 0);
-	//al_flip_display();
 }
 
 void Render_init()
@@ -664,21 +707,24 @@ void Render_init()
 	Init_emptyTileColorsHolder(ASSUMED_EMPTY_LAYER1_PATH);
 }
 
-void Scroll(float ScrollDistanceX, float ScrollDistanceY)
-{	
-	//unsigned int TotalHeight = al_get_bitmap_height(bitmap);
-	//unsigned int TotalWidth = al_get_bitmap_width(bitmap);
+void Scroll_Bitmap()
+{
+	if (player->positionX > DISPLAY_W)	//scroll left	old statement((player->positionX / DISPLAY_W) + player->screenX > abs(cameraX) / DISPLAY_W)
+	{
+		cameraX -= DISPLAY_W;
+		player->screenX++;
+		player->positionX = 5;	//scroll the player to the left side of the screen
+	}
+	else if (player->positionX < 0) //scroll right
+	{
+		cameraX += DISPLAY_W;
+		player->screenX--;
+		player->positionX = DISPLAY_W - 10;
+	}
+	else if (player->positionY / DISPLAY_H > cameraY / DISPLAY_H)	//check if this statemnet if correct
+	{
 
-	/*check if you want to go out of boundary*/
-	if ((ScrollDistanceY > 0 && cameraY < 100) || (ScrollDistanceY < 0 && cameraY > 1))
-	{
-		cameraY += ScrollDistanceY;
 	}
-	if ((ScrollDistanceX > 0 && cameraX < 50) || (ScrollDistanceX < 0 && cameraX > -850))
-	{
-		cameraX += ScrollDistanceX;
-	}
-	//cout << "CameraX : " << cameraX << " , CameraY : " << cameraY << '\n';
 }
 
 // use this to render grid (toggle on / off), used only for development time testing -
@@ -719,8 +765,8 @@ void DisplayGrid()
 					//printf("grid[rowTile + rowElem][colTile + colElem] : [%d + %d][%d + %d]\n", rowTile, rowElem, colTile, colElem);
 					if (grid->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
 					{
-						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;
-						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;
+						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;	//note : try pre-caching the power of 2 of the grid elem widthso that
+						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;//i can do something like colelem>> MUL_GRID_WIDTH
 						auto w = grid->Grid_Element_Width-1;
 						auto h = grid->Grid_Element_Height-1;
 						//printf("(x + cameraX) && (y + cameraY) = : %d + %d , %d + %d\n", x, cameraX, y, cameraY);
@@ -747,6 +793,7 @@ void Renderer()
 			std::cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
 			exit(-1);
 		}
+		//no need to check for the type of event, the only events in the queue are timer events
 		if (GameState == PlayingLevel1)
 		{
 			al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
@@ -755,19 +802,27 @@ void Renderer()
 				levelLoaded = 1;
 				Load_Level(1);
 			}
+
+			//this if section should stay in Render.h because we want the player to move each frame ?
 			if (scrollUp == true)
-				scrolly += scrollDistanceY;
-			if (scrollDown == true)
 				scrolly -= scrollDistanceY;
+			if (scrollDown == true)
+				scrolly += scrollDistanceY;
 			if (scrollLeft == true)
-				scrollx += scrollDistanceX;
-			if (scrollRight == true)
 				scrollx -= scrollDistanceX;
+			if (scrollRight == true)
+				scrollx += scrollDistanceX;
 
 			if (scrollx != 0 || scrolly != 0)
-				Scroll(scrollx, scrolly);		//maybe put this inside the player class? input will change the vars and render will just draw
-
+			{
+				//first check grid if i can scroll where i want to
+				grid->FilterGridMotion(player, &scrollx, &scrolly);
+				player->Scroll_Player(scrollx, scrolly);
+				Scroll_Bitmap();
+			}
+				
 			al_draw_bitmap(bitmap, cameraX, cameraY, 0);
+			Paint_Player_to_Screen();
 			if (Toggle_Grid)
 			{
 				DisplayGrid();
