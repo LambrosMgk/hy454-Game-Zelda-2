@@ -6,6 +6,7 @@
 //Link sprites vary so its better to go with 16 pixels
 #define LINK_SPRITE_WIDTH 16
 #define LINK_SPRITE_HEIGHT 16
+#define LINK_JUMP_HEIGHT 32
 
 #define scrollDistanceX 2
 #define scrollDistanceY 2

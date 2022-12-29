@@ -296,11 +296,11 @@ public:
 			if (newCol != currCol) 
 			{
 				assert(newCol + 1 == currCol); // we really move left
-				auto startRow = (player->positionY)/Grid_Element_Height;
-				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1)/Grid_Element_Height;
+				auto startRow = (player->positionY + player->screenY * DISPLAY_H)/Grid_Element_Height;
+				auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT*2 - 1)/Grid_Element_Height;
 				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
+					if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
 					{
 						*dx = Grid_Element_Width *(currCol) - (player->positionX + player->screenX * DISPLAY_W);
 						//cout << "*dx = " << *dx << "\n";
@@ -312,7 +312,7 @@ public:
 
 	void FilterGridMotionRight(Player* player, int* dx)
 	{
-		auto x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH - 1;
+		auto x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH*2 - 1;
 		auto x2_next = x2 + *dx;
 		if (x2_next >= MAX_PIXEL_WIDTH)
 			*dx = (MAX_PIXEL_WIDTH - 1) - x2;
@@ -323,11 +323,11 @@ public:
 			if (newCol != currCol)
 			{
 				assert(newCol - 1 == currCol); // we really move right
-				auto startRow = (player->positionY)/Grid_Element_Height;
-				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1)/Grid_Element_Height;
+				auto startRow = (player->positionY + player->screenY * DISPLAY_H)/Grid_Element_Height;
+				auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT*2 - 1)/Grid_Element_Height;
 				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
+					if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
 					{
 						*dx = (Grid_Element_Width*(newCol) - 1) - (x2);
 						//cout << "*dx = " << *dx << "\n";
@@ -337,35 +337,57 @@ public:
 		}
 	}
 
-	void FilterGridMotionUp(Player* player, int* dx)
+	void FilterGridMotionUp(Player* player, int* dy)
 	{
-		auto x1_next = player->positionX + player->screenX * DISPLAY_W + *dx;
+		auto x1_next = player->positionY + player->screenY * DISPLAY_H + *dy;
 		if (x1_next < 0)
-			*dx = -player->positionX;
+			*dy = -player->positionY;
 		else
 		{
-			auto newCol = (x1_next) / Grid_Element_Width;
-			auto currCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-			if (newCol != currCol)
+			auto newRow = (x1_next) / Grid_Element_Height;
+			auto currRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
+			if (newRow != currRow)
 			{
-				assert(newCol + 1 == currCol); // we really move left
-				auto startRow = (player->positionY) / Grid_Element_Height;
-				auto endRow = (player->positionY + LINK_SPRITE_HEIGHT - 1) / Grid_Element_Height;
-				//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
-				for (auto row = startRow; row <= endRow; ++row)
-					if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
+				assert(newRow + 1 == currRow); // we really move up
+				auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+				auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH*2 - 1) / Grid_Element_Width;
+				cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+				for (auto col = startCol; col <= endCol; ++col)
+					if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
 					{
-						*dx = Grid_Element_Width * (currCol)-(player->positionX + player->screenX * DISPLAY_W);
-						//cout << "*dx = " << *dx << "\n";
+						*dy = Grid_Element_Height * (currRow)-(player->positionY + player->screenY * DISPLAY_H);
+						cout << "*dy = " << *dy << "\n";
 						break;
 					}
 			}
 		}
 	}
 
-	void FilterGridMotionDown(Player* player, int* dx)
+	void FilterGridMotionDown(Player* player, int* dy)
 	{
-
+		auto x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT*2 - 1;
+		auto x2_next = x2 + *dy;
+		if (x2_next >= MAX_PIXEL_HEIGHT)
+			*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
+		else
+		{
+			auto newRow = (x2_next) / Grid_Element_Height;
+			auto currRow = (x2) / Grid_Element_Height;
+			if (newRow != currRow)
+			{
+				assert(newRow - 1 == currRow); // we really move down
+				auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+				auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH*2 - 1) / Grid_Element_Width;
+				cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+				for (auto col = startCol; col <= endCol; ++col)
+					if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
+					{
+						*dy = (Grid_Element_Width * (newRow)-1) - (x2);
+						cout << "*dy = " << *dy << "\n";
+						break;
+					}
+			}
+		}
 	}
 
 	/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
@@ -736,21 +758,21 @@ void DisplayGrid()
 		return;
 	}
 
-	auto startCol = 0;
-	auto startRow = 0;
-	auto endCol = 0;// = DIV_TILE_WIDTH(cameraX + DISPLAY_W - 1);
-	auto endRow = 0;// = DIV_TILE_HEIGHT(cameraY + DISPLAY_H - 1);
+	auto startCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W);
+	auto startRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H);
+	auto endCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W + 1 * DISPLAY_W);
+	auto endRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H + 1 * DISPLAY_H);
 
 	//if some part of the bitmap is not showing on the screen because of scrolling skip that part
 	if(cameraX < 0)
-		startCol += DIV_TILE_WIDTH(abs(cameraX)) + 1;
+		startCol += DIV_TILE_WIDTH(abs(cameraX* DISPLAY_W)) + 1;
 	if (cameraY < 0)
-		startRow += DIV_TILE_WIDTH(abs(cameraY)) + 1;
+		startRow += DIV_TILE_HEIGHT(abs(cameraY* DISPLAY_H)) + 1;
 
 	//in case of a bitmap smaller than the screen (e.g. when testing the engine)
-	//if (endCol > grid->Grid_Max_Width)
+	if (endCol > grid->Grid_Max_Width)
 		endCol = grid->Grid_Max_Width/ grid->Grid_Block_Columns;	//divide with block cols and rows to get the max width and height for tiles
-	//if (endRow > grid->Grid_Max_Height)
+	if (endRow > grid->Grid_Max_Height)
 		endRow = grid->Grid_Max_Height/ grid->Grid_Block_Rows;
 	
 	//cout << "StartCol : " << startCol << " , StarRow : " << startRow << ", endCol : " << endCol << " , endrow : " << endRow << '\n';
@@ -765,13 +787,12 @@ void DisplayGrid()
 					//printf("grid[rowTile + rowElem][colTile + colElem] : [%d + %d][%d + %d]\n", rowTile, rowElem, colTile, colElem);
 					if (grid->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
 					{
-						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;	//note : try pre-caching the power of 2 of the grid elem widthso that
-						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;//i can do something like colelem>> MUL_GRID_WIDTH
+						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;	//if i want better perfomance note : try pre-caching the power of 2 of the grid elem width so that i can do something like colelem >> MUL_GRID_WIDTH
+						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;
 						auto w = grid->Grid_Element_Width-1;
 						auto h = grid->Grid_Element_Height-1;
-						//printf("(x + cameraX) && (y + cameraY) = : %d + %d , %d + %d\n", x, cameraX, y, cameraY);
-						//if (cameraX >= 0 && cameraY >= 0)
-							al_draw_filled_rectangle(x + cameraX, y + cameraY, x+w + cameraX, y+h + cameraY, al_map_rgba(255, 0, 0, 64));
+						
+						al_draw_filled_rectangle(x + cameraX, y + cameraY, x+w + cameraX, y+h + cameraY, al_map_rgba(255, 0, 0, 64));
 					}
 				}
 			}
