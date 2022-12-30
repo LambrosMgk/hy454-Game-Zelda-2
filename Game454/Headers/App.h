@@ -3,6 +3,8 @@
 #include "al_init.h"
 #include "Render.h"
 #include "User_Input.h"
+#include "ProgressAnimations.h"
+#include "Physics.h"		//spase ta .h se .h kai .cpp (declaration kai definition)
 
 
 namespace app
@@ -91,7 +93,7 @@ namespace app
 		SetProgressAnimations(&Animator);
 		SetInput(&UserInput);
 		//SetAI();
-		//SetPhysics();
+		SetPhysics(&Calculate_Physics);
 		//SetCollisionChecking();
 		//SetCommitDestructions();
 		//SetUserCode();	//add fps calculation
@@ -100,6 +102,7 @@ namespace app
 		Render_init();
 		User_Input_init();
 		Animator_Init();
+		Physics_Init();
 
 		Game::done = isDone;
 		game = this;
@@ -129,7 +132,7 @@ namespace app
 		Input();
 		ProgressAnimations();
 		//AI();
-		//Physics();
+		Physics();
 		//CollisionChecking();
 		//UserCode(); // hook for custom code at end
 		//CommitDestructions();

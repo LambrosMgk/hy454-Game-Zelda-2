@@ -143,11 +143,11 @@ void UserInput(void)
 			case ALLEGRO_KEY_ESCAPE:
 				User_input_done = true;		//ends the game for now
 				break;
-			case ALLEGRO_KEY_UP:
-				scrollUp = true;
+			case ALLEGRO_KEY_UP:		//to be removed
+				
 				break;
-			case ALLEGRO_KEY_DOWN:
-				scrollDown = true;
+			case ALLEGRO_KEY_DOWN:		//to be removed
+				
 				break;
 			case ALLEGRO_KEY_LEFT:
 				player->direction = dir_left;
@@ -157,7 +157,8 @@ void UserInput(void)
 				player->direction = dir_right;
 				scrollRight = true;
 				break;
-			case ALLEGRO_KEY_A:			// Action key. e.g. slash with sword
+			case ALLEGRO_KEY_A:			// Jump
+				scrollUp = true;
 				break;
 			case ALLEGRO_KEY_G:			// L_Ctrl + G combination
 				ALLEGRO_KEYBOARD_STATE KbState;
@@ -176,12 +177,6 @@ void UserInput(void)
 		{
 			switch (event.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_UP:
-				scrollUp = false;
-				break;
-			case ALLEGRO_KEY_DOWN:
-				scrollDown = false;
-				break;
 			case ALLEGRO_KEY_LEFT:
 				scrollLeft = false;
 				break;
