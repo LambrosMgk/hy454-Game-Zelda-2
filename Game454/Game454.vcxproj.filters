@@ -38,5 +38,8 @@
     <ClInclude Include="Headers\Physics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\GameObjectsClasses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

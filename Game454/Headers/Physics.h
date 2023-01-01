@@ -5,15 +5,23 @@ ALLEGRO_EVENT_QUEUE* PhysicsQueue;
 
 void Physics_Init()
 {
-	PhysicsTimer = al_create_timer(1.0 / 32.0);
+	PhysicsTimer = al_create_timer(1.0 / 2.0);
 	PhysicsQueue = al_create_event_queue();
 	al_register_event_source(PhysicsQueue, al_get_timer_event_source(PhysicsTimer));
-	al_start_timer(PhysicsTimer);
 }
 
 void Calculate_Physics()
 {
 	ALLEGRO_EVENT event;
+
+	if (player != NULL)
+	{
+		if (scrollUp == true)	//jumped
+		{
+			scrollDown = false;
+			al_start_timer(PhysicsTimer);	//start jump timer
+		}
+	}
 
 	if (!al_is_event_queue_empty(PhysicsQueue))
 	{
@@ -22,12 +30,9 @@ void Calculate_Physics()
 			std::cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
 			exit(-1);
 		}
-		if (player != NULL)
-		{
-			if (scrollUp == true)	//jumped
-			{
-
-			}
-		}
+		
+		al_stop_timer(PhysicsTimer);
+		scrollUp = false;
+		scrollDown = true;
 	}
 }

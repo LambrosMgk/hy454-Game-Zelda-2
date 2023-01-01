@@ -18,6 +18,7 @@ struct Point { int x, y; };
 
 enum Game_State {StartingScreen, PlayingLevel1, Paused};
 enum Player_Direction {dir_left, dir_right};
+enum Player_State {State_Walking, State_Crounching, State_Attacking};
 
 class GameLogic
 {
@@ -26,12 +27,16 @@ class GameLogic
 
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
 {
+private:
+	Player_State state = State_Walking;
 public:
-	Player_Direction direction = dir_left;
+	Player_Direction direction = dir_right;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
+	std::vector<Rect>FramesCrounch;
+	std::vector<Rect>FramesSlashLeft;
 
 	Player(int _positionX, int _positionY)
 	{
@@ -47,10 +52,23 @@ public:
 
 	}
 
+	void Set_State(Player_State state)
+	{
+		this->state = state;
+	}
+
+	Player_State Get_State()
+	{
+		return this->state;
+	}
+
 	void Scroll_Player(float ScrollDistanceX, float ScrollDistanceY)
 	{
-		this->positionX += ScrollDistanceX;
-		this->positionY += ScrollDistanceY;
+		if (state == State_Walking)
+		{
+			this->positionX += ScrollDistanceX;
+			this->positionY += ScrollDistanceY;
+		}
 	}
 
 	void Init_frames_bounding_boxes()
@@ -70,6 +88,7 @@ public:
 			r->x = k;
 			FramesWalkingLeft.push_back(*r);
 		}
+		std::reverse(FramesWalkingLeft.begin(), FramesWalkingLeft.end());
 
 		for (i = 0, k = 160; i < 4; i++)
 		{
@@ -83,6 +102,64 @@ public:
 			r->x = k;
 			FramesWalkingRight.push_back(*r);
 		}
+
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT + LINK_SPRITE_HEIGHT;
+		r->w = LINK_SPRITE_WIDTH;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 3;
+		FramesCrounch.push_back(*r);
+
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT + LINK_SPRITE_HEIGHT;
+		r->w = LINK_SPRITE_WIDTH;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//0 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 15 + LINK_SPRITE_WIDTH / 2;
+		FramesCrounch.push_back(*r);
+
+
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 7 + 10;
+		FramesSlashLeft.push_back(*r);
+		
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 5;
+		FramesSlashLeft.push_back(*r);
+	}
+
+	Rect FrameToDraw()
+	{
+		if (state == State_Walking && direction == dir_left)
+		{
+			return FramesWalkingLeft[LinkSpriteNum];
+		}
+		else if (state == State_Walking && direction == dir_right)
+		{
+			return FramesWalkingRight[LinkSpriteNum];
+		}
+		else if (state == State_Crounching)
+		{
+			return FramesCrounch[direction];
+		}
+		else if (state == State_Attacking && direction == dir_left)
+		{
+			return FramesSlashLeft[LinkSpriteNum];
+		}
+		else if (state == State_Attacking && direction == dir_right)
+		{
+			return FramesSlashLeft[LinkSpriteNum];
+		}
+		else
+		{
+			fprintf(stderr, "Error with player direction : invalid value %d.\n", direction);
+			exit(-1);
+		}
 	}
 };
 
@@ -90,7 +167,7 @@ ALLEGRO_EVENT_QUEUE* EventQueue;
 Game_State GameState;
 Player *player = NULL;
 bool User_input_done = false;
-bool scrollUp = false, scrollDown = false, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
+bool scrollUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
 int cameraX = 0, cameraY = 0;
 bool Toggle_Grid = false;
 
@@ -143,11 +220,9 @@ void UserInput(void)
 			case ALLEGRO_KEY_ESCAPE:
 				User_input_done = true;		//ends the game for now
 				break;
-			case ALLEGRO_KEY_UP:		//to be removed
-				
-				break;
-			case ALLEGRO_KEY_DOWN:		//to be removed
-				
+			case ALLEGRO_KEY_DOWN:
+				player->Scroll_Player(5, 5);	//scroll because the sprite is a bit shorter than then rest, scroll before changing the state because in crounch state you can't scroll
+				player->state = State_Crounching;
 				break;
 			case ALLEGRO_KEY_LEFT:
 				player->direction = dir_left;
@@ -159,6 +234,11 @@ void UserInput(void)
 				break;
 			case ALLEGRO_KEY_A:			// Jump
 				scrollUp = true;
+				break;
+			case ALLEGRO_KEY_B:			// Slash
+				player->LinkSpriteNum = 0;
+				std::cout << "user input setting state to attacking\n";
+				player->state = State_Attacking;
 				break;
 			case ALLEGRO_KEY_G:			// L_Ctrl + G combination
 				ALLEGRO_KEYBOARD_STATE KbState;
@@ -177,6 +257,10 @@ void UserInput(void)
 		{
 			switch (event.keyboard.keycode)
 			{
+			case ALLEGRO_KEY_DOWN:
+				player->state = State_Walking;
+				player->Scroll_Player(-5, -5);
+				break;
 			case ALLEGRO_KEY_LEFT:
 				scrollLeft = false;
 				break;

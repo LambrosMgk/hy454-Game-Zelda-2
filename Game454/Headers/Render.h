@@ -351,12 +351,12 @@ public:
 				assert(newRow + 1 == currRow); // we really move up
 				auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
 				auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH*2 - 1) / Grid_Element_Width;
-				cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+				//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
 				for (auto col = startCol; col <= endCol; ++col)
 					if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
 					{
 						*dy = Grid_Element_Height * (currRow)-(player->positionY + player->screenY * DISPLAY_H);
-						cout << "*dy = " << *dy << "\n";
+						//cout << "*dy = " << *dy << "\n";
 						break;
 					}
 			}
@@ -378,12 +378,12 @@ public:
 				assert(newRow - 1 == currRow); // we really move down
 				auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
 				auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH*2 - 1) / Grid_Element_Width;
-				cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+				//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
 				for (auto col = startCol; col <= endCol; ++col)
 					if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
 					{
 						*dy = (Grid_Element_Width * (newRow)-1) - (x2);
-						cout << "*dy = " << *dy << "\n";
+						//cout << "*dy = " << *dy << "\n";
 						break;
 					}
 			}
@@ -641,21 +641,9 @@ void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tilese
 }
 
 /*By screen i mean the target bitmap*/
-void Paint_Player_to_Screen()
+void Paint_Player_to_Screen(Rect r)
 {
-	if (player->direction == dir_left)
-	{
-		al_draw_bitmap_region(PlayerSpriteSheet, player->FramesWalkingLeft[player->LinkSpriteNum].x, player->FramesWalkingLeft[player->LinkSpriteNum].y, player->FramesWalkingLeft[player->LinkSpriteNum].w, player->FramesWalkingLeft[player->LinkSpriteNum].h, player->positionX, player->positionY, 0);
-	}
-	else if (player->direction == dir_right)
-	{
-		al_draw_bitmap_region(PlayerSpriteSheet, player->FramesWalkingRight[player->LinkSpriteNum].x, player->FramesWalkingRight[player->LinkSpriteNum].y, player->FramesWalkingRight[player->LinkSpriteNum].w, player->FramesWalkingRight[player->LinkSpriteNum].h, player->positionX, player->positionY, 0);
-	}
-	else
-	{
-		fprintf(stderr, "Error with player direction : invalid value %d.\n", player->direction);
-		exit(-1);
-	}
+	al_draw_bitmap_region(PlayerSpriteSheet, r.x, r.y, r.w, r.h, player->positionX, player->positionY, 0);
 }
 
 void Load_Start_Screen()
@@ -702,7 +690,7 @@ void Load_Level(unsigned short levelNum)
 	if (PlayerSpriteSheet == NULL)
 	{
 		Load_Player_Spiresheet();
-		Init_Player(5*TILE_WIDTH, 10*TILE_HEIGHT);
+		Init_Player(5*TILE_WIDTH, 11*TILE_HEIGHT-1);
 	}
 }
 
@@ -824,7 +812,7 @@ void Renderer()
 				Load_Level(1);
 			}
 
-			//this if section should stay in Render.h because we want the player to move each frame ?
+			//could probably move this to user_input
 			if (scrollUp == true)
 				scrolly -= scrollDistanceY;
 			if (scrollDown == true)
@@ -843,7 +831,7 @@ void Renderer()
 			}
 				
 			al_draw_bitmap(bitmap, cameraX, cameraY, 0);
-			Paint_Player_to_Screen();
+			Paint_Player_to_Screen(player->FrameToDraw());
 			if (Toggle_Grid)
 			{
 				DisplayGrid();
