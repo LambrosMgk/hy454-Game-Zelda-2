@@ -27,7 +27,7 @@ class Player //player might be in layer 3 for drawing and compare with layer 1 f
 {
 private:
 	Player_State state = State_Walking;
-	float scrollDistanceX = 2.0, scrollDistanceY = 5.0;
+	int scrollDistanceX = 2, scrollDistanceY = 3;
 public:
 	Player_Direction direction = dir_right;
 	int positionX, positionY;
@@ -49,6 +49,41 @@ public:
 	~Player()
 	{
 
+	}
+
+	void Set_Speed_X(int speedX)
+	{
+		this->scrollDistanceX = speedX;
+	}
+
+	void Increment_Speed_X()
+	{
+		this->scrollDistanceX++;
+	}
+
+	int Get_Speed_X()
+	{
+		return this->scrollDistanceX;
+	}
+
+	void Set_Speed_Y(int speedY)
+	{
+		this->scrollDistanceY = speedY;
+	}
+
+	void Increment_Speed_Y()
+	{
+		this->scrollDistanceY++;
+	}
+
+	void Decrement_Speed_Y()
+	{
+		this->scrollDistanceY--;
+	}
+
+	int Get_Speed_Y()
+	{
+		return this->scrollDistanceY;
 	}
 
 	void Set_Speed_X(float speedX)

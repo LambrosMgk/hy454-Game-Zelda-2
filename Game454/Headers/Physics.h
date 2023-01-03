@@ -2,6 +2,7 @@
 
 ALLEGRO_TIMER* PhysicsTimer;
 ALLEGRO_EVENT_QUEUE* PhysicsQueue;
+unsigned short jumpCountPixels = 0;
 
 void Physics_Init()
 {
@@ -14,7 +15,7 @@ void Physics_Init()
 void Calculate_Physics()
 {
 	ALLEGRO_EVENT event;
-	float scrollx = 0, scrolly = 0;
+	int scrollx = 0, scrolly = 0;
 
 	if (player != NULL)
 	{
@@ -29,13 +30,24 @@ void Calculate_Physics()
 
 			//check user movement
 			if (scrollUp == true)
-				scrolly = -player->Get_Speed_Y();
+			{
+				scrollDown = false;
+				scrolly -= player->Get_Speed_Y();
+				jumpCountPixels += player->Get_Speed_Y();
+			}
 			if (scrollDown == true)
-				scrolly += 0.2;	//gravity
+				scrolly += player->Get_Speed_Y();
 			if (scrollLeft == true)
 				scrollx -= player->Get_Speed_X();
 			if (scrollRight == true)
 				scrollx += player->Get_Speed_X();
+
+			if (jumpCountPixels >= 32)	//add check when the player hits the ground only then he will be able to jump again
+			{
+				scrollUp = false;
+				scrollDown = true;
+				jumpCountPixels = 0;
+			}
 
 			if (scrollx != 0 || scrolly != 0)
 			{
