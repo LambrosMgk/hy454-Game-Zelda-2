@@ -86,41 +86,6 @@ public:
 		return this->scrollDistanceY;
 	}
 
-	void Set_Speed_X(float speedX)
-	{
-		this->scrollDistanceX = speedX;
-	}
-
-	void Increment_Speed_X()
-	{
-		this->scrollDistanceX++;
-	}
-
-	int Get_Speed_X()
-	{
-		return this->scrollDistanceX;
-	}
-
-	void Set_Speed_Y(float speedY)
-	{
-		this->scrollDistanceY = speedY;
-	}
-
-	void Increment_Speed_Y()
-	{
-		this->scrollDistanceY++;
-	}
-
-	void Decrement_Speed_Y()
-	{
-		this->scrollDistanceY--;
-	}
-
-	int Get_Speed_Y()
-	{
-		return this->scrollDistanceY;
-	}
-
 	void Set_State(Player_State state)
 	{
 		if (this->state == State_Walking && state == State_Crounching)	//Walking -> Crounching
