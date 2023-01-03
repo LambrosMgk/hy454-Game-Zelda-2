@@ -8,8 +8,6 @@
 #define LINK_SPRITE_HEIGHT 16
 #define LINK_JUMP_HEIGHT 32
 
-#define scrollDistanceX 2
-#define scrollDistanceY 2
 
 typedef unsigned short Dim;
 typedef unsigned short Index;
@@ -29,6 +27,7 @@ class Player //player might be in layer 3 for drawing and compare with layer 1 f
 {
 private:
 	Player_State state = State_Walking;
+	float scrollDistanceX = 2.0, scrollDistanceY = 5.0;
 public:
 	Player_Direction direction = dir_right;
 	int positionX, positionY;
@@ -36,9 +35,9 @@ public:
 	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesCrounch;
-	std::vector<Rect>FramesSlashLeft;
+	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 
-	Player(int _positionX, int _positionY)
+	Player(float _positionX, float _positionY)
 	{
 		positionX = _positionX;
 		positionY = _positionY;
@@ -52,8 +51,57 @@ public:
 
 	}
 
+	void Set_Speed_X(float speedX)
+	{
+		this->scrollDistanceX = speedX;
+	}
+
+	void Increment_Speed_X()
+	{
+		this->scrollDistanceX++;
+	}
+
+	int Get_Speed_X()
+	{
+		return this->scrollDistanceX;
+	}
+
+	void Set_Speed_Y(float speedY)
+	{
+		this->scrollDistanceY = speedY;
+	}
+
+	void Increment_Speed_Y()
+	{
+		this->scrollDistanceY++;
+	}
+
+	void Decrement_Speed_Y()
+	{
+		this->scrollDistanceY--;
+	}
+
+	int Get_Speed_Y()
+	{
+		return this->scrollDistanceY;
+	}
+
 	void Set_State(Player_State state)
 	{
+		if (this->state == State_Walking && state == State_Crounching)	//Walking -> Crounching
+		{
+			this->Scroll_Player(5, 5);	//scroll because the sprite is a bit shorter than then rest, scroll before changing the state because in crounch state you can't scroll
+		}
+		else if (this->state == State_Crounching && (state == State_Walking || state == State_Attacking))	//Crounching -> Walking
+		{
+			this->state = State_Walking;	//to enable scrolling
+			this->Scroll_Player(-5, -5);
+			//this->state = state;
+		}
+		else if (this->state == State_Attacking && state != State_Walking)//Attacking X->X Crounching or anything else expect Walking
+		{
+			return;	//the only state transition allowed is from attacking to walking
+		}
 		this->state = state;
 	}
 
@@ -76,6 +124,7 @@ public:
 		Rect* r;
 		int i = 0, k = 0;
 
+		//FramesWalkingLeft
 		for (i = 0, k = 0; i < 4; i++)
 		{
 			r = new Rect;
@@ -90,6 +139,7 @@ public:
 		}
 		std::reverse(FramesWalkingLeft.begin(), FramesWalkingLeft.end());
 
+		//FramesWalkingRight
 		for (i = 0, k = 160; i < 4; i++)
 		{
 			r = new Rect;
@@ -103,6 +153,7 @@ public:
 			FramesWalkingRight.push_back(*r);
 		}
 
+		//FramesCrounch (left)
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT + LINK_SPRITE_HEIGHT;
 		r->w = LINK_SPRITE_WIDTH;
@@ -110,6 +161,7 @@ public:
 		r->x = LINK_SPRITE_WIDTH * 3;
 		FramesCrounch.push_back(*r);
 
+		//FramesCrounch (right)
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT + LINK_SPRITE_HEIGHT;
 		r->w = LINK_SPRITE_WIDTH;
@@ -117,7 +169,7 @@ public:
 		r->x = LINK_SPRITE_WIDTH * 15 + LINK_SPRITE_WIDTH / 2;
 		FramesCrounch.push_back(*r);
 
-
+		//FramesSlashLeft
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT * 2;
 		r->w = LINK_SPRITE_WIDTH * 2;
@@ -131,6 +183,21 @@ public:
 		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
 		r->x = LINK_SPRITE_WIDTH * 5;
 		FramesSlashLeft.push_back(*r);
+
+		//FramesSlashRight
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 10;
+		FramesSlashRight.push_back(*r);
+
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
+		r->x = LINK_SPRITE_WIDTH * 12 + 10;
+		FramesSlashRight.push_back(*r);
 	}
 
 	Rect FrameToDraw()
@@ -153,7 +220,7 @@ public:
 		}
 		else if (state == State_Attacking && direction == dir_right)
 		{
-			return FramesSlashLeft[LinkSpriteNum];
+			return FramesSlashRight[LinkSpriteNum];
 		}
 		else
 		{
@@ -221,8 +288,7 @@ void UserInput(void)
 				User_input_done = true;		//ends the game for now
 				break;
 			case ALLEGRO_KEY_DOWN:
-				player->Scroll_Player(5, 5);	//scroll because the sprite is a bit shorter than then rest, scroll before changing the state because in crounch state you can't scroll
-				player->state = State_Crounching;
+				player->Set_State(State_Crounching);
 				break;
 			case ALLEGRO_KEY_LEFT:
 				player->direction = dir_left;
@@ -237,13 +303,11 @@ void UserInput(void)
 				break;
 			case ALLEGRO_KEY_B:			// Slash
 				player->LinkSpriteNum = 0;
-				std::cout << "user input setting state to attacking\n";
-				player->state = State_Attacking;
+				player->Set_State(State_Attacking);
 				break;
 			case ALLEGRO_KEY_G:			// L_Ctrl + G combination
 				ALLEGRO_KEYBOARD_STATE KbState;
 				
-				//try a loop through the event queue till empty or find G
 				al_get_keyboard_state(&KbState);
 				if (al_key_down(&KbState, ALLEGRO_KEY_LCTRL))
 				{
@@ -258,8 +322,7 @@ void UserInput(void)
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_DOWN:
-				player->state = State_Walking;
-				player->Scroll_Player(-5, -5);
+				player->Set_State(State_Walking);
 				break;
 			case ALLEGRO_KEY_LEFT:
 				scrollLeft = false;

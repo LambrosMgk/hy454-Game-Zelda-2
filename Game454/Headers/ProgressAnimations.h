@@ -10,7 +10,7 @@ bool StartAttack = false;
 void Animator_Init()
 {
 	AnimationTimer = al_create_timer(1.0 / 5.0);
-	AttackTimer = al_create_timer(1.0 / 2.0);
+	AttackTimer = al_create_timer(1.0 / 10.0);
 	AnimatorQueue = al_create_event_queue();
 	al_register_event_source(AnimatorQueue, al_get_timer_event_source(AnimationTimer));
 	al_register_event_source(AnimatorQueue, al_get_timer_event_source(AttackTimer));
@@ -30,7 +30,7 @@ void Animator()
 		}
 		if (player != NULL)	//animator will be called from the start of the game when we haven't initialized a player yet
 		{
-			if (player->state == State_Walking)
+			if (player->Get_State() == State_Walking)
 			{
 				if (scrollLeft == true || scrollRight == true)	//walking
 					player->LinkSpriteNum = ++player->LinkSpriteNum % 4;
@@ -40,20 +40,17 @@ void Animator()
 			else if (event.any.source == al_get_timer_event_source(AttackTimer))
 			{
 				player->LinkSpriteNum = ++player->LinkSpriteNum;
-				std::cout << "TATAKAE\n";
 
 				if (player->LinkSpriteNum >= 2)
 				{
 					StartAttack = false;
 					al_stop_timer(AttackTimer);
-					std::cout << "changing state to walking\n";
-					player->state == State_Walking;
+					player->Set_State(State_Walking);
 					player->LinkSpriteNum = 0;
 				}
 			}
-			else if (player->state == State_Attacking && StartAttack == false)
+			else if (player->Get_State() == State_Attacking && StartAttack == false)
 			{
-				std::cout << "starting attack\n";
 				player->LinkSpriteNum = 0;
 				StartAttack = true;
 				al_start_timer(AttackTimer);

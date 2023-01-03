@@ -23,6 +23,9 @@
 #define TILE_WIDTH 16
 #define TILE_HEIGHT 16
 
+#define StartPlayerPositionX 5*TILE_WIDTH
+#define StartPlayerPositionY 11*TILE_HEIGHT-1
+
 #define FPS 60.0
 
 #define MUL_TILE_WIDTH(i) ((i)<<4)
@@ -690,7 +693,7 @@ void Load_Level(unsigned short levelNum)
 	if (PlayerSpriteSheet == NULL)
 	{
 		Load_Player_Spiresheet();
-		Init_Player(5*TILE_WIDTH, 11*TILE_HEIGHT-1);
+		Init_Player(StartPlayerPositionX, StartPlayerPositionY);
 	}
 }
 
@@ -719,7 +722,7 @@ void Render_init()
 
 void Scroll_Bitmap()
 {
-	if (player->positionX > DISPLAY_W)	//scroll left	old statement((player->positionX / DISPLAY_W) + player->screenX > abs(cameraX) / DISPLAY_W)
+	if (player->positionX > DISPLAY_W)	//scroll left
 	{
 		cameraX -= DISPLAY_W;
 		player->screenX++;
@@ -792,7 +795,6 @@ void DisplayGrid()
 void Renderer()
 {
 	ALLEGRO_EVENT event;
-	int scrollx = 0, scrolly = 0;
 	//al_wait_for_event(timerQueue, &event);
 	
 	if (!al_is_event_queue_empty(timerQueue))	//time to draw, every 0.0167 of a second (60 fps)
@@ -812,24 +814,7 @@ void Renderer()
 				Load_Level(1);
 			}
 
-			//could probably move this to user_input
-			if (scrollUp == true)
-				scrolly -= scrollDistanceY;
-			if (scrollDown == true)
-				scrolly += scrollDistanceY;
-			if (scrollLeft == true)
-				scrollx -= scrollDistanceX;
-			if (scrollRight == true)
-				scrollx += scrollDistanceX;
-
-			if (scrollx != 0 || scrolly != 0)
-			{
-				//first check grid if i can scroll where i want to
-				grid->FilterGridMotion(player, &scrollx, &scrolly);
-				player->Scroll_Player(scrollx, scrolly);
-				Scroll_Bitmap();
-			}
-				
+			
 			al_draw_bitmap(bitmap, cameraX, cameraY, 0);
 			Paint_Player_to_Screen(player->FrameToDraw());
 			if (Toggle_Grid)
