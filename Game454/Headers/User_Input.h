@@ -16,7 +16,7 @@ struct Point { int x, y; };
 
 enum Game_State {StartingScreen, PlayingLevel1, Paused};
 enum Player_Direction {dir_left, dir_right};
-enum Player_State {State_Walking, State_Crounching, State_Attacking};
+enum Player_State {State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking};
 
 class GameLogic
 {
@@ -33,9 +33,11 @@ public:
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
+	boolean jumping = false;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesCrounch;
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
+	std::vector<Rect>FramesCrounchSlash;
 
 	Player(float _positionX, float _positionY)
 	{
@@ -91,18 +93,30 @@ public:
 		if (this->state == State_Walking && state == State_Crounching)	//Walking -> Crounching
 		{
 			this->Scroll_Player(5, 5);	//scroll because the sprite is a bit shorter than then rest, scroll before changing the state because in crounch state you can't scroll
+			this->state = state;
 		}
-		else if (this->state == State_Crounching && (state == State_Walking || state == State_Attacking))	//Crounching -> Walking
+		else if (this->state == State_Walking && state == State_Attacking) //Walking -> Attacking
+		{
+			this->state = state;
+		}
+		else if (this->state == State_Crounching && state == State_Walking) //Crounching -> Walking
 		{
 			this->state = State_Walking;	//to enable scrolling
 			this->Scroll_Player(-5, -5);
+		}
+		else if (this->state == State_Crounching && state == State_Attacking)	//Crounching -> CrounchAttacking
+		{
+			this->state = State_CrounchAttacking;	
 			//this->state = state;
 		}
-		else if (this->state == State_Attacking && state != State_Walking)//Attacking X->X Crounching or anything else expect Walking
+		else if ((this->state == State_CrounchAttacking && state == State_Crounching)){ //CrounchAttacking -> Crouching
+			this->state = State_Crounching;
+		}	
+		else if (this->state == State_Attacking && state == State_Walking) //Attacking -> Walking
 		{
-			return;	//the only state transition allowed is from attacking to walking
+			this->state = state;
 		}
-		this->state = state;
+		
 	}
 
 	Player_State Get_State()
@@ -198,6 +212,23 @@ public:
 		r->y = LINK_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
 		r->x = LINK_SPRITE_WIDTH * 12 + 10;
 		FramesSlashRight.push_back(*r);
+
+		//FramesCrounchSlashLeft
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;
+		r->x = 0;
+		FramesCrounchSlash.push_back(*r);
+
+		//FramesCrounchSlashRight
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH * 2;
+		r->y = LINK_SPRITE_HEIGHT * 2 + 10;
+		r->x = LINK_SPRITE_WIDTH * 18;
+		FramesCrounchSlash.push_back(*r);
+
 	}
 
 	Rect FrameToDraw()
@@ -221,6 +252,10 @@ public:
 		else if (state == State_Attacking && direction == dir_right)
 		{
 			return FramesSlashRight[LinkSpriteNum];
+		} 
+		else if (state == State_CrounchAttacking)
+		{
+			return FramesCrounchSlash[direction];
 		}
 		else
 		{
@@ -234,7 +269,7 @@ ALLEGRO_EVENT_QUEUE* EventQueue;
 Game_State GameState;
 Player *player = NULL;
 bool User_input_done = false;
-bool scrollUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
+bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
 int cameraX = 0, cameraY = 0;
 bool Toggle_Grid = false;
 
@@ -299,7 +334,7 @@ void UserInput(void)
 				scrollRight = true;
 				break;
 			case ALLEGRO_KEY_A:			// Jump
-				scrollUp = true;
+				keyboardUp = true;
 				break;
 			case ALLEGRO_KEY_B:			// Slash
 				player->LinkSpriteNum = 0;

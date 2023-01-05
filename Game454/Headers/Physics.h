@@ -3,6 +3,7 @@
 ALLEGRO_TIMER* PhysicsTimer;
 ALLEGRO_EVENT_QUEUE* PhysicsQueue;
 unsigned short jumpCountPixels = 0;
+boolean scrollUp = false;
 
 void Physics_Init()
 {
@@ -29,11 +30,19 @@ void Calculate_Physics()
 
 
 			//check user movement
-			if (scrollUp == true)
+			
+			if (keyboardUp == true && player->jumping == false) {
+
+				scrollUp = true;
+				player->jumping = true;
+				keyboardUp = false;
+			}
+			if (scrollUp == true && player->jumping == true)
 			{
 				scrollDown = false;
 				scrolly -= player->Get_Speed_Y();
 				jumpCountPixels += player->Get_Speed_Y();
+				
 			}
 			if (scrollDown == true)
 				scrolly += player->Get_Speed_Y();

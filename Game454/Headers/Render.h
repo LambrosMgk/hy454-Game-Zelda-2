@@ -385,6 +385,7 @@ public:
 				for (auto col = startCol; col <= endCol; ++col)
 					if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
 					{
+						player->jumping = false;
 						*dy = (Grid_Element_Width * (newRow)-1) - (x2);
 						//cout << "*dy = " << *dy << "\n";
 						break;
@@ -790,6 +791,8 @@ void DisplayGrid()
 				
 		}
 	}
+
+	al_draw_rectangle(player->positionX,player->positionY, player->positionX + player->FrameToDraw().w, player->positionY + player->FrameToDraw().h,al_map_rgba(0,255,0,64),1.0);
 }
 
 void Renderer()

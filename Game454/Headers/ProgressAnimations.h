@@ -37,9 +37,9 @@ void Animator()
 				else if (scrollLeft == false && scrollRight == false)	//idle
 					player->LinkSpriteNum = 0;
 			}
-			else if (event.any.source == al_get_timer_event_source(AttackTimer))
+			else if (event.any.source == al_get_timer_event_source(AttackTimer) && player->Get_State() == State_Attacking)
 			{
-				player->LinkSpriteNum = ++player->LinkSpriteNum;
+				player->LinkSpriteNum++;
 
 				if (player->LinkSpriteNum >= 2)
 				{
@@ -49,12 +49,25 @@ void Animator()
 					player->LinkSpriteNum = 0;
 				}
 			}
-			else if (player->Get_State() == State_Attacking && StartAttack == false)
+			else if (event.any.source == al_get_timer_event_source(AttackTimer) && player->Get_State() == State_CrounchAttacking)
+			{
+				player->LinkSpriteNum++;
+
+				if (player->LinkSpriteNum >= 1)
+				{
+					StartAttack = false;
+					al_stop_timer(AttackTimer);
+					player->Set_State(State_Crounching);
+					player->LinkSpriteNum = 0;
+				}
+			}
+			else if ((player->Get_State() == State_Attacking || player->Get_State() == State_CrounchAttacking) && StartAttack == false)
 			{
 				player->LinkSpriteNum = 0;
 				StartAttack = true;
 				al_start_timer(AttackTimer);
 			}
+			
 		}
 	}
 }
