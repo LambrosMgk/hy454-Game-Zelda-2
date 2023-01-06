@@ -61,7 +61,7 @@ void Calculate_Physics()
 			if (scrollx != 0 || scrolly != 0)
 			{
 				//first check grid if i can scroll where i want to
-				grid->FilterGridMotion(player, &scrollx, &scrolly);
+				grids[0]->FilterGridMotion(player, &scrollx, &scrolly);
 				player->Scroll_Player(scrollx, scrolly);
 				Scroll_Bitmap();
 			}

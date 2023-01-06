@@ -14,8 +14,9 @@
 
 #define START_SCREEN_PATH "UnitTests\\Media\\Start_Screen.png"
 #define TILESET_PATH "UnitTests\\Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
-#define ASSUMED_EMPTY_LAYER1_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer1.txt"
+#define ASSUMED_EMPTY_LAYER_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer"
 #define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
+
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -27,6 +28,7 @@
 #define StartPlayerPositionY 11*TILE_HEIGHT-1
 
 #define FPS 60.0
+#define LAYERS 2
 
 #define MUL_TILE_WIDTH(i) ((i)<<4)
 #define MUL_TILE_HEIGHT(i)((i)<<4)
@@ -134,16 +136,17 @@ class TileColorsHolder final
 		}
 };
 // keeps colors that are assumed to be empty
-static TileColorsHolder emptyTileColors;
 
-bool IsTileColorEmpty(ALLEGRO_COLOR c)
+std::vector<TileColorsHolder> emptyTileColors;
+
+bool IsTileColorEmpty(unsigned int emptyTileColor_num,ALLEGRO_COLOR c)
 {
-	return emptyTileColors.ColorIn(c);
+	return emptyTileColors[emptyTileColor_num].ColorIn(c);
 }
 
-bool IsTileIndexAssumedEmpty(Index index)
+bool IsTileIndexAssumedEmpty(unsigned int layer, Index index)
 {
-	return emptyTileColors.IndexIn(index);
+	return emptyTileColors[layer].IndexIn(index);
 }
 
 /*Opens the file at "filepath" for reading, reads the indices of tiles that are considered empty in the tileset.
@@ -158,6 +161,8 @@ void Init_emptyTileColorsHolder(const char* filepath)
 		exit(-1);
 	}
 
+	
+	TileColorsHolder* tch = new TileColorsHolder;
 	ALLEGRO_BITMAP* bmp = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);
 	al_set_target_bitmap(bmp);
 	while (!file.eof())
@@ -168,9 +173,10 @@ void Init_emptyTileColorsHolder(const char* filepath)
 		Index x = stoi(line);
 		
 		al_draw_bitmap_region(TileSet, MUL_TILE_WIDTH(modIndex[x]), MUL_TILE_HEIGHT(divIndex[x]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
-		emptyTileColors.Insert(bmp, x);
+		tch->Insert(bmp, x);
 	}
-
+	
+	emptyTileColors.push_back(*tch);
 	al_set_target_bitmap(al_get_backbuffer(display));
 	al_destroy_bitmap(bmp);
 	file.close();
@@ -185,15 +191,17 @@ public:
 	unsigned int Grid_Max_Width, Grid_Max_Height;
 
 	unsigned int MAX_PIXEL_WIDTH, MAX_PIXEL_HEIGHT;
+	unsigned int layer;
 
 	byte** grid;	// 2D Array that holds our grid
 
 	/*Parameters _Grid_Element_Width and _Grid_Element_Height are for the size of each element in the grid.
 	MAX_WIDTH and MAX_HEIGHT are the number of tiles of the tilemap you want to apply the grid*/
-	Grid(unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
+	Grid(unsigned int layer_num,unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
 	{
 		Grid_Element_Width = _Grid_Element_Width;
 		Grid_Element_Height = _Grid_Element_Height;
+		layer = layer_num;
 
 
 		if (TILE_WIDTH % Grid_Element_Width != 0)
@@ -423,7 +431,7 @@ public:
 				//al_unmap_rgb(c, &r, &g, &b);
 				/*al_unmap_rgb(transColor, &rt, &gt, &bt);*/
 
-				if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(c))
+				if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(layer,c))
 					++n;
 			}
 		}//cout << "\nn = " << n << '\n';
@@ -452,7 +460,7 @@ public:
 				al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(modIndex[index]), MUL_TILE_HEIGHT(divIndex[index]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
 				al_set_target_bitmap(al_get_backbuffer(display));	//reset the target back to the display
 
-				if (IsTileIndexAssumedEmpty(index))
+				if (IsTileIndexAssumedEmpty(layer,index) || index == -1)
 				{
 					//printf("this->grid[%d][%d] = %d\n", row, col, this->grid[row][col]);
 					this->grid[row][col] = GRID_EMPTY_TILE;
@@ -480,7 +488,7 @@ public:
 	}
 };
 
-Grid* grid = NULL;
+std::vector<Grid*> grids;
 
 /*class objlevel
 {
@@ -488,10 +496,10 @@ Grid* grid = NULL;
 	//maybe put the grid object in here
 };*/
 
-void init_Grid(unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
+void add_Grid(unsigned int layer,unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
 {
-	assert(grid == NULL);
-	grid = new Grid(Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight);
+	
+	grids.push_back(new Grid(layer,Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
 //pre-caching tileset indexes for better perfomance, this function should be called at the start of the programm
@@ -687,9 +695,14 @@ void Load_Level(unsigned short levelNum)
 	bitmap = Create_Bitmap_From_CSV(TileMapCSV[0], TileSet, display);
 	Paint_To_Bitmap(bitmap, TileMapCSV[1], TileSet, display);
 	cout << "Created the whole bitmap\n";
-	init_Grid(TILE_WIDTH, TILE_HEIGHT, TileMapCSV[0][0].size(), TileMapCSV[0].size());		//initialize the grid for the tilemap
-	grid->ComputeTileGridBlocks2(TileMapCSV[0], TileSet, 128);
-	cout << "Created the whole grid\n";
+
+	add_Grid(0,TILE_WIDTH, TILE_HEIGHT, TileMapCSV[0][0].size(), TileMapCSV[0].size());		//initialize the grid for layer 1
+	grids[0]->ComputeTileGridBlocks2(TileMapCSV[0], TileSet, 128);
+	cout << "Created the whole grid for layer 1\n";
+
+	add_Grid(1, TILE_WIDTH, TILE_HEIGHT, TileMapCSV[1][0].size(), TileMapCSV[1].size());		//initialize the grid for layer 2
+	grids[1]->ComputeTileGridBlocks2(TileMapCSV[1], TileSet, 128);
+	cout << "Created the whole grid for layer 2\n";
 
 	if (PlayerSpriteSheet == NULL)
 	{
@@ -718,7 +731,18 @@ void Render_init()
 	TileSet = load_tileset(TILESET_PATH);
 	Calculate_Tileset_Indexes();//pre-caching
 	//initalize the empty colors of the tileset
-	Init_emptyTileColorsHolder(ASSUMED_EMPTY_LAYER1_PATH);
+	for (int i = 0; i < LAYERS; i++) {
+		string tmp = ASSUMED_EMPTY_LAYER_PATH;
+		cout << tmp;
+		string txt = ".txt";
+		cout << tmp;
+		tmp = tmp + to_string(i + 1);
+		tmp = tmp + txt;
+		cout << tmp;
+		Init_emptyTileColorsHolder(tmp.c_str());
+	}
+
+	
 }
 
 void Scroll_Bitmap()
@@ -743,9 +767,10 @@ void Scroll_Bitmap()
 
 // use this to render grid (toggle on / off), used only for development time testing -
 // a tile grid block is consecutive GRID_BLOCK_ROWS x GRID_BLOCK_COLUMNS block of grid indices
-void DisplayGrid()
+void DisplayGrid(unsigned int grid_num)
 {
-	if (grid == NULL)
+	
+	if (grids[grid_num] == NULL)
 	{
 		return;
 	}
@@ -762,27 +787,27 @@ void DisplayGrid()
 		startRow += DIV_TILE_HEIGHT(abs(cameraY* DISPLAY_H)) + 1;
 
 	//in case of a bitmap smaller than the screen (e.g. when testing the engine)
-	if (endCol > grid->Grid_Max_Width)
-		endCol = grid->Grid_Max_Width/ grid->Grid_Block_Columns;	//divide with block cols and rows to get the max width and height for tiles
-	if (endRow > grid->Grid_Max_Height)
-		endRow = grid->Grid_Max_Height/ grid->Grid_Block_Rows;
+	if (endCol > grids[grid_num]->Grid_Max_Width)
+		endCol = grids[grid_num]->Grid_Max_Width / grids[grid_num]->Grid_Block_Columns;	//divide with block cols and rows to get the max width and height for tiles
+	if (endRow > grids[grid_num]->Grid_Max_Height)
+		endRow = grids[grid_num]->Grid_Max_Height / grids[grid_num]->Grid_Block_Rows;
 	
 	//cout << "StartCol : " << startCol << " , StarRow : " << startRow << ", endCol : " << endCol << " , endrow : " << endRow << '\n';
 	for (Dim rowTile = startRow; rowTile < endRow; rowTile++)
 	{
 		for (Dim colTile = startCol; colTile < endCol; colTile++)
 		{
-			for (auto rowElem = 0; rowElem < grid->Grid_Block_Rows; ++rowElem)
+			for (auto rowElem = 0; rowElem < grids[grid_num]->Grid_Block_Rows; ++rowElem)
 			{
-				for (auto colElem = 0; colElem < grid->Grid_Block_Columns; ++colElem)
+				for (auto colElem = 0; colElem < grids[grid_num]->Grid_Block_Columns; ++colElem)
 				{
 					//printf("grid[rowTile + rowElem][colTile + colElem] : [%d + %d][%d + %d]\n", rowTile, rowElem, colTile, colElem);
-					if (grid->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
+					if (grids[grid_num]->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)
 					{
-						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grid->Grid_Element_Width;	//if i want better perfomance note : try pre-caching the power of 2 of the grid elem width so that i can do something like colelem >> MUL_GRID_WIDTH
-						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grid->Grid_Element_Height;
-						auto w = grid->Grid_Element_Width-1;
-						auto h = grid->Grid_Element_Height-1;
+						auto x = MUL_TILE_WIDTH(colTile) + (colElem)* grids[grid_num]->Grid_Element_Width;	//if i want better perfomance note : try pre-caching the power of 2 of the grid elem width so that i can do something like colelem >> MUL_GRID_WIDTH
+						auto y = MUL_TILE_HEIGHT(rowTile) + (rowElem)* grids[grid_num]->Grid_Element_Height;
+						auto w = grids[grid_num]->Grid_Element_Width - 1;
+						auto h = grids[grid_num]->Grid_Element_Height - 1;
 						
 						al_draw_filled_rectangle(x + cameraX, y + cameraY, x+w + cameraX, y+h + cameraY, al_map_rgba(255, 0, 0, 64));
 					}
@@ -822,7 +847,8 @@ void Renderer()
 			Paint_Player_to_Screen(player->FrameToDraw());
 			if (Toggle_Grid)
 			{
-				DisplayGrid();
+				DisplayGrid(0);
+				DisplayGrid(1);
 			}
 			
 			al_flip_display(); //Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible on screen.
@@ -833,7 +859,9 @@ void Renderer()
 /*might be useful to have this in the future, also add more stuff cuz i'll forget for sure*/
 void Render_Clear()
 {
-	delete grid;
+	for (int i = 0; i < grids.size();i++) {
+		delete grids[i];
+	}	
 	delete divIndex;
 	delete modIndex;
 }
