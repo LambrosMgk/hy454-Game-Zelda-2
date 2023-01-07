@@ -701,7 +701,7 @@ void Load_Level(unsigned short levelNum)
 	cout << "Created the whole grid for layer 1\n";
 
 	add_Grid(1, TILE_WIDTH, TILE_HEIGHT, TileMapCSV[1][0].size(), TileMapCSV[1].size());		//initialize the grid for layer 2
-	grids[1]->ComputeTileGridBlocks2(TileMapCSV[1], TileSet, 128);
+	grids[1]->ComputeTileGridBlocks2(TileMapCSV[1], TileSet, 64);
 	cout << "Created the whole grid for layer 2\n";
 
 	if (PlayerSpriteSheet == NULL)
