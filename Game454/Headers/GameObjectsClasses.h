@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "al_init.h"
-#include "render.h"
 
 #define START_SCREEN_PATH "UnitTests\\Media\\Start_Screen.png"
 #define TILESET_PATH "UnitTests\\Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
@@ -61,6 +60,9 @@
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
+//used in render 
+bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
+//used in physics and animations
 
 typedef unsigned short Dim;
 typedef unsigned short Index;
@@ -70,13 +72,35 @@ struct Point { int x, y; };
 enum Game_State { StartingScreen, PlayingLevel1, Paused };
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
-Player* player = NULL;
+Player *player = NULL;
+
+//forward declaration
+class TileColorsHolder;
+class GameLogic;
+
+
+// keeps colors that are assumed to be empty
+std::vector<TileColorsHolder> emptyTileColors;
+GameLogic gameLogic;	//object that holds the game state and other useful information
+
+class Level
+{
+public:
+	ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
+	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
+	unsigned char* divIndex, * modIndex;
+	unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
+	int cameraX = 0, cameraY = 0;
+	std::vector<Grid*> grids;
+};
 
 class GameLogic
 {
-
+public:
+	ALLEGRO_DISPLAY* display = NULL;
+	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * PlayerSpriteSheet = NULL;
+	Level *level = NULL;
 };
-
 
 class Elevator
 {
@@ -139,4 +163,106 @@ public:
 	Rect FrameToDraw();
 };
 
+class TileColorsHolder final
+{
+private:
+	std::set<Index> indices;
+	set<ALLEGRO_COLOR> colors;
+public:
+	void Insert(ALLEGRO_BITMAP* bmp, Index index);
+
+	bool ColorIn(ALLEGRO_COLOR c) const;
+
+	bool IndexIn(Index index);
+};
+
 void Init_Player(int PlayerX, int PlayerY);
+
+class Grid
+{
+public:
+	unsigned int Grid_Element_Width, Grid_Element_Height;	//subdivisions of our tiles (TILE_WIDTH and TILE_HEIGHT)
+	unsigned int Grid_Block_Columns, Grid_Block_Rows;
+	unsigned int Grid_Elements_Per_Tile;
+	unsigned int Grid_Max_Width, Grid_Max_Height;
+
+	unsigned int MAX_PIXEL_WIDTH, MAX_PIXEL_HEIGHT;
+	unsigned int layer;
+
+	byte** grid;	// 2D Array that holds our grid
+
+	/*Parameters _Grid_Element_Width and _Grid_Element_Height are for the size of each element in the grid.
+	MAX_WIDTH and MAX_HEIGHT are the number of tiles of the tilemap you want to apply the grid*/
+	Grid(unsigned int layer_num, unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT);
+
+	~Grid();	//Destructor
+
+
+	void SetGridTile(unsigned short row, unsigned short col, byte index);
+
+	byte GetGridTile(unsigned short row, unsigned short col);
+
+	void SetSolidGridTile(unsigned short row, unsigned short col);
+
+	void SetEmptyGridTile(unsigned short row, unsigned short col);
+
+	void SetGridTileFlags(unsigned short row, unsigned short col, byte flags);
+
+	void SetGridTileTopSolidOnly(unsigned short row, unsigned short col);
+
+	bool CanPassGridTile(unsigned short row, unsigned short col, byte flags); // i.e. checks if flags set
+
+	int getPlayerBottomRow(Player* player);
+
+	int getPlayerStartCol(Player* player);
+
+	int GetIndexFromLayer(int gridRow, int gridCol);
+
+	void FilterGridMotion(Player* player, int* dx, int* dy);
+
+	void FilterGridMotionLeft(Player* player, int* dx);
+
+	void FilterGridMotionRight(Player* player, int* dx);
+
+	void FilterGridMotionUp(Player* player, int* dy);
+
+	void FilterGridMotionDown(Player* player, int* dy);
+
+	/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
+	{
+		for (auto row = 0; row < al_get_bitmap_height(map); ++row)
+			for (auto col = 0; col < MAX_WIDTH; ++col)
+			{
+				memset(
+					grid,
+					IsTileIndexAssumedEmpty(GetTile(map, col, row)) ? GRID_EMPTY_TILE : GRID_SOLID_TILE,
+					GRID_ELEMENTS_PER_TILE
+				);
+				//grid += GRID_ELEMENTS_PER_TILE;
+			}
+	}*/
+
+	bool ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, byte solidThreshold);
+
+	/*Computes the grid elements (solid or empty) based on the given map. (map argument is a vector with the values of the csv of the tilemap,
+	those values will be used to get the corresponding tile from the tileset)*/
+	void ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold);
+};
+
+void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight);
+
+
+/*added these 3 overloards so that set<ALLEGRO_COLOR> could work*/
+bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2);
+
+bool operator != (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2);
+
+bool operator < (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2);
+
+bool IsTileColorEmpty(unsigned int emptyTileColor_num, ALLEGRO_COLOR c);
+
+bool IsTileIndexAssumedEmpty(unsigned int layer, Index index);
+
+/*Opens the file at "filepath" for reading, reads the indices of tiles that are considered empty in the tileset.
+The format of the file should be numbers (indices) seperated by commas*/
+void Init_emptyTileColorsHolder(const char* filepath);

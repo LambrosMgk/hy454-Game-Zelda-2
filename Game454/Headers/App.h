@@ -1,7 +1,6 @@
 #pragma once
 #include <functional>	/*need this for "using Action = std::function<void(void)>;" to work*/
 #include "al_init.h"
-#include "GameObjectsClasses.h"
 #include "Render.h"
 #include "User_Input.h"
 #include "ProgressAnimations.h"

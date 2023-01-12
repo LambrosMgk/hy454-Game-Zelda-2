@@ -8,8 +8,7 @@
 #include <sstream>
 #include <set>
 
-#include "al_init.h"
-#include "User_Input.h"
+
 #include "GameObjectsClasses.h"
 
 ALLEGRO_TIMER* PhysicsTimer;
