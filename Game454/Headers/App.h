@@ -1,10 +1,11 @@
 #pragma once
 #include <functional>	/*need this for "using Action = std::function<void(void)>;" to work*/
 #include "al_init.h"
+#include "GameObjectsClasses.h"
 #include "Render.h"
 #include "User_Input.h"
 #include "ProgressAnimations.h"
-#include "Physics.h"		//spase ta .h se .h kai .cpp (declaration kai definition)
+#include "Physics.h"
 
 
 namespace app
@@ -24,17 +25,10 @@ namespace app
 			Game& GetGame(void);
 			const Game& GetGame(void) const;
 			virtual void	Clear(void) = 0;
-			void Main(void) {
-				Initialise();
-				Load();
-				Run();
-				Clear();
-			}
+			void Main(void);
 
-			App()
-			{
+			App();
 
-			}
 			App(const App&) = default;	//otherwise constructor gets deleted and cannot instantiate Game object in the main function
 	};
 
@@ -48,95 +42,36 @@ namespace app
 			Pred done;
 			void Invoke(const Action& f) { if (f) f(); }
 		public:
-			void SetRender(const Action& f) { render = f; }
-			void Render(void) { Invoke(render); }
+			void SetRender(const Action& f);
+			void Render(void);
 
-			void SetProgressAnimations(const Action& f) { anim = f; }
-			void ProgressAnimations(void) { Invoke(anim); }
+			void SetProgressAnimations(const Action& f);
+			void ProgressAnimations(void);
 
-			void SetInput(const Action& f) { input = f; }
-			void Input(void) { Invoke(input); }
+			void SetInput(const Action& f);
+			void Input(void);
 
-			void SetAI(const Action& f) { ai = f; }
-			void AI(void) { Invoke(ai); }
+			void SetAI(const Action& f);
+			void AI(void);
 
-			void SetPhysics(const Action& f) { physics = f; }
-			void Physics(void) { Invoke(physics); }
+			void SetPhysics(const Action& f);
+			void Physics(void);
 
-			void SetCollisionChecking(const Action& f) { collisions = f; }
-			void CollisionChecking(void) { Invoke(collisions); }
+			void SetCollisionChecking(const Action& f);
+			void CollisionChecking(void);
 
-			void SetCommitDestructions(const Action& f) { destruct = f; }
-			void CommitDestructions(void) { Invoke(destruct); }
+			void SetCommitDestructions(const Action& f);
+			void CommitDestructions(void);
 
-			void SetUserCode(const Action& f) { user = f; }
-			void UserCode(void) { Invoke(user); }
+			void SetUserCode(const Action& f);
+			void UserCode(void);
 
 			void Initialise();
 			void Load();
 			void Clear();
 
-			bool IsFinished(void) const { return done(); }
+			bool IsFinished(void) const;
 			void MainLoop(void);
 			void MainLoopIteration(void);
 	};
-
-	//implementation after definition of Game class
-	void App::Run(void) { game->MainLoop(); }
-	void App::RunIteration(void){ game->MainLoopIteration(); }
-	Game& App::GetGame(void) { return *game; }
-	const Game& App::GetGame(void) const { return *game; }
-
-	void Game::Initialise()
-	{
-		SetRender(&Renderer);
-		SetProgressAnimations(&Animator);
-		SetInput(&UserInput);
-		//SetAI();
-		SetPhysics(&Calculate_Physics);
-		//SetCollisionChecking();
-		//SetCommitDestructions();
-		//SetUserCode();	//add fps calculation
-
-		allegro_startup();	//from custom header file al_init.h
-		Render_init();
-		User_Input_init();
-		Animator_Init();
-		Physics_Init();
-
-		Game::done = isDone;
-		game = this;
-	}
-
-	void Game::Load()
-	{
-		Load_Start_Screen();
-	}
-
-	void Game::Clear()
-	{
-		Render_Clear();
-		al_rest(1.0);
-		al_destroy_display(display);
-	}
-	
-	void Game::MainLoop(void) 
-	{
-		while (!IsFinished())
-			MainLoopIteration();
-	}
-
-	void Game::MainLoopIteration(void)
-	{
-		Render();
-		Input();
-		ProgressAnimations();
-		//AI();
-		Physics();
-		//CollisionChecking();
-		//UserCode(); // hook for custom code at end
-		//CommitDestructions();
-	}
-
-
 }
