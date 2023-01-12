@@ -5,12 +5,14 @@ void User_Input_init()
 {
 	EventQueue = al_create_event_queue();
 	al_register_event_source(EventQueue, al_get_keyboard_event_source());
-	GameState = StartingScreen;
+	gameObj.Set_State(StartingScreen);
 }
 
 bool isDone()
 {
-	return User_input_done;
+	if (gameObj.Get_State() == GameFinished)
+		return true;
+	return false;
 }
 
 /*Handles all user input*/
@@ -25,14 +27,14 @@ void UserInput(void)
 			exit(-1);
 		}
 
-		if (GameState == StartingScreen)
+		if (gameObj.Get_State() == StartingScreen)
 		{
 			if (event.type == ALLEGRO_EVENT_KEY_DOWN)
 			{
 				switch (event.keyboard.keycode)
 				{
 				case ALLEGRO_KEY_ENTER:			//Enter == continue, load first level
-					GameState = PlayingLevel1;
+					gameObj.Set_State(PlayingLevel1);
 					break;
 				}
 			}
@@ -42,16 +44,16 @@ void UserInput(void)
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_ESCAPE:
-				User_input_done = true;		//ends the game for now
+				gameObj.End_Game();		//ends the game for now
 				break;
 			case ALLEGRO_KEY_DOWN:
-
-				if (grids[1]->GetIndexFromLayer(grids[1]->getPlayerBottomRow(player), grids[1]->getPlayerStartCol(player)) == ELEVATORID1 ||
-					grids[1]->GetIndexFromLayer(grids[1]->getPlayerBottomRow(player), grids[1]->getPlayerStartCol(player)) == ELEVATORID2)
+				Grid * grid = gameObj.level->grids[1];
+				if (grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID1 ||
+					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID2)
 				{
 					player->Set_State(State_Elevator);
 
-					elevators[0]->hide_og_elevator();
+					elevators[0].hide_og_elevator();
 				}
 				else
 				{
@@ -79,7 +81,7 @@ void UserInput(void)
 				al_get_keyboard_state(&KbState);
 				if (al_key_down(&KbState, ALLEGRO_KEY_LCTRL))
 				{
-					Toggle_Grid = Toggle_Grid ? false : true;
+					gameObj.level->Toggle_Grid = gameObj.level->Toggle_Grid ? false : true;
 					std::cout << "Grid toggled\n";
 				}
 				break;

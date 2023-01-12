@@ -58,10 +58,10 @@ void Calculate_Physics()
 			if (scrollx != 0 || scrolly != 0)
 			{
 				//first check grid if i can scroll where i want to
-				grids[0]->FilterGridMotion(player, &scrollx, &scrolly);
-				grids[1]->FilterGridMotion(player, &scrollx, &scrolly);
+				gameObj.level->grids[0]->FilterGridMotion(player, &scrollx, &scrolly);
+				gameObj.level->grids[1]->FilterGridMotion(player, &scrollx, &scrolly);
 				player->Scroll_Player(scrollx, scrolly);
-				Scroll_Bitmap();
+				gameObj.level->Scroll_Bitmap();
 			}
 
 			//al_stop_timer(PhysicsTimer);

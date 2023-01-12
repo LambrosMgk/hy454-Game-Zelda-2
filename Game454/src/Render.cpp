@@ -1,215 +1,23 @@
 #include "..\\Headers\\Render.h"
 
 
-//pre-caching tileset indexes for better perfomance, this function should be called at the start of the programm
-void Calculate_Tileset_Indexes()
-{
-	divIndex = new unsigned char[TILESET_WIDTH * TILESET_HEIGHT];
-	modIndex = new unsigned char[TILESET_WIDTH * TILESET_HEIGHT];
-	if (divIndex == NULL || modIndex == NULL)
-	{
-		cout << "Failed to allocate memory for tileset indexes\n";
-		exit(-1);
-	}
-	for (unsigned short i = 0; i < TILESET_WIDTH * TILESET_HEIGHT; ++i)
-		divIndex[i] = i / TILESET_WIDTH, modIndex[i] = i % TILESET_WIDTH;
-}
-
-/*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
-in case of bad file path exits program with -1*/
-ALLEGRO_BITMAP* load_tileset(const char* filepath)
-{
-	ALLEGRO_BITMAP* TileSet = al_load_bitmap(filepath);
-	if (TileSet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize Tileset (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
-	/*initialize TILESET_WIDTH and TILESET_HEIGHT base on the given tileset*/
-	TILESET_WIDTH = al_get_bitmap_width(TileSet) / TILE_WIDTH;
-	TILESET_HEIGHT = al_get_bitmap_height(TileSet) / TILE_HEIGHT;
-	//cout << "filepath = " << filepath << "\n";
-	//cout << "TILESET_WIDTH = " << TILESET_WIDTH << " TILESET_HEIGHT = " << TILESET_HEIGHT << "\n";
-
-	return TileSet;
-}
-
-/*Given the path of a .csv file, returns a vector<vector<int>> of indices that correspondes to a TileSet*/
-vector<vector<int>> ReadTextMap(string TileMapFileName)
-{
-	ifstream TileMap(TileMapFileName);
-	vector<vector<int>> content;
-	vector<int> row;
-	string line, word;
-
-	if (TileMap.fail()) /*check for file not found*/
-	{
-		cout << "Failed to open " << TileMapFileName << " in function ReadTextMap().\n";
-		exit(-1);
-	}
-
-	while (getline(TileMap, line))
-	{
-		row.clear();
-		stringstream str(line);
-		while (getline(str, word, ','))
-		{
-			row.push_back(stoi(word));
-		}
-		content.push_back(row);
-	}
-
-	/*for (int i = 0; i < content.size(); i++)
-	{
-		for (int j = 0; j < content[i].size(); j++)
-		{
-			cout << content[i][j] << " ";
-		}
-		cout << "\n";
-	}*/
-
-	return content;
-}
-
-/*Creates and returns a bitmap from an CSV and a Tileset, WILL NOT WORK IF A TILESET IS NOT LOADED (tileset width and height vars will have a value of 0)*/
-ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
-{
-	assert(CSV.size != 0);
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size() * TILE_WIDTH, CSV.size() * TILE_HEIGHT);
-	int TileSetIndex;
-
-	//cout << "Create_Bitmap_From_CSV() height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
-	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
-	for (size_t y = 0; y < CSV.size(); y++)
-	{
-		for (size_t x = 0; x < CSV[0].size(); x++)
-		{
-			TileSetIndex = CSV[y][x];
-			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
-		}
-	}
-
-	al_set_target_bitmap(al_get_backbuffer(display));/*Select the backbuffer to return to drawing to the screen normally.*/
-	return bitmap;
-}
-
-/*Paints over the given bitmap, useful for maps with multiple layers*/
-void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
-{
-	assert(CSV.size != 0);
-	int TileSetIndex;
-
-	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
-	for (size_t y = 0; y < CSV.size(); y++)
-	{
-		for (size_t x = 0; x < CSV[0].size(); x++)
-		{
-			TileSetIndex = CSV[y][x];
-			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
-		}
-	}
-
-	al_set_target_bitmap(al_get_backbuffer(display));/*Select the backbuffer to return to drawing to the screen normally.*/
-}
-
-/*uses the indeces from the CSV file which are stored in the CSV vector and uses them to blit from the given Tileset*/
-void Draw_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset)
-{
-	assert(CSV.size != 0);
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());
-	int TileSetIndex;
-
-	//cout << "height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
-	//cout << "CSV[0].size() = " << CSV[0].size() << " CSV.size() = " << CSV.size() << "\n";
-	for (auto y = 0; y < al_get_bitmap_height(bitmap); y++)
-	{
-		for (auto x = 0; x < al_get_bitmap_width(bitmap); x++)
-		{
-			TileSetIndex = CSV[y][x];
-			if (TileSetIndex != -1)
-				al_draw_bitmap_region(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(x), MUL_TILE_HEIGHT(y), 0);
-		}
-	}
-}
-
-/*uses the indeces from the CSV file which are stored in the CSV vector and uses them to blit from the given Tileset with the given scaling*/
-void Draw_Scaled_BitMap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, float scaleWidth, float scaleHeight)
-{
-	assert(CSV.size != 0);
-	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size(), CSV.size());
-	int TileSetIndex;
-
-	for (auto y = 0; y < al_get_bitmap_height(bitmap); y++)
-	{
-		for (auto x = 0; x < al_get_bitmap_width(bitmap); x++)
-		{
-			TileSetIndex = CSV[y][x];
-			al_draw_scaled_bitmap(Tileset, MUL_TILE_WIDTH(modIndex[TileSetIndex]), MUL_TILE_HEIGHT(divIndex[TileSetIndex]), TILE_WIDTH, TILE_HEIGHT, scaleWidth * MUL_TILE_WIDTH(x), scaleHeight * MUL_TILE_HEIGHT(y), scaleWidth * TILE_WIDTH, scaleHeight * TILE_HEIGHT, 0);
-		}
-	}
-}
-
 /*By screen i mean the target bitmap*/
 void Paint_Player_to_Screen(Rect r)
 {
-	al_draw_bitmap_region(PlayerSpriteSheet, r.x, r.y, r.w, r.h, player->positionX, player->positionY, 0);
+	al_draw_bitmap_region(player->PlayerSpriteSheet, r.x, r.y, r.w, r.h, player->positionX, player->positionY, 0);
 }
 
 void Load_Start_Screen()
 {
-	Start_Screen_bitmap = al_load_bitmap(START_SCREEN_PATH);
-	if (Start_Screen_bitmap == NULL)
+	gameObj.Start_Screen_bitmap = al_load_bitmap(START_SCREEN_PATH);
+	if (gameObj.Start_Screen_bitmap == NULL)
 	{
 		fprintf(stderr, "\nFailed to initialize Start_Screen_bitmap (al_load_bitmap() failed).\n");
 		exit(-1);
 	}
-	al_draw_bitmap(Start_Screen_bitmap, 0, 0, 0);
+	al_draw_bitmap(gameObj.Start_Screen_bitmap, 0, 0, 0);
 	al_flip_display();
 	//cout << "Drawing " << filepath << '\n';
-}
-
-void Load_Player_Spiresheet()
-{
-	PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
-	if (PlayerSpriteSheet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
-}
-
-void Load_Level(unsigned short levelNum)
-{
-	TileMapCSV.push_back(ReadTextMap("UnitTests\\Media\\Level_1\\Level_1_Tile Layer 1.csv"));
-	TileMapCSV.push_back(ReadTextMap("UnitTests\\Media\\Level_1\\Level_1_Tile Layer 2.csv"));
-	if (TileMapCSV.size() == 0)
-	{
-		fprintf(stderr, "ReadTextMap returned empty vector.\n");
-		exit(-1);
-	}
-
-	//create the bitmap of the level
-	bitmap = Create_Bitmap_From_CSV(TileMapCSV[0], TileSet, display);
-	Paint_To_Bitmap(bitmap, TileMapCSV[1], TileSet, display);
-	cout << "Created the whole bitmap\n";
-
-	add_Grid(0, TILE_WIDTH, TILE_HEIGHT, TileMapCSV[0][0].size(), TileMapCSV[0].size());		//initialize the grid for layer 1
-	grids[0]->ComputeTileGridBlocks2(TileMapCSV[0], TileSet, 128);
-	cout << "Created the whole grid for layer 1\n";
-
-	add_Grid(1, TILE_WIDTH, TILE_HEIGHT, TileMapCSV[1][0].size(), TileMapCSV[1].size());  		//initialize the grid for layer 2
-	grids[1]->ComputeTileGridBlocks2(TileMapCSV[1], TileSet, 64);
-	cout << "Created the whole grid for layer 2\n";
-
-	createElevators();
-
-	if (PlayerSpriteSheet == NULL)
-	{
-		Load_Player_Spiresheet();
-		Init_Player(StartPlayerPositionX, StartPlayerPositionY);
-	}
 }
 
 void Render_init()
@@ -220,17 +28,14 @@ void Render_init()
 	al_start_timer(FPStimer);	//a video said not to initialize any variables after this cuz it might mess up the timer, we'll see
 
 	al_set_new_display_flags(ALLEGRO_WINDOWED);
-	display = al_create_display(DISPLAY_W, DISPLAY_H);
-	if (!display)
+	gameObj.display = al_create_display(DISPLAY_W, DISPLAY_H);
+	if (!gameObj.display)
 	{
 		fprintf(stderr, "failed to create display!\n");
 		exit(-1);
 	}
-	al_set_window_title(display, "Zelda II: The Adventure of Link");
+	al_set_window_title(gameObj.display, "Zelda II: The Adventure of Link");
 
-
-	TileSet = load_tileset(TILESET_PATH);
-	Calculate_Tileset_Indexes();//pre-caching
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LAYERS; i++) {
 		string tmp = ASSUMED_EMPTY_LAYER_PATH;
@@ -244,31 +49,12 @@ void Render_init()
 	}
 }
 
-void Scroll_Bitmap()
-{
-	if (player->positionX > DISPLAY_W)	//scroll left
-	{
-		cameraX -= DISPLAY_W;
-		player->screenX++;
-		player->positionX = 5;	//scroll the player to the left side of the screen
-	}
-	else if (player->positionX < 0) //scroll right
-	{
-		cameraX += DISPLAY_W;
-		player->screenX--;
-		player->positionX = DISPLAY_W - 10;
-	}
-	else if (player->positionY / DISPLAY_H > cameraY / DISPLAY_H)	//check if this statemnet if correct
-	{
-
-	}
-}
-
 // use this to render grid (toggle on / off), used only for development time testing -
 // a tile grid block is consecutive GRID_BLOCK_ROWS x GRID_BLOCK_COLUMNS block of grid indices
 void DisplayGrid(unsigned int grid_num)
 {
-
+	std::vector<Grid*> grids = gameObj.level->grids;
+	int cameraX = gameObj.level->cameraX, cameraY = gameObj.level->cameraY;
 	if (grids[grid_num] == NULL)
 	{
 		return;
@@ -332,19 +118,18 @@ void Renderer()
 			exit(-1);
 		}
 		//no need to check for the type of event, the only events in the queue are timer events
-		if (GameState == PlayingLevel1)
+		if (gameObj.Get_State() == PlayingLevel1)
 		{
 			al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
-			if (levelLoaded == -1)
+			if (gameObj.level == NULL)
 			{
-				levelLoaded = 1;
-				Load_Level(1);
+				gameObj.Load_Level(1);
 			}
 
 
-			al_draw_bitmap(bitmap, cameraX, cameraY, 0);
+			al_draw_bitmap(gameObj.level->bitmap, gameObj.level->cameraX, gameObj.level->cameraY, 0);
 			Paint_Player_to_Screen(player->FrameToDraw());
-			if (Toggle_Grid)
+			if (gameObj.level->Toggle_Grid)
 			{
 				DisplayGrid(0);
 				DisplayGrid(1);
@@ -358,9 +143,5 @@ void Renderer()
 /*might be useful to have this in the future, also add more stuff cuz i'll forget for sure*/
 void Render_Clear()
 {
-	for (int i = 0; i < grids.size(); i++) {
-		delete grids[i];
-	}
-	delete divIndex;
-	delete modIndex;
+	
 }

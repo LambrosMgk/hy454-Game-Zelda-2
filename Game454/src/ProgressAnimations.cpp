@@ -1,6 +1,5 @@
 #include "..\\Headers\\ProgressAnimations.h"
 
-
 void Animator_Init()
 {
 	AnimationTimer = al_create_timer(1.0 / 5.0);
@@ -10,6 +9,7 @@ void Animator_Init()
 	al_register_event_source(AnimatorQueue, al_get_timer_event_source(AttackTimer));
 	al_start_timer(AnimationTimer);
 }
+
 
 void Animator()
 {

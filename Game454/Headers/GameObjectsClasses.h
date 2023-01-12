@@ -60,6 +60,8 @@
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
+using namespace std;
+
 //used in render 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
 //used in physics and animations
@@ -69,37 +71,72 @@ typedef unsigned short Index;
 struct Rect { int x, y, w, h; };
 struct Point { int x, y; };
 
-enum Game_State { StartingScreen, PlayingLevel1, Paused };
+enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
-Player *player = NULL;
+
 
 //forward declaration
 class TileColorsHolder;
 class GameLogic;
+class Player;
+class Grid;
+class Elevator;
 
 
 // keeps colors that are assumed to be empty
 std::vector<TileColorsHolder> emptyTileColors;
-GameLogic gameLogic;	//object that holds the game state and other useful information
+GameLogic gameObj;	//object that holds the game state and other useful information
+Player* player = NULL;
+std::vector<Elevator> elevators;
 
 class Level
 {
 public:
 	ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
+	std::vector<Grid*> grids;
+
+	bool Toggle_Grid = false;
 	unsigned char* divIndex, * modIndex;
 	unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 	int cameraX = 0, cameraY = 0;
-	std::vector<Grid*> grids;
+
+	/*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
+in case of bad file path exits program with -1*/
+	void load_tileset(const char* filepath);
+
+	//pre-caching tileset indexes for better perfomance, this function should be called at the start of the programm
+	void Calculate_Tileset_Indexes();
+
+	/*Given the path of a .csv file, returns a vector<vector<int>> of indices that correspondes to a TileSet*/
+	vector<vector<int>> ReadTextMap(string TileMapFileName);
+
+	/*Creates and returns a bitmap from an CSV and a Tileset, WILL NOT WORK IF A TILESET IS NOT LOADED (tileset width and height vars will have a value of 0)*/
+	ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display);
+
+	/*Paints over the given bitmap, useful for maps with multiple layers*/
+	void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display);
+
+	void Scroll_Bitmap();
 };
 
 class GameLogic
 {
+private:
+	Game_State GameState;
 public:
 	ALLEGRO_DISPLAY* display = NULL;
-	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * PlayerSpriteSheet = NULL;
+	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL;
 	Level *level = NULL;
+
+	Game_State Get_State();
+
+	void Set_State(Game_State state);
+
+	void End_Game();
+
+	void Load_Level(unsigned short levelNum);
 };
 
 class Elevator
@@ -114,16 +151,13 @@ public:
 	void hide_og_elevator();
 };
 
-std::vector<Elevator> elevators;
-
-void createElevators();
-
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
 {
 private:
 	Player_State state = State_Walking;
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 public:
+	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
 	Player_Direction direction = dir_right;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
@@ -167,7 +201,7 @@ class TileColorsHolder final
 {
 private:
 	std::set<Index> indices;
-	set<ALLEGRO_COLOR> colors;
+	std::set<ALLEGRO_COLOR> colors;
 public:
 	void Insert(ALLEGRO_BITMAP* bmp, Index index);
 
@@ -175,8 +209,6 @@ public:
 
 	bool IndexIn(Index index);
 };
-
-void Init_Player(int PlayerX, int PlayerY);
 
 class Grid
 {
@@ -246,11 +278,16 @@ public:
 
 	/*Computes the grid elements (solid or empty) based on the given map. (map argument is a vector with the values of the csv of the tilemap,
 	those values will be used to get the corresponding tile from the tileset)*/
-	void ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold);
+	void ComputeTileGridBlocks2(std::vector<std::vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold);
 };
 
-void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight);
+void createElevators();
 
+void Init_Player(int PlayerX, int PlayerY);
+
+void Load_Player_Spiresheet();
+
+void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight);
 
 /*added these 3 overloards so that set<ALLEGRO_COLOR> could work*/
 bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2);

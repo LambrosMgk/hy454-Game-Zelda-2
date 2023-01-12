@@ -8,7 +8,6 @@
 #include <sstream>
 #include <set>
 
-
 #include "GameObjectsClasses.h"
 
 ALLEGRO_TIMER* AnimationTimer, *AttackTimer;

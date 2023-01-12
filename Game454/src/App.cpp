@@ -75,7 +75,7 @@ void app::Game::Clear()
 {
 	Render_Clear();
 	al_rest(1.0);
-	al_destroy_display(display);
+	al_destroy_display(gameObj.display);
 }
 
 void app::Game::MainLoop(void)
