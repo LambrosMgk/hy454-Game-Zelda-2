@@ -62,9 +62,6 @@
 
 using namespace std;
 
-//used in render 
-bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;	//omit these later, maybe not left and right? useful for animation?
-//used in physics and animations
 
 typedef unsigned short Dim;
 typedef unsigned short Index;
@@ -87,12 +84,15 @@ class Elevator;
 
 
 // keeps colors that are assumed to be empty
-std::vector<TileColorsHolder> emptyTileColors;
-std::vector<Skeleton> skeletons;
-std::vector<SkeletonKnight> skeletonKnights;
-GameLogic gameObj;	//object that holds the game state and other useful information
-Player* player = NULL;
-std::vector<Elevator> elevators;
+extern std::vector<TileColorsHolder> emptyTileColors;
+extern GameLogic gameObj;	//object that holds the game state and other useful information
+extern Player* player;
+extern std::vector<Elevator> elevators;
+
+//used in render
+extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
+//used in physics and animations
+
 
 class Level
 {
@@ -128,7 +128,7 @@ in case of bad file path exits program with -1*/
 class GameLogic
 {
 private:
-	Game_State GameState;
+	Game_State GameState = StartingScreen;
 public:
 	ALLEGRO_DISPLAY* display = NULL;
 	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL;

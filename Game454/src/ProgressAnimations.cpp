@@ -1,5 +1,9 @@
 #include "..\\Headers\\ProgressAnimations.h"
 
+ALLEGRO_TIMER* AnimationTimer, * AttackTimer;
+ALLEGRO_EVENT_QUEUE* AnimatorQueue;
+bool StartAttack = false;
+
 void Animator_Init()
 {
 	AnimationTimer = al_create_timer(1.0 / 5.0);
@@ -64,3 +68,4 @@ void Animator()
 
 		}
 	}
+}

@@ -11,10 +11,10 @@
 
 #include "GameObjectsClasses.h"
 
-ALLEGRO_TIMER* PhysicsTimer;
-ALLEGRO_EVENT_QUEUE* PhysicsQueue;
-unsigned short jumpCountPixels = 0;
-boolean scrollUp = false;
+extern ALLEGRO_TIMER* PhysicsTimer;
+extern ALLEGRO_EVENT_QUEUE* PhysicsQueue;
+extern unsigned short jumpCountPixels;
+extern boolean scrollUp;
 
 void Physics_Init();
 

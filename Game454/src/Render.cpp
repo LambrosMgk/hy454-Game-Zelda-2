@@ -1,5 +1,8 @@
 #include "..\\Headers\\Render.h"
 
+bool draw = false;
+ALLEGRO_TIMER* FPStimer;
+ALLEGRO_EVENT_QUEUE* timerQueue;
 
 /*By screen i mean the target bitmap*/
 void Paint_Player_to_Screen(Rect r)

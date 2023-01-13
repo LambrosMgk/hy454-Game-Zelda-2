@@ -1,5 +1,9 @@
 #include "..\\Headers\\Physics.h"
 
+ALLEGRO_TIMER* PhysicsTimer;
+ALLEGRO_EVENT_QUEUE* PhysicsQueue;
+unsigned short jumpCountPixels = 0;
+boolean scrollUp = false;
 
 void Physics_Init()
 {
@@ -69,3 +73,4 @@ void Calculate_Physics()
 			//scrollDown = true;
 		}
 	}
+}

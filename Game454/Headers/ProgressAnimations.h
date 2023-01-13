@@ -1,19 +1,10 @@
 #pragma once
 
-#include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <set>
-
 #include "GameObjectsClasses.h"
 
-ALLEGRO_TIMER* AnimationTimer, *AttackTimer;
-ALLEGRO_EVENT_QUEUE* AnimatorQueue;
-
-bool StartAttack = false;
+extern ALLEGRO_TIMER* AnimationTimer, *AttackTimer;
+extern ALLEGRO_EVENT_QUEUE* AnimatorQueue;
+extern bool StartAttack;
 
 void Animator_Init();
 

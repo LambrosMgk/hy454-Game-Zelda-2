@@ -1,5 +1,6 @@
 #include "..\\Headers\\User_Input.h"
 
+ALLEGRO_EVENT_QUEUE* EventQueue;
 
 void User_Input_init()
 {
@@ -47,7 +48,8 @@ void UserInput(void)
 				gameObj.End_Game();		//ends the game for now
 				break;
 			case ALLEGRO_KEY_DOWN:
-				Grid * grid = gameObj.level->grids[1];
+			{
+				Grid* grid = gameObj.level->grids[1];;
 				if (grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID1 ||
 					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID2)
 				{
@@ -59,6 +61,7 @@ void UserInput(void)
 				{
 					player->Set_State(State_Crounching);
 				}
+			}
 				break;
 			case ALLEGRO_KEY_LEFT:
 				player->direction = dir_left;

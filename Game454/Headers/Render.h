@@ -13,9 +13,9 @@
 using namespace std;
 
 
-bool draw = false;
-ALLEGRO_TIMER* FPStimer;
-ALLEGRO_EVENT_QUEUE* timerQueue;
+extern bool draw;
+extern ALLEGRO_TIMER* FPStimer;
+extern ALLEGRO_EVENT_QUEUE* timerQueue;
 
 /*By screen i mean the target bitmap*/
 void Paint_Player_to_Screen(Rect r);

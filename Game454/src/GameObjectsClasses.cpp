@@ -1,5 +1,16 @@
 #include "..\\Headers\\GameObjectsClasses.h"
 
+//Start of global variables
+
+std::vector<TileColorsHolder> emptyTileColors;
+GameLogic gameObj;
+Player* player = NULL;
+std::vector<Elevator> elevators;
+
+bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
+
+//End of global variables
+
 //Start of Class Level
 
 
@@ -247,7 +258,7 @@ void createElevators() {
 
 //Class Player functions
 
-Player::Player(float _positionX, float _positionY)
+Player::Player(int _positionX, int _positionY)
 {
 	positionX = _positionX;
 	positionY = _positionY;

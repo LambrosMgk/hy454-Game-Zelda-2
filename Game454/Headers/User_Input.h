@@ -2,7 +2,7 @@
 
 #include "GameObjectsClasses.h"
 
-ALLEGRO_EVENT_QUEUE* EventQueue;
+extern ALLEGRO_EVENT_QUEUE* EventQueue;
 
 void User_Input_init();
 
