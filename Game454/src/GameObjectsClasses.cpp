@@ -480,11 +480,10 @@ Rect Player::FrameToDraw()
 
 //Class Enemy functions
 
-Enemy::Enemy(float _positionX, float _positionY)
+Enemy::Enemy(int posX, int posY)
 {
-	positionX = _positionX;
-	positionY = _positionY;
-
+	positionX = posX;
+	positionY = posY;
 }
 
 Enemy::~Enemy()
@@ -529,11 +528,11 @@ int Enemy::Get_Speed_Y()
 
 void Enemy::Set_State(Enemy_State state)
 {
-	if (this->state == State_Walking && state == State_Attacking) //Walking -> Attacking
+	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
 	{
 		this->state = state;
 	}
-	else if (this->state == State_Attacking && state == State_Walking) //Attacking -> Walking
+	else if (this->state == E_State_Attacking && state == E_State_Walking) //Attacking -> Walking
 	{
 		this->state = state;
 	}
@@ -546,130 +545,29 @@ Enemy_State Enemy::Get_State()
 
 void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 {
-	if (state == State_Walking)
+	if (state == E_State_Walking)
 	{
 		this->positionX += ScrollDistanceX;
 		this->positionY += ScrollDistanceY;
 	}
 }
 
-void Enemy::Init_frames_bounding_boxes()
-{
-	Rect* r;
-	int i = 0, k = 0;
-
-	//FramesWalkingLeft
-	for (i = 0, k = 0; i < 4; i++)
-	{
-		r = new Rect;
-		r->h = SKELETON_SPRITE_HEIGHT * 2;
-		r->w = i % 2 == 1 ? SKELETON_SPRITE_WIDTH : SKELETON_SPRITE_WIDTH * 2;
-		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16;
-		r->y = 0;
-		if (i == 3)
-			k -= 32;
-		r->x = k;
-		FramesWalkingLeft.push_back(*r);
-	}
-	std::reverse(FramesWalkingLeft.begin(), FramesWalkingLeft.end());
-
-	//FramesWalkingRight
-	for (i = 0, k = 160; i < 4; i++)
-	{
-		r = new Rect;
-		r->h = SKELETON_SPRITE_HEIGHT * 2;
-		r->w = i % 2 == 1 ? SKELETON_SPRITE_WIDTH : SKELETON_SPRITE_WIDTH * 2;
-		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16;
-		r->y = 0;
-		if (i == 3)
-			k -= 32;
-		r->x = k;
-		FramesWalkingRight.push_back(*r);
-	}
-
-
-	//FramesSlashLeft
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
-	r->x = SKELETON_SPRITE_WIDTH * 7 + 10;
-	FramesSlashLeft.push_back(*r);
-
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
-	r->x = SKELETON_SPRITE_WIDTH * 5;
-	FramesSlashLeft.push_back(*r);
-
-	//FramesSlashRight
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
-	r->x = SKELETON_SPRITE_WIDTH * 10;
-	FramesSlashRight.push_back(*r);
-
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;	//10 pixels offset for the next row of sprites
-	r->x = SKELETON_SPRITE_WIDTH * 12 + 10;
-	FramesSlashRight.push_back(*r);
-
-	//FramesCrounchSlashLeft
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;
-	r->x = 0;
-	FramesCrounchSlash.push_back(*r);
-
-	//FramesCrounchSlashRight
-	r = new Rect;
-	r->h = SKELETON_SPRITE_HEIGHT * 2;
-	r->w = SKELETON_SPRITE_WIDTH * 2;
-	r->y = SKELETON_SPRITE_HEIGHT * 2 + 10;
-	r->x = SKELETON_SPRITE_WIDTH * 18;
-	FramesCrounchSlash.push_back(*r);
-
-}
-
-Rect Enemy::FrameToDraw()
-{
-	if (state == State_Walking && direction == dir_left)
-	{
-		return FramesWalkingLeft[LinkSpriteNum];
-	}
-	else if (state == State_Walking && direction == dir_right)
-	{
-		return FramesWalkingRight[LinkSpriteNum];
-	}
-	else if (state == State_Crounching)
-	{
-		return FramesCrounch[direction];
-	}
-	else if (state == State_Attacking && direction == dir_left)
-	{
-		return FramesSlashLeft[LinkSpriteNum];
-	}
-	else if (state == State_Attacking && direction == dir_right)
-	{
-		return FramesSlashRight[LinkSpriteNum];
-	}
-	else if (state == State_CrounchAttacking)
-	{
-		return FramesCrounchSlash[direction];
-	}
-	else
-	{
-		fprintf(stderr, "Error with player direction : invalid value %d.\n", direction);
-		exit(-1);
-	}
-}
-
 //end of class enemy
+
+//Start Skeleton Class
+
+Skeleton::Skeleton(int x, int y) :Enemy(x, y), positionX(x), positionY(y)
+{
+	
+}
+//End Skeleton Class
+
+
+//Start SkeletonKnight Class
+
+
+
+//End SkeletonKnight Class
 
 //Class TileColorsHolder
 
@@ -1111,14 +1009,14 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 
 void add_Skeleton(int EnemyX, int EnemyY)
 {
-	enemy = new Skeleton(EnemyX, EnemyY);
-	enemy->Init_frames_bounding_boxes();
+	skeletons.push_back(Skeleton(EnemyX, EnemyY));
+	
 }
 
 void add_SkeletonKnight(int EnemyX, int EnemyY)
 {
-	enemy = new Player(EnemyX, EnemyY);
-	enemy->Init_frames_bounding_boxes();
+	//enemy = new Player(EnemyX, EnemyY);
+	
 }
 
 class Skeleton : private Enemy

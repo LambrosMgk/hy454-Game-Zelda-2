@@ -79,8 +79,11 @@ enum Enemy_State { E_State_Walking, E_State_Attacking };
 class TileColorsHolder;
 class GameLogic;
 class Player;
+class Enemy;
+class Skeleton;
 class Grid;
 class Elevator;
+
 
 
 // keeps colors that are assumed to be empty
@@ -88,6 +91,7 @@ extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
+extern std::vector<Skeleton> skeletons;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -294,7 +298,7 @@ public:
 	Enemy_Direction direction = e_dir_right;
 	int positionX, positionY;
 
-	Enemy(float positionX, float positionY);
+	Enemy(int posX, int posY);
 
 	~Enemy();
 
@@ -318,30 +322,32 @@ public:
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 
-	void Init_frames_bounding_boxes();
+	virtual void Init_frames_bounding_boxes();
 
-	Rect FrameToDraw();
+	virtual Rect FrameToDraw();
 };
 
-class Skeleton : private Enemy
+class Skeleton : public Enemy
 {
+private:
 	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 
 public:
-
+	Skeleton(int x,int y);
 
 };
 
-class SkeletonKnight : private Enemy
+class SkeletonKnight : public Enemy
 {
+private:
 	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 
 public:
-
+	SkeletonKnight();
 
 };
 
@@ -371,5 +377,3 @@ void Init_emptyTileColorsHolder(const char* filepath);
 void add_Skeleton(int EnemyX, int EnemyY);
 
 void add_SkeletonKnight(int EnemyX, int EnemyY);
-
-void Enemy::Init_frames_bounding_boxes();
