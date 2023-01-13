@@ -74,6 +74,8 @@ struct Point { int x, y; };
 enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
+enum Enemy_Direction {	e_dir_left, e_dir_right };
+enum Enemy_State { E_State_Walking, E_State_Attacking };
 
 
 //forward declaration
@@ -86,6 +88,8 @@ class Elevator;
 
 // keeps colors that are assumed to be empty
 std::vector<TileColorsHolder> emptyTileColors;
+std::vector<Skeleton> skeletons;
+std::vector<SkeletonKnight> skeletonKnights;
 GameLogic gameObj;	//object that holds the game state and other useful information
 Player* player = NULL;
 std::vector<Elevator> elevators;
@@ -168,7 +172,7 @@ public:
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 	std::vector<Rect>FramesCrounchSlash;
 
-	Player(float _positionX, float _positionY);
+	Player(int _positionX, int _positionY);
 
 	~Player();
 
@@ -281,6 +285,66 @@ public:
 	void ComputeTileGridBlocks2(std::vector<std::vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold);
 };
 
+class Enemy //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
+{
+private:
+	Enemy_State state = E_State_Walking;
+	int scrollDistanceX = 2, scrollDistanceY = 3;
+public:
+	Enemy_Direction direction = e_dir_right;
+	int positionX, positionY;
+
+	Enemy(float positionX, float positionY);
+
+	~Enemy();
+
+	void Set_Speed_X(int speedX);
+
+	void Increment_Speed_X();
+
+	int Get_Speed_X();
+
+	void Set_Speed_Y(int speedY);
+
+	void Increment_Speed_Y();
+
+	void Decrement_Speed_Y();
+
+	int Get_Speed_Y();
+
+	void Set_State(Enemy_State state);
+
+	Enemy_State Get_State();
+
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+};
+
+class Skeleton : private Enemy
+{
+	unsigned int LinkSpriteNum = 0;
+	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
+	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
+
+public:
+
+
+};
+
+class SkeletonKnight : private Enemy
+{
+	unsigned int LinkSpriteNum = 0;
+	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
+	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
+
+public:
+
+
+};
+
 void createElevators();
 
 void Init_Player(int PlayerX, int PlayerY);
@@ -303,3 +367,9 @@ bool IsTileIndexAssumedEmpty(unsigned int layer, Index index);
 /*Opens the file at "filepath" for reading, reads the indices of tiles that are considered empty in the tileset.
 The format of the file should be numbers (indices) seperated by commas*/
 void Init_emptyTileColorsHolder(const char* filepath);
+
+void add_Skeleton(int EnemyX, int EnemyY);
+
+void add_SkeletonKnight(int EnemyX, int EnemyY);
+
+void Enemy::Init_frames_bounding_boxes();
