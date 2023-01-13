@@ -6,6 +6,7 @@ std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
+//std::vector<Skeleton> Skeletons;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -556,10 +557,11 @@ void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 //Start Skeleton Class
 
-Skeleton::Skeleton(int x, int y) :Enemy(x, y), positionX(x), positionY(y)
+Skeleton::Skeleton(int posX, int posY) : Enemy(posX, posY) 
 {
-	
+
 }
+
 //End Skeleton Class
 
 
@@ -1009,8 +1011,7 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 
 void add_Skeleton(int EnemyX, int EnemyY)
 {
-	skeletons.push_back(Skeleton(EnemyX, EnemyY));
-	
+	//skeletons.push_back(Skeleton(EnemyX, EnemyY));
 }
 
 void add_SkeletonKnight(int EnemyX, int EnemyY)
@@ -1019,32 +1020,11 @@ void add_SkeletonKnight(int EnemyX, int EnemyY)
 	
 }
 
-class Skeleton : private Enemy
+void createSkeletons(int skel_number) 
 {
-	unsigned int LinkSpriteNum = 0;
-	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
-	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-
-public:
-
-
-};
-
-class SkeletonKnight : private Enemy
-{
-	unsigned int LinkSpriteNum = 0;
-	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
-	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-
-public:
-
-
-};
-
-
-void createSkeletons(int skel_number) {
-	for (int i = 0; i < skel_number; i++) {
-		skeletons.push_back(Skeleton());
+	for (int i = 0; i < skel_number; i++) 
+	{
+		//skeletons.push_back(Skeleton());
 	}
 
 }

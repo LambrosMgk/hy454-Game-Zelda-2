@@ -91,7 +91,7 @@ extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
-extern std::vector<Skeleton> skeletons;
+//extern std::vector<Skeleton> Skeletons;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -101,7 +101,7 @@ extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later,
 class Level
 {
 public:
-	ALLEGRO_BITMAP* bitmap = NULL, * TileSet = NULL;
+	ALLEGRO_BITMAP* bitmap = NULL, *TileSet = NULL;
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
 
@@ -289,10 +289,11 @@ public:
 	void ComputeTileGridBlocks2(std::vector<std::vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold);
 };
 
-class Enemy //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
+class Enemy
 {
 private:
 	Enemy_State state = E_State_Walking;
+	unsigned int SpriteNum = 0;	//counter for animation
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 public:
 	Enemy_Direction direction = e_dir_right;
@@ -330,25 +331,19 @@ public:
 class Skeleton : public Enemy
 {
 private:
-	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-
 public:
 	Skeleton(int x,int y);
-
 };
 
 class SkeletonKnight : public Enemy
 {
 private:
-	unsigned int LinkSpriteNum = 0;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-
 public:
-	SkeletonKnight();
-
+	SkeletonKnight(int x, int y);
 };
 
 void createElevators();
