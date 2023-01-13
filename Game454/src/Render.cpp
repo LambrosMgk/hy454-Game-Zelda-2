@@ -51,10 +51,10 @@ void DisplayGrid(unsigned int grid_num)
 		return;
 	}
 
-	auto startCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W);
-	auto startRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H);
-	auto endCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W + 1 * DISPLAY_W);
-	auto endRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H + 1 * DISPLAY_H);
+	unsigned int startCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W);
+	unsigned int startRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H);
+	unsigned int endCol = DIV_TILE_WIDTH(cameraX * DISPLAY_W + 1 * DISPLAY_W);
+	unsigned int endRow = DIV_TILE_HEIGHT(cameraY * DISPLAY_H + 1 * DISPLAY_H);
 
 	//if some part of the bitmap is not showing on the screen because of scrolling skip that part
 	if (cameraX < 0)
@@ -73,9 +73,9 @@ void DisplayGrid(unsigned int grid_num)
 	{
 		for (Dim colTile = startCol; colTile < endCol; colTile++)
 		{
-			for (auto rowElem = 0; rowElem < grids[grid_num]->Grid_Block_Rows; ++rowElem)
+			for (unsigned int rowElem = 0; rowElem < grids[grid_num]->Grid_Block_Rows; ++rowElem)
 			{
-				for (auto colElem = 0; colElem < grids[grid_num]->Grid_Block_Columns; ++colElem)
+				for (unsigned int colElem = 0; colElem < grids[grid_num]->Grid_Block_Columns; ++colElem)
 				{
 					//printf("grid[rowTile + rowElem][colTile + colElem] : [%d + %d][%d + %d]\n", rowTile, rowElem, colTile, colElem);
 					if (grids[grid_num]->grid[rowTile + rowElem][colTile + colElem] & GRID_SOLID_TILE)

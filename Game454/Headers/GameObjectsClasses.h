@@ -106,7 +106,7 @@ public:
 	std::vector<Grid*> grids;
 
 	bool Toggle_Grid = false;
-	unsigned char* divIndex, * modIndex;
+	unsigned char* divIndex = NULL, * modIndex = NULL;
 	unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 	int cameraX = 0, cameraY = 0;
 
@@ -170,7 +170,7 @@ public:
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
-	boolean jumping = false;
+	bool jumping = false;
 	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
 	std::vector<Rect>FramesCrounch;
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;

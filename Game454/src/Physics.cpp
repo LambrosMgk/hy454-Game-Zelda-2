@@ -3,7 +3,7 @@
 ALLEGRO_TIMER* PhysicsTimer;
 ALLEGRO_EVENT_QUEUE* PhysicsQueue;
 unsigned short jumpCountPixels = 0;
-boolean scrollUp = false;
+bool scrollUp = false;
 
 void Physics_Init()
 {

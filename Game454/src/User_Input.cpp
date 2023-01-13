@@ -49,7 +49,7 @@ void UserInput(void)
 				break;
 			case ALLEGRO_KEY_DOWN:
 			{
-				Grid* grid = gameObj.level->grids[1];;
+				Grid* grid = gameObj.level->grids[1];
 				if (grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID1 ||
 					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID2)
 				{

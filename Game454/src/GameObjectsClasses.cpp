@@ -183,12 +183,9 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LAYERS; i++) {
 		string tmp = ASSUMED_EMPTY_LAYER_PATH;
-		cout << tmp;
 		string txt = ".txt";
-		cout << tmp;
 		tmp = tmp + to_string(i + 1);
 		tmp = tmp + txt;
-		cout << tmp;
 		Init_emptyTileColorsHolder(tmp.c_str());
 	}
 
@@ -235,8 +232,8 @@ void Elevator::Paint_Elevator()
 void Elevator::hide_og_elevator() 
 {
 	al_set_target_bitmap(gameObj.level->bitmap);
-	for (int i = y; i < y + TILE_HEIGHT; i++) {
-		for (int j = x; j < x + 2 * TILE_WIDTH; j++) {
+	for (unsigned int i = y; i < y + TILE_HEIGHT; i++) {
+		for (unsigned int j = x; j < x + 2 * TILE_WIDTH; j++) {
 			ALLEGRO_COLOR color = al_get_pixel(gameObj.level->bitmap, i, j);
 			unsigned char r, g, b;
 
@@ -255,8 +252,8 @@ void Elevator::hide_og_elevator()
 void createElevators() {
 	boolean isTopElev = true;
 
-	for (int i = 0; i < gameObj.level->TileMapCSV[1].size(); i++) {
-		for (int j = 0; j < gameObj.level->TileMapCSV[1][i].size(); i++) {
+	for (unsigned int i = 0; i < gameObj.level->TileMapCSV[1].size(); i++) {
+		for (unsigned int j = 0; j < gameObj.level->TileMapCSV[1][i].size(); i++) {
 
 			if ((gameObj.level->TileMapCSV[1][i][j] == ELEVATORID1))
 				isTopElev = false;
@@ -683,7 +680,7 @@ Grid::Grid(unsigned int layer_num, unsigned int _Grid_Element_Width, unsigned in
 	*/
 
 	grid = new byte * [Grid_Max_Height];
-	for (int i = 0; i < Grid_Max_Height; i++)
+	for (unsigned int i = 0; i < Grid_Max_Height; i++)
 		grid[i] = new byte[Grid_Max_Width];
 
 	MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
@@ -693,7 +690,7 @@ Grid::Grid(unsigned int layer_num, unsigned int _Grid_Element_Width, unsigned in
 Grid::~Grid()	//Destructor
 {
 	//Free the memory for the grid array
-	for (int i = 0; i < Grid_Max_Height; i++)
+	for (unsigned int i = 0; i < Grid_Max_Height; i++)
 		delete[] grid[i];
 	delete[] grid;
 }
@@ -793,8 +790,8 @@ void Grid::FilterGridMotionLeft(Player* player, int* dx)
 
 void Grid::FilterGridMotionRight(Player* player, int* dx)
 {
-	auto x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1;
-	auto x2_next = x2 + *dx;
+	unsigned int x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1;
+	unsigned int x2_next = x2 + *dx;
 	if (x2_next >= MAX_PIXEL_WIDTH)
 		*dx = (MAX_PIXEL_WIDTH - 1) - x2;
 	else
@@ -846,7 +843,7 @@ void Grid::FilterGridMotionUp(Player* player, int* dy)
 
 void Grid::FilterGridMotionDown(Player* player, int* dy)
 {
-	auto x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
+	unsigned int x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
 	auto x2_next = x2 + *dy;
 	if (x2_next >= MAX_PIXEL_HEIGHT)
 		*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
@@ -923,8 +920,8 @@ void Grid::ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileS
 	auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);		//e.g. 16x16
 	auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);	//e.g. 8x8
 
-	for (auto row = 0; row < map.size(); ++row)
-		for (auto col = 0; col < map[0].size(); ++col)
+	for (unsigned int row = 0; row < map.size(); ++row)
+		for (unsigned int col = 0; col < map[0].size(); ++col)
 		{
 			auto index = map[row][col];
 			al_set_target_bitmap(tileElem);	//set as target the tileElem and copy/paint the tile onto it
@@ -939,7 +936,7 @@ void Grid::ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileS
 			else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
 			{
 				al_set_target_bitmap(gridElem);
-				for (auto i = 0; i < Grid_Elements_Per_Tile; i++)
+				for (unsigned int i = 0; i < Grid_Elements_Per_Tile; i++)
 				{
 					auto x = i % Grid_Block_Rows;
 					auto y = i / Grid_Block_Rows;

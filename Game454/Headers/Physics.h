@@ -14,7 +14,7 @@
 extern ALLEGRO_TIMER* PhysicsTimer;
 extern ALLEGRO_EVENT_QUEUE* PhysicsQueue;
 extern unsigned short jumpCountPixels;
-extern boolean scrollUp;
+extern bool scrollUp;
 
 void Physics_Init();
 
