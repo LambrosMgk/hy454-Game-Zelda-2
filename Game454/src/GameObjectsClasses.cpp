@@ -6,7 +6,7 @@ std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
-//std::vector<Skeleton> Skeletons;
+std::vector<Skeleton> Skeletons;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -178,6 +178,18 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	{
 		fprintf(stderr, "ReadTextMap returned empty vector.\n");
 		exit(-1);
+	}
+
+	//initalize the empty colors of the tileset
+	for (int i = 0; i < LAYERS; i++) {
+		string tmp = ASSUMED_EMPTY_LAYER_PATH;
+		cout << tmp;
+		string txt = ".txt";
+		cout << tmp;
+		tmp = tmp + to_string(i + 1);
+		tmp = tmp + txt;
+		cout << tmp;
+		Init_emptyTileColorsHolder(tmp.c_str());
 	}
 
 	//create the bitmap of the level
@@ -562,12 +574,35 @@ Skeleton::Skeleton(int posX, int posY) : Enemy(posX, posY)
 
 }
 
+void Skeleton::Init_frames_bounding_boxes()
+{
+
+}
+
+Rect Skeleton::FrameToDraw()
+{
+
+}
+
 //End Skeleton Class
 
 
 //Start SkeletonKnight Class
 
+SkeletonKnight::SkeletonKnight(int x, int y) : Enemy(x, y)
+{
 
+}
+
+void SkeletonKnight::Init_frames_bounding_boxes()
+{
+
+}
+
+Rect SkeletonKnight::FrameToDraw()
+{
+
+}
 
 //End SkeletonKnight Class
 
@@ -981,6 +1016,11 @@ void Init_emptyTileColorsHolder(const char* filepath)
 		cout << "Error Init_emptyTileColorsHolder could not open file.\n";
 		exit(-1);
 	}
+	if (gameObj.level == NULL)
+	{
+		cout << "game object has a null pointer on level (maybe a level isn't loaded yet)... Exiting....\n";
+		exit(-1);
+	}
 
 
 	TileColorsHolder* tch = new TileColorsHolder;
@@ -1003,21 +1043,16 @@ void Init_emptyTileColorsHolder(const char* filepath)
 	file.close();
 }
 
-
 void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight)
 {
 	gameObj.level->grids.push_back(new Grid(layer, Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
+
+
 void add_Skeleton(int EnemyX, int EnemyY)
 {
 	//skeletons.push_back(Skeleton(EnemyX, EnemyY));
-}
-
-void add_SkeletonKnight(int EnemyX, int EnemyY)
-{
-	//enemy = new Player(EnemyX, EnemyY);
-	
 }
 
 void createSkeletons(int skel_number) 
@@ -1029,6 +1064,12 @@ void createSkeletons(int skel_number)
 
 }
 
-void createSkeletonKnights(int skelKnight_number) {
+void add_SkeletonKnight(int EnemyX, int EnemyY)
+{
+	SkeletonKnight *Sk = new SkeletonKnight(EnemyX, EnemyY);
+}
+
+void createSkeletonKnights(int skelKnight_number) 
+{
 
 }

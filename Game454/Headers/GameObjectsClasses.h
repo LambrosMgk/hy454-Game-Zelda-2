@@ -91,7 +91,7 @@ extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
-//extern std::vector<Skeleton> Skeletons;
+extern std::vector<Skeleton> Skeletons;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -303,6 +303,10 @@ public:
 
 	~Enemy();
 
+	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual Rect FrameToDraw() = 0;
+
 	void Set_Speed_X(int speedX);
 
 	void Increment_Speed_X();
@@ -322,10 +326,6 @@ public:
 	Enemy_State Get_State();
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
-
-	virtual void Init_frames_bounding_boxes();
-
-	virtual Rect FrameToDraw();
 };
 
 class Skeleton : public Enemy
@@ -335,6 +335,10 @@ private:
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 public:
 	Skeleton(int x,int y);
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
 };
 
 class SkeletonKnight : public Enemy
@@ -344,6 +348,10 @@ private:
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 public:
 	SkeletonKnight(int x, int y);
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
 };
 
 void createElevators();
@@ -371,4 +379,8 @@ void Init_emptyTileColorsHolder(const char* filepath);
 
 void add_Skeleton(int EnemyX, int EnemyY);
 
+void createSkeletons(int skel_number);
+
 void add_SkeletonKnight(int EnemyX, int EnemyY);
+
+void createSkeletonKnights(int skelKnight_number);

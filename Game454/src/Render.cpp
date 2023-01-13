@@ -38,18 +38,6 @@ void Render_init()
 		exit(-1);
 	}
 	al_set_window_title(gameObj.display, "Zelda II: The Adventure of Link");
-
-	//initalize the empty colors of the tileset
-	for (int i = 0; i < LAYERS; i++) {
-		string tmp = ASSUMED_EMPTY_LAYER_PATH;
-		cout << tmp;
-		string txt = ".txt";
-		cout << tmp;
-		tmp = tmp + to_string(i + 1);
-		tmp = tmp + txt;
-		cout << tmp;
-		Init_emptyTileColorsHolder(tmp.c_str());
-	}
 }
 
 // use this to render grid (toggle on / off), used only for development time testing -
