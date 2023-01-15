@@ -35,6 +35,30 @@ void Animator()
 				else if (scrollLeft == false && scrollRight == false)	//idle
 					player->LinkSpriteNum = 0;
 			}
+			else if (player->Get_State() == State_Elevator)	//move both the player and the elevator
+			{
+				unsigned int act_elevator = gameObj.level->active_elevator;
+				if (act_elevator == -1)
+				{
+					cout << "Error : player state set to elevator but no activate elevator on \"Level\" object.\n";
+					exit(-1);
+				}
+
+				cout << "DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) = " << DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) << "\n";
+				if (gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) + 2, DIV_TILE_WIDTH(elevators[act_elevator].getCol())) & GRID_SOLID_TILE)
+				{
+					player->Set_State(State_Walking);
+					gameObj.level->active_elevator = -1;	//no active elevator
+				}
+				else
+				{
+					elevators[act_elevator].setCurrRow(elevators[act_elevator].getCurrRow() + player->Get_Speed_Y());
+					elevators[act_elevator].Paint_Sprite_Elevator();
+				}
+				/*me ena timer tha kanoume scroll to active elevator kai me enan epipleon elegxo mporoume na doume
+				poia grid tiles tha allazoume apo solid se empty kai olo ayto until xtypisoume kati solid se kapoio layer
+				(logika mono to layer 1 tha xreiastei na checkaroume mias kai auto exei tiles-toubla)*/
+			}
 			else if (event.any.source == al_get_timer_event_source(AttackTimer) && player->Get_State() == State_Attacking)
 			{
 				player->LinkSpriteNum++;

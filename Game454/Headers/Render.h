@@ -20,6 +20,8 @@ extern ALLEGRO_EVENT_QUEUE* timerQueue;
 /*By screen i mean the target bitmap*/
 void Paint_Player_to_Screen(Rect r);
 
+void Draw_Level(Level* level);
+
 void Load_Start_Screen();
 
 void Render_init();

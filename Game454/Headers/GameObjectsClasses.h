@@ -101,9 +101,11 @@ extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later,
 class Level
 {
 public:
-	ALLEGRO_BITMAP* bitmap = NULL, *TileSet = NULL;
+	ALLEGRO_BITMAP* TileSet = NULL;
+	std::vector<ALLEGRO_BITMAP*> bitmaps;	//bitmaps vector has the bitmaps of all the layers of the map
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
+	unsigned int active_elevator = -1;	//index for the elevators vector showing which elevator is being used by the player
 
 	bool Toggle_Grid = false;
 	unsigned char* divIndex = NULL, * modIndex = NULL;
@@ -123,7 +125,6 @@ in case of bad file path exits program with -1*/
 	/*Creates and returns a bitmap from an CSV and a Tileset, WILL NOT WORK IF A TILESET IS NOT LOADED (tileset width and height vars will have a value of 0)*/
 	ALLEGRO_BITMAP* Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display);
 
-	/*Paints over the given bitmap, useful for maps with multiple layers*/
 	void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display);
 
 	void Scroll_Bitmap();
@@ -150,23 +151,30 @@ public:
 class Elevator
 {
 private:
-	unsigned int x, y;
+	unsigned int row, col, curr_row;	//row and col count pixels (instead of row 1 it stores 1*TILE_HEIGHT), curr_row is the height of the elevatorbitmap
 	ALLEGRO_BITMAP* elevatorbitmap;
 	
 public:
-	Elevator(unsigned int _x, unsigned int _y);
-	void Paint_Elevator();
+	Elevator(unsigned int _row, unsigned int _col);
+	void Paint_Sprite_Elevator();
 	void hide_og_elevator();
+
+	unsigned int getRow();
+	unsigned int getCurrRow();
+	unsigned int getCol();
+	void setRow(unsigned int X);
+	void setCurrRow(unsigned int X);
+	void setCol(unsigned int Y);
 };
 
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
 {
 private:
 	Player_State state = State_Walking;
+	Player_Direction direction = dir_right;
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
-	Player_Direction direction = dir_right;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
@@ -193,6 +201,10 @@ public:
 	void Decrement_Speed_Y();
 
 	int Get_Speed_Y();
+
+	void set_Direction(Player_Direction direction);
+
+	Player_Direction get_Direction();
 
 	void Set_State(Player_State state);
 
@@ -254,7 +266,9 @@ public:
 
 	int getPlayerBottomRow(Player* player);
 
-	int getPlayerStartCol(Player* player);
+	int getPlayerLeftCol(Player* player);
+
+	int getPlayerRightCol(Player* player);
 
 	int GetIndexFromLayer(int gridRow, int gridCol);
 
