@@ -87,7 +87,8 @@ ALLEGRO_BITMAP* Level::Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_B
 	ALLEGRO_BITMAP* bitmap = al_create_bitmap(CSV[0].size() * TILE_WIDTH, CSV.size() * TILE_HEIGHT);
 	int TileSetIndex;
 
-	//cout << "Create_Bitmap_From_CSV() height : " << al_get_bitmap_height(bitmap) << " width : " << al_get_bitmap_width(bitmap) << "\n";
+	// Enable blending and set the blending mode to use the alpha channel
+	al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
 	al_set_target_bitmap(bitmap);	/*Select the bitmap to which all subsequent drawing operations in the calling thread will draw.*/
 	for (size_t y = 0; y < CSV.size(); y++)
 	{
@@ -103,6 +104,7 @@ ALLEGRO_BITMAP* Level::Create_Bitmap_From_CSV(vector<vector<int>> CSV, ALLEGRO_B
 	return bitmap;
 }
 
+/*Paints over the given bitmap*/
 void Level::Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display)
 {
 	assert(CSV.size != 0);
@@ -145,7 +147,7 @@ void Level::Scroll_Bitmap()
 
 //End of Class Level
 
-//Start of Class GameLogic 
+//Start of Class GameLogic
 
 Game_State GameLogic::Get_State()
 {
@@ -190,8 +192,8 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	}
 
 	//create the bitmap of the level
-	level->bitmap = level->Create_Bitmap_From_CSV(level->TileMapCSV[0], level->TileSet, gameObj.display);
-	level->Paint_To_Bitmap(level->bitmap, level->TileMapCSV[1], level->TileSet, gameObj.display);
+	level->bitmaps.push_back(level->Create_Bitmap_From_CSV(level->TileMapCSV[0], level->TileSet, gameObj.display));
+	level->bitmaps.push_back(level->Create_Bitmap_From_CSV(level->TileMapCSV[1], level->TileSet, gameObj.display));
 	cout << "Created the whole bitmap\n";
 
 	add_Grid(0, TILE_WIDTH, TILE_HEIGHT, level->TileMapCSV[0][0].size(), level->TileMapCSV[0].size());	//initialize the grid for layer 1
@@ -209,12 +211,13 @@ void GameLogic::Load_Level(unsigned short levelNum)
 
 //start of Class Elevator functions
 
-Elevator::Elevator(unsigned int _x, unsigned int _y) 
+Elevator::Elevator(unsigned int Row, unsigned int Col) 
 {
-	this->x = _x;
-	this->y = _y;
+	this->row = Row;
+	this->col = Col;
+	this->curr_row = Row + 4 * TILE_HEIGHT;	//to point to the bottom part of the elevator
 
-	this->elevatorbitmap = al_create_bitmap(TILE_HEIGHT, 2 * TILE_WIDTH); //create a bitmap for the bottom part of the elevator with dimensions (16,2x16)
+	this->elevatorbitmap = al_create_bitmap(2 * TILE_WIDTH, TILE_HEIGHT); //create a bitmap for the bottom part of the elevator with dimensions (16,2x16)
 	al_set_target_bitmap(elevatorbitmap);
 
 	al_draw_bitmap_region(gameObj.level->TileSet, MUL_TILE_WIDTH(gameObj.level->modIndex[ELEVATORID1]), MUL_TILE_HEIGHT(gameObj.level->divIndex[ELEVATORID1]), TILE_WIDTH, TILE_HEIGHT, MUL_TILE_WIDTH(0), MUL_TILE_HEIGHT(0), 0);
@@ -223,44 +226,99 @@ Elevator::Elevator(unsigned int _x, unsigned int _y)
 	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
 }
 
-void Elevator::Paint_Elevator() 
+void Elevator::Paint_Sprite_Elevator()
 {
-	al_draw_bitmap_region(this->elevatorbitmap, 0, 0, TILE_WIDTH, TILE_HEIGHT, x, y, 0);
-	al_draw_bitmap_region(this->elevatorbitmap, MUL_TILE_WIDTH(1), 0, TILE_WIDTH, TILE_HEIGHT, x, y, 0);
+	assert(gameObj.level != NULL);
+
+	//paint the sprite over the layer 2 bitmap so that the renderer can paint it when the time comes
+	al_set_target_bitmap(gameObj.level->bitmaps[1]);
+	al_draw_bitmap_region(this->elevatorbitmap, MUL_TILE_WIDTH(0), 0, TILE_WIDTH, TILE_HEIGHT, col, curr_row, 0);
+	al_draw_bitmap_region(this->elevatorbitmap, MUL_TILE_WIDTH(1), 0, TILE_WIDTH, TILE_HEIGHT, col + TILE_WIDTH, curr_row, 0);
+	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
 }
 
 void Elevator::hide_og_elevator() 
 {
-	al_set_target_bitmap(gameObj.level->bitmap);
-	for (unsigned int i = y; i < y + TILE_HEIGHT; i++) {
-		for (unsigned int j = x; j < x + 2 * TILE_WIDTH; j++) {
-			ALLEGRO_COLOR color = al_get_pixel(gameObj.level->bitmap, i, j);
+	assert(gameObj.level->bitmaps.size() > 1);
+
+	al_lock_bitmap(gameObj.level->bitmaps[1], ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READWRITE);
+	al_set_target_bitmap(gameObj.level->bitmaps[1]);
+	//(row+4) because we start from the upper part of the elevator
+	for (unsigned int y = row + 4*TILE_HEIGHT; y < row +4*TILE_HEIGHT + TILE_HEIGHT; y++) {
+		for (unsigned int x = col; x < col + 2 * TILE_WIDTH; x++) {
+			ALLEGRO_COLOR color = al_get_pixel(gameObj.level->bitmaps[1], x, y);
 			unsigned char r, g, b;
 
 			al_unmap_rgb(color, &r, &g, &b);
-
-
-			al_put_pixel(i, j, al_map_rgba(r, g, b, 255));
+			//cout << "r = " << (int)r << ", g = " << (int)g << ", b = " << (int)b << ", a = " << (int)a << "\n";
+			al_put_pixel(x, y, al_map_rgba(r, g, b, 0));
 
 		}
 	}
 	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
+	al_unlock_bitmap(gameObj.level->bitmaps[1]);
+}
+
+
+unsigned int Elevator::getRow()
+{
+	return this->row;
+}
+
+unsigned int Elevator::getCurrRow()
+{
+	return this->curr_row;
+}
+
+unsigned int Elevator::getCol()
+{
+	return this->col;
+}
+
+void Elevator::setRow(unsigned int Row)
+{
+	this->row = Row;
+}
+
+void Elevator::setCurrRow(unsigned int X)
+{
+	this->curr_row = X;
+}
+
+void Elevator::setCol(unsigned int Col)
+{
+	this->col = Col;
 }
 
 //End of Class Elevator
 
-void createElevators() {
-	boolean isTopElev = true;
+void createElevators() 
+{
+	bool isTopElev = false;	//flag to help skip the lower part of the elevator
+	
+	for (unsigned int row = 0; row < gameObj.level->TileMapCSV[1].size(); row++) {
+		for (unsigned int col = 0; col < gameObj.level->TileMapCSV[1][row].size(); col++) {
 
-	for (unsigned int i = 0; i < gameObj.level->TileMapCSV[1].size(); i++) {
-		for (unsigned int j = 0; j < gameObj.level->TileMapCSV[1][i].size(); i++) {
+			
+			if (gameObj.level->TileMapCSV[1][row][col] == ELEVATORID1)	//found upper part
+			{
+				//search if i already added this elevator e.g. if i add the top part the for-loop will eventually hit the bottom part and it might mistake it as a new elevator
+				for (unsigned int k = 0; k < elevators.size(); k++)
+				{
+					if (elevators[k].getRow() == row - 4 && elevators[k].getCol() == col)	//if the upper part is already added don't create new elevator
+					{
+						isTopElev = true;
+						break;
+					}
+				}
 
-			if ((gameObj.level->TileMapCSV[1][i][j] == ELEVATORID1))
+				if (isTopElev != true)
+				{
+					//cout << "Created elevator at row = " << row << "and col = " << col << "\n";
+					elevators.push_back(Elevator(MUL_TILE_HEIGHT(row), MUL_TILE_WIDTH(col)));
+				}
+
 				isTopElev = false;
-
-			else if ((gameObj.level->TileMapCSV[1][i][j] == ELEVATORID1) && !isTopElev) {
-
-				elevators.push_back(Elevator(MUL_TILE_WIDTH(i), MUL_TILE_HEIGHT(j)));
 			}
 		}
 	}
@@ -311,6 +369,22 @@ int Player::Get_Speed_Y()
 	return this->scrollDistanceY;
 }
 
+void Player::set_Direction(Player_Direction direction)
+{
+	if (direction != dir_left && direction != dir_right)
+	{
+		cout << "Error : invalid direction \"" << direction << "\"\n";
+		exit(-1);
+	}
+
+	this->direction = direction;
+}
+
+Player_Direction Player::get_Direction()
+{
+	return this->direction;
+}
+
 void Player::Set_State(Player_State state)
 {
 	if (this->state == State_Walking && state == State_Crounching)	//Walking -> Crounching
@@ -319,6 +393,14 @@ void Player::Set_State(Player_State state)
 		this->state = state;
 	}
 	else if (this->state == State_Walking && state == State_Attacking) //Walking -> Attacking
+	{
+		this->state = state;
+	}
+	else if (this->state == State_Walking && state == State_Elevator) //Walking -> Elevator
+	{
+		this->state = state;
+	}
+	else if (this->state == State_Elevator && state == State_Walking) //Elevator -> Walking
 	{
 		this->state = state;
 	}
@@ -351,6 +433,10 @@ void Player::Scroll_Player(float ScrollDistanceX, float ScrollDistanceY)
 	if (state == State_Walking)
 	{
 		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+	else if (state == State_Elevator)	//allow the player only to fall (and also jump)
+	{
 		this->positionY += ScrollDistanceY;
 	}
 }
@@ -455,7 +541,7 @@ void Player::Init_frames_bounding_boxes()
 
 Rect Player::FrameToDraw()
 {
-	if (state == State_Walking && direction == dir_left)
+	if (state == State_Walking && direction == dir_left)	//Walking
 	{
 		return FramesWalkingLeft[LinkSpriteNum];
 	}
@@ -463,11 +549,19 @@ Rect Player::FrameToDraw()
 	{
 		return FramesWalkingRight[LinkSpriteNum];
 	}
-	else if (state == State_Crounching)
+	if (state == State_Elevator && direction == dir_left)	//Elevator
+	{
+		return FramesWalkingLeft[0];
+	}
+	else if (state == State_Elevator && direction == dir_right)
+	{
+		return FramesWalkingRight[0];
+	}
+	else if (state == State_Crounching)		//Crounching
 	{
 		return FramesCrounch[direction];
 	}
-	else if (state == State_Attacking && direction == dir_left)
+	else if (state == State_Attacking && direction == dir_left)		//Attacking (standing)
 	{
 		return FramesSlashLeft[LinkSpriteNum];
 	}
@@ -475,20 +569,20 @@ Rect Player::FrameToDraw()
 	{
 		return FramesSlashRight[LinkSpriteNum];
 	}
-	else if (state == State_CrounchAttacking)
+	else if (state == State_CrounchAttacking)		//Crounch Attacking
 	{
 		return FramesCrounchSlash[direction];
 	}
 	else
 	{
-		fprintf(stderr, "Error with player direction : invalid value %d.\n", direction);
+		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
 		exit(-1);
 	}
 }
 
-// start of class enemy
+//end of class Player functions
 
-//Class Enemy functions
+//start of class Enemy functions
 
 Enemy::Enemy(int posX, int posY)
 {
@@ -731,22 +825,24 @@ bool Grid::CanPassGridTile(unsigned short row, unsigned short col, byte flags) /
 	return (GetGridTile(row, col) & flags) == 0;	//changed from != 0
 }
 
+/*Returns the row based on the TILE_HEIGHT (not the Grid_element_height)*/
 int Grid::getPlayerBottomRow(Player* player) {
-	return player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
+	return (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / TILE_HEIGHT;
 }
 
-int Grid::getPlayerStartCol(Player* player) {
-	return (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+/*Returns the column based on the TILE_WIDTH (not the Grid_element_width)*/
+int Grid::getPlayerLeftCol(Player* player) {
+	return (player->positionX + player->screenX * DISPLAY_W) / TILE_WIDTH;
+}
+
+int Grid::getPlayerRightCol(Player* player) {
+	return (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / TILE_WIDTH;
 }
 
 int Grid::GetIndexFromLayer(int gridRow, int gridCol)
 {
 	//For a grid to exist it means that a level object already exists
-	cout << "1" << layer;
-		cout << "2" << gridRow / Grid_Block_Rows;
-		cout << "3" << gridCol / Grid_Block_Columns;
-	
-	return gameObj.level->TileMapCSV[layer][gridRow / Grid_Block_Rows][gridCol / Grid_Block_Columns];
+	return gameObj.level->TileMapCSV[layer][gridRow][gridCol];
 }
 
 void Grid::FilterGridMotion(Player* player, int* dx, int* dy)

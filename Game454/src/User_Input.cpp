@@ -50,12 +50,41 @@ void UserInput(void)
 			case ALLEGRO_KEY_DOWN:
 			{
 				Grid* grid = gameObj.level->grids[1];
-				if (grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID1 ||
-					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerStartCol(player)) == ELEVATORID2)
+				//cout << "grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) = " << grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerLeftCol(player)) << "\n";
+				//cout << "grid->getPlayerBottomRow(player)  + 1=  " << grid->getPlayerBottomRow(player) + 1 << "\n";
+				//cout << "grid->getPlayerleftCol(player) = " << grid->getPlayerLeftCol(player) << "\n";
+				//cout << "grid->getPlayerRightCol(player) = " << grid->getPlayerRightCol(player) << "\n";
+				
+				/*both tiles of the player must be inside of the elevator*/
+				if ((grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerLeftCol(player)) == ELEVATORID1 ||
+					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerLeftCol(player)) == ELEVATORID2)
+					&&
+					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID1 ||
+					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID2)
 				{
 					player->Set_State(State_Elevator);
+					if (elevators.size() == 0)
+					{
+						cout << "Error : elevators vector is empty!\n";
+						exit(-1);
+					}
 
+					for (unsigned int i = 0; i < elevators.size(); i++)
+					{
+						cout << "DIV_TILE_HEIGHT(elevators[i].getRow()) = " << DIV_TILE_HEIGHT(elevators[i].getRow()) << "\n";
+						//grid->getPlayerBottomRow(player) - 3 to get the upper part of the elevator
+						if ((DIV_TILE_HEIGHT(elevators[i].getRow()) == grid->getPlayerBottomRow(player) - 3) &&
+							(DIV_TILE_WIDTH(elevators[i].getCol()) == grid->getPlayerLeftCol(player) ||
+							DIV_TILE_WIDTH(elevators[i].getCol()) == grid->getPlayerRightCol(player))
+							)
+						{
+							cout << "Active elevator = " << i << "\n";
+							gameObj.level->active_elevator = i;
+							break;
+						}
+					}
 					elevators[0].hide_og_elevator();
+					elevators[0].Paint_Sprite_Elevator();
 				}
 				else
 				{
@@ -64,11 +93,11 @@ void UserInput(void)
 			}
 				break;
 			case ALLEGRO_KEY_LEFT:
-				player->direction = dir_left;
+				player->set_Direction(dir_left);
 				scrollLeft = true;
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				player->direction = dir_right;
+				player->set_Direction(dir_right);
 				scrollRight = true;
 				break;
 			case ALLEGRO_KEY_A:			// Jump
