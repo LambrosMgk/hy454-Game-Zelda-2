@@ -6,7 +6,7 @@ std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
-std::vector<Skeleton> Skeletons;
+std::vector<Skeleton> skeletons;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -366,7 +366,7 @@ void Player::Init_frames_bounding_boxes()
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT * 2;
 		r->w = i % 2 == 1 ? LINK_SPRITE_WIDTH : LINK_SPRITE_WIDTH * 2;
-		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16;
+		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16; 
 		r->y = 0;
 		if (i == 3)
 			k -= 32;
@@ -742,6 +742,10 @@ int Grid::getPlayerStartCol(Player* player) {
 int Grid::GetIndexFromLayer(int gridRow, int gridCol)
 {
 	//For a grid to exist it means that a level object already exists
+	cout << "1" << layer;
+		cout << "2" << gridRow / Grid_Block_Rows;
+		cout << "3" << gridCol / Grid_Block_Columns;
+	
 	return gameObj.level->TileMapCSV[layer][gridRow / Grid_Block_Rows][gridCol / Grid_Block_Columns];
 }
 
@@ -973,6 +977,23 @@ void Load_Player_Spiresheet()
 	}
 }
 
+void Load_Enemy1_Spiresheet()
+{
+	enemy->PlayerSpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
+
+	for (int i = 0; i < skeletons.size(); i++) {
+	
+		if (skeletons[i]->PlayerSpriteSheet == NULL)
+		{
+			fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+			exit(-1);
+		}
+
+	}
+	
+	
+}
+
 bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
 {
 	return (c1.r == c2.r && c1.g == c2.g && c1.b == c2.b);
@@ -1049,7 +1070,7 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 
 void add_Skeleton(int EnemyX, int EnemyY)
 {
-	//skeletons.push_back(Skeleton(EnemyX, EnemyY));
+	skeletons.push_back(Skeleton(EnemyX, EnemyY));
 }
 
 void createSkeletons(int skel_number) 

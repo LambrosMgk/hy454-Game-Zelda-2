@@ -15,6 +15,9 @@
 #define TILESET_PATH "UnitTests\\Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
 #define ASSUMED_EMPTY_LAYER_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer"
 #define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
+#define ENEMY1_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-1.gif"
+#define ENEMY2_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-2.gif"
+#define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects.png"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
