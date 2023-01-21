@@ -10,6 +10,15 @@ void Paint_Player_to_Screen(Rect r)
 	al_draw_bitmap_region(player->PlayerSpriteSheet, r.x, r.y, r.w, r.h, player->positionX, player->positionY, 0);
 }
 
+void Paint_Enemies_to_Screen()
+{
+	for (unsigned int i = 0; i < stalfoses.size(); i++)
+	{
+		Rect r = stalfoses[i].FrameToDraw();
+		al_draw_bitmap_region(stalfoses[i].EnemySpriteSheet, r.x, r.y, r.w, r.h, stalfoses[i].positionX, stalfoses[i].positionY, 0);
+	}
+}
+
 void Draw_Level(Level *level)
 {
 	assert(level != NULL);
@@ -129,6 +138,7 @@ void Renderer()
 
 
 			Draw_Level(gameObj.level);
+			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
 			if (gameObj.level->Toggle_Grid)
 			{

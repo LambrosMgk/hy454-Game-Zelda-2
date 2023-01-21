@@ -28,6 +28,8 @@
 #define StartPlayerPositionX 5*TILE_WIDTH
 #define StartPlayerPositionY 11*TILE_HEIGHT-1
 
+
+
 #define FPS 60.0
 #define LAYERS 2
 
@@ -60,6 +62,10 @@
 #define LINK_SPRITE_HEIGHT 16
 #define LINK_JUMP_HEIGHT 32
 
+//Enemy sprites vary so its better to go with 16 pixels
+#define ENEMY_SPRITE_WIDTH 16
+#define ENEMY_SPRITE_HEIGHT 16
+
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
@@ -83,9 +89,9 @@ class TileColorsHolder;
 class GameLogic;
 class Player;
 class Enemy;
-class Skeleton;
 class Grid;
 class Elevator;
+class Stalfos;
 
 
 
@@ -94,7 +100,7 @@ extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
-extern std::vector<Skeleton> Skeletons;
+extern std::vector<Stalfos> stalfoses;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -217,6 +223,8 @@ public:
 
 	void Init_frames_bounding_boxes();
 
+	void Load_Player_Spritesheet();
+
 	Rect FrameToDraw();
 };
 
@@ -308,13 +316,15 @@ public:
 
 class Enemy
 {
-private:
+protected:
 	Enemy_State state = E_State_Walking;
-	unsigned int SpriteNum = 0;	//counter for animation
+	unsigned int EnemySpriteNum = 0;	//counter for animation
 	int scrollDistanceX = 2, scrollDistanceY = 3;
-public:
 	Enemy_Direction direction = e_dir_right;
+public:
 	int positionX, positionY;
+	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
+	
 
 	Enemy(int posX, int posY);
 
@@ -342,33 +352,27 @@ public:
 
 	Enemy_State Get_State();
 
+	void Load_Enemy_Spritesheet();
+
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 };
 
-class Skeleton : public Enemy
+class Stalfos : public Enemy
 {
 private:
-	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
-	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-public:
-	Skeleton(int x,int y);
+	std::vector<Rect> FramesWalkingRight;
+	std::vector<Rect> FramesSlashRight;
+	std::vector<Rect> FramesFalling;
+	
+public :
+	Stalfos(int x, int y);
+	
+	Enemy_State Get_State();
 
 	void Init_frames_bounding_boxes();
 
 	Rect FrameToDraw();
-};
 
-class SkeletonKnight : public Enemy
-{
-private:
-	std::vector<Rect>FramesWalkingLeft, FramesWalkingRight;	//the bounding box for each frame, x and y will be the position in the sprite sheet to help find the sprite we want
-	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
-public:
-	SkeletonKnight(int x, int y);
-
-	void Init_frames_bounding_boxes();
-
-	Rect FrameToDraw();
 };
 
 void createElevators();
@@ -394,10 +398,8 @@ bool IsTileIndexAssumedEmpty(unsigned int layer, Index index);
 The format of the file should be numbers (indices) seperated by commas*/
 void Init_emptyTileColorsHolder(const char* filepath);
 
-void add_Skeleton(int EnemyX, int EnemyY);
+void add_Stalfos(int EnemyX, int EnemyY);
 
-void createSkeletons(int skel_number);
+void add_Wosu(int EnemyX, int EnemyY);
 
-void add_SkeletonKnight(int EnemyX, int EnemyY);
-
-void createSkeletonKnights(int skelKnight_number);
+void createWosus(int skelKnight_number);

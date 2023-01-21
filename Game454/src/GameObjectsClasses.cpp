@@ -6,7 +6,7 @@ std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
-std::vector<Skeleton> skeletons;
+std::vector<Stalfos> stalfoses;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -167,8 +167,8 @@ void GameLogic::End_Game()
 void GameLogic::Load_Level(unsigned short levelNum)
 {
 	Init_Player(StartPlayerPositionX, StartPlayerPositionY);
-	Load_Player_Spiresheet();
-
+	
+	add_Stalfos(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
 
 	Level* level = new Level();
 	gameObj.level = level;
@@ -539,6 +539,18 @@ void Player::Init_frames_bounding_boxes()
 
 }
 
+void Player::Load_Player_Spritesheet() {
+
+	this->PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
+	if (this->PlayerSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+	
+
+}
+
 Rect Player::FrameToDraw()
 {
 	if (state == State_Walking && direction == dir_left)	//Walking
@@ -647,6 +659,17 @@ Enemy_State Enemy::Get_State()
 	return this->state;
 }
 
+void Enemy::Load_Enemy_Spritesheet()
+{
+	this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
+	if (this->EnemySpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
+
+
 void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 {
 	if (state == E_State_Walking)
@@ -658,44 +681,91 @@ void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 //end of class enemy
 
-//Start Skeleton Class
+//Start of Stalfos Class
 
-Skeleton::Skeleton(int posX, int posY) : Enemy(posX, posY) 
+Stalfos::Stalfos(int x, int y) : Enemy(x, y) 
 {
 
 }
 
-void Skeleton::Init_frames_bounding_boxes()
-{
+void Stalfos::Init_frames_bounding_boxes() {
+	Rect* r;
+	int i = 0;
 
+	//FramesWalkingRight
+	for (i = 0; i < 2; i++)
+	{
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = i % 2 == 1 ? ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH/2 : ENEMY_SPRITE_WIDTH * 2;
+		
+		r->y = 448 + 5;
+		r->x = 288 + i* 2 *ENEMY_SPRITE_WIDTH;
+		FramesWalkingRight.push_back(*r);
+	}
+
+	//FramesAttackingRight
+	for (i = 0; i < 3; i++)
+	{
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		if (i == 0) {
+			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 2;
+			r->y = 448 + 5;
+			r->x = 336 + 10;
+		}
+		else if (i == 1) {
+			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 2;
+			r->y = 448 + 5;
+			r->x = 368;
+		}
+		else {
+			r->w = 2 * ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH/2;
+			r->y = 448 + 5;
+			r->x = 384 + 5;
+		}
+
+		FramesSlashRight.push_back(*r);
+	}
+
+	//FramesFalling
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2 +ENEMY_SPRITE_HEIGHT/2;
+	r->w = 2 * ENEMY_SPRITE_WIDTH;
+	r->y = 432 + 10;
+	r->x = 448 + 5;
+	
+
+	FramesFalling.push_back(*r);
+	
 }
 
-Rect Skeleton::FrameToDraw()
-{
 
+Rect Stalfos::FrameToDraw() {
+
+	return FramesFalling[0];
+
+	/*if (state == E_State_Walking && direction == e_dir_right)
+	{
+		return FramesWalkingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Attacking && direction == e_dir_right)
+	{
+		return FramesSlashRight[EnemySpriteNum];
+	}
+	else
+	{
+		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
+		exit(-1);
+	}*/
 }
 
-//End Skeleton Class
+//End of Stalfos Class
 
 
-//Start SkeletonKnight Class
+//Start of Wosu Class
 
-SkeletonKnight::SkeletonKnight(int x, int y) : Enemy(x, y)
-{
-
-}
-
-void SkeletonKnight::Init_frames_bounding_boxes()
-{
-
-}
-
-Rect SkeletonKnight::FrameToDraw()
-{
-
-}
-
-//End SkeletonKnight Class
+//End Wosu Class
 
 //Class TileColorsHolder
 
@@ -1061,34 +1131,9 @@ void Init_Player(int PlayerX, int PlayerY)
 {
 	player = new Player(PlayerX, PlayerY);
 	player->Init_frames_bounding_boxes();
+	player->Load_Player_Spritesheet();
 }
 
-void Load_Player_Spiresheet()
-{
-	player->PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
-	if (player->PlayerSpriteSheet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
-}
-
-void Load_Enemy1_Spiresheet()
-{
-	enemy->PlayerSpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
-
-	for (int i = 0; i < skeletons.size(); i++) {
-	
-		if (skeletons[i]->PlayerSpriteSheet == NULL)
-		{
-			fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
-			exit(-1);
-		}
-
-	}
-	
-	
-}
 
 bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
 {
@@ -1162,28 +1207,9 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 	gameObj.level->grids.push_back(new Grid(layer, Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
-
-
-void add_Skeleton(int EnemyX, int EnemyY)
-{
-	skeletons.push_back(Skeleton(EnemyX, EnemyY));
-}
-
-void createSkeletons(int skel_number) 
-{
-	for (int i = 0; i < skel_number; i++) 
-	{
-		//skeletons.push_back(Skeleton());
-	}
-
-}
-
-void add_SkeletonKnight(int EnemyX, int EnemyY)
-{
-	SkeletonKnight *Sk = new SkeletonKnight(EnemyX, EnemyY);
-}
-
-void createSkeletonKnights(int skelKnight_number) 
-{
-
+void add_Stalfos(int x,int y) {
+	Stalfos stalfos = Stalfos(x, y);
+	stalfos.Init_frames_bounding_boxes();
+	stalfos.Load_Enemy_Spritesheet();
+	stalfoses.push_back(stalfos);
 }
