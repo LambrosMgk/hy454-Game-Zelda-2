@@ -50,10 +50,6 @@ void UserInput(void)
 			case ALLEGRO_KEY_DOWN:
 			{
 				Grid* grid = gameObj.level->grids[1];
-				//cout << "grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) = " << grid->GetIndexFromLayer(grid->getPlayerBottomRow(player), grid->getPlayerLeftCol(player)) << "\n";
-				//cout << "grid->getPlayerBottomRow(player)  + 1=  " << grid->getPlayerBottomRow(player) + 1 << "\n";
-				//cout << "grid->getPlayerleftCol(player) = " << grid->getPlayerLeftCol(player) << "\n";
-				//cout << "grid->getPlayerRightCol(player) = " << grid->getPlayerRightCol(player) << "\n";
 				
 				/*both tiles of the player must be inside of the elevator*/
 				if ((grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerLeftCol(player)) == ELEVATORID1 ||
@@ -71,20 +67,19 @@ void UserInput(void)
 
 					for (unsigned int i = 0; i < elevators.size(); i++)
 					{
-						cout << "DIV_TILE_HEIGHT(elevators[i].getRow()) = " << DIV_TILE_HEIGHT(elevators[i].getRow()) << "\n";
-						//grid->getPlayerBottomRow(player) - 3 to get the upper part of the elevator
+						//grid->getPlayerBottomRow(player) - 3 to match the upper part of the elevator
 						if ((DIV_TILE_HEIGHT(elevators[i].getRow()) == grid->getPlayerBottomRow(player) - 3) &&
 							(DIV_TILE_WIDTH(elevators[i].getCol()) == grid->getPlayerLeftCol(player) ||
 							DIV_TILE_WIDTH(elevators[i].getCol()) == grid->getPlayerRightCol(player))
 							)
 						{
-							cout << "Active elevator = " << i << "\n";
 							gameObj.level->active_elevator = i;
+							elevators[i].hide_og_elevator();
+							elevators[i].Add_to_draw_queue();
 							break;
 						}
 					}
-					elevators[0].hide_og_elevator();
-					elevators[0].Paint_Sprite_Elevator();
+					
 				}
 				else
 				{
@@ -124,7 +119,8 @@ void UserInput(void)
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_DOWN:
-				player->Set_State(State_Walking);
+				if(player->Get_State() != State_Elevator)
+					player->Set_State(State_Walking);
 				break;
 			case ALLEGRO_KEY_LEFT:
 				scrollLeft = false;

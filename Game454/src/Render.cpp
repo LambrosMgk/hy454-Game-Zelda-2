@@ -4,7 +4,7 @@ bool draw = false;
 ALLEGRO_TIMER* FPStimer;
 ALLEGRO_EVENT_QUEUE* timerQueue;
 
-/*By screen i mean the target bitmap*/
+/*By screen i mean the target bitmap (which by default is the backbuffer of the display)*/
 void Paint_Player_to_Screen(Rect r)
 {
 	al_draw_bitmap_region(player->PlayerSpriteSheet, r.x, r.y, r.w, r.h, player->positionX, player->positionY, 0);
@@ -19,14 +19,12 @@ void Paint_Enemies_to_Screen()
 	}
 }
 
-void Draw_Level(Level *level)
+void Draw_Level(Level *level, unsigned int layer)
 {
 	assert(level != NULL);
+	assert(layer < level->bitmaps.size());	/*can't paint a bitmap that i don't have*/
 
-	for (unsigned int i = 0; i < level->bitmaps.size(); i++)
-	{
-		al_draw_bitmap(level->bitmaps[i], gameObj.level->cameraX, gameObj.level->cameraY, 0);
-	}
+	al_draw_bitmap(level->bitmaps[layer], level->cameraX, level->cameraY, 0);
 }
 
 void Load_Start_Screen()
@@ -137,12 +135,23 @@ void Renderer()
 			}
 
 
-			Draw_Level(gameObj.level);
+			
+			for (unsigned int i = 0; i < LEVEL_LAYERS; i++)
+			{
+				Draw_Level(gameObj.level, i);
+				for (unsigned int j = 0; j < gameObj.DrawingOrder[i].size(); j++)
+				{
+					//cout << "gameObj.DrawingOrder[i][j]->sx =" << gameObj.DrawingOrder[i][j]->sx << ",gameObj.DrawingOrder[i][j]->sy = " << gameObj.DrawingOrder[i][j]->sy << '\n';
+					//cout << "gameObj.DrawingOrder[i][j]->xPos = " << gameObj.DrawingOrder[i][j]->xPos << " ,gameObj.DrawingOrder[i][j]->yPos = " << gameObj.DrawingOrder[i][j]->yPos << '\n';
+					al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
+				}
+			}
 			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
+
 			if (gameObj.level->Toggle_Grid)
 			{
-				DisplayGrid(0);
+				DisplayGrid(0);	//change to for loop if we add more
 				DisplayGrid(1);
 			}
 

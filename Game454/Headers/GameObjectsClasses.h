@@ -31,7 +31,7 @@
 
 
 #define FPS 60.0
-#define LAYERS 2
+#define LEVEL_LAYERS 2
 
 #define MUL_TILE_WIDTH(i) ((i)<<4)
 #define MUL_TILE_HEIGHT(i)((i)<<4)
@@ -106,6 +106,17 @@ extern std::vector<Stalfos> stalfoses;
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
 //used in physics and animations
 
+class DrawOrder
+{
+public:
+	ALLEGRO_BITMAP* bitmap;
+	unsigned int sx, sy, w, h;
+	int xPos, yPos;
+
+	DrawOrder(ALLEGRO_BITMAP* bmp, unsigned int sx, unsigned int sy, unsigned int w, unsigned int h, int xPos, int yPos);
+	//setters getters
+};
+
 
 class Level
 {
@@ -144,6 +155,10 @@ class GameLogic
 private:
 	Game_State GameState = StartingScreen;
 public:
+	/*Allows me to draw in order stuff from the same layer e.g. i want to draw layer 2 but layer 2 has a moving elevator which must
+	be drawn without changing the layer 2 bitmap, so it must be drawn after layer 2 but before layer 3 (if we add a layer 3)
+	its like getting a priority, layer 2 is basically 2.1 (first) and the elevator is 2.2 (second)*/
+	std::vector<DrawOrder*> DrawingOrder[LEVEL_LAYERS];
 	ALLEGRO_DISPLAY* display = NULL;
 	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL;
 	Level *level = NULL;
@@ -155,17 +170,21 @@ public:
 	void End_Game();
 
 	void Load_Level(unsigned short levelNum);
+
+	void insert_DrawingOrder(DrawOrder *dro, unsigned int layer);
 };
 
 class Elevator
 {
 private:
-	unsigned int row, col, curr_row;	//row and col count pixels (instead of row 1 it stores 1*TILE_HEIGHT), curr_row is the height of the elevatorbitmap
+	unsigned int row, col, curr_row;	//row and col count pixels (take caution when drawing because it might be out of the screens width or height and will not draw), curr_row is the height of the elevatorbitmap
 	ALLEGRO_BITMAP* elevatorbitmap;
+	DrawOrder* DrawObj;	/*pointers to update the object directly inside the drawing queue*/
 	
 public:
 	Elevator(unsigned int _row, unsigned int _col);
-	void Paint_Sprite_Elevator();
+	void Add_to_draw_queue();
+	void Update_draw_obj();
 	void hide_og_elevator();
 
 	unsigned int getRow();
@@ -174,6 +193,8 @@ public:
 	void setRow(unsigned int X);
 	void setCurrRow(unsigned int X);
 	void setCol(unsigned int Y);
+
+	void addToCurrRow(unsigned int X);
 };
 
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story

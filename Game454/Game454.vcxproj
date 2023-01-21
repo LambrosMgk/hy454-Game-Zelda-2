@@ -142,6 +142,7 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="src\al_init.cpp" />
     <ClCompile Include="src\App.cpp" />
+    <ClCompile Include="src\Collisions.cpp" />
     <ClCompile Include="src\GameObjectsClasses.cpp" />
     <ClCompile Include="src\Physics.cpp" />
     <ClCompile Include="src\ProgressAnimations.cpp" />
@@ -151,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="Headers\al_init.h" />
     <ClInclude Include="Headers\App.h" />
+    <ClInclude Include="Headers\Collisions.h" />
     <ClInclude Include="Headers\GameObjectsClasses.h" />
     <ClInclude Include="Headers\Physics.h" />
     <ClInclude Include="Headers\ProgressAnimations.h" />

@@ -12,6 +12,21 @@ bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = fa
 
 //End of global variables
 
+//Start of class DrawOrder
+
+DrawOrder::DrawOrder(ALLEGRO_BITMAP* bmp, unsigned int sx, unsigned int sy, unsigned int w, unsigned int h, int xPos, int yPos)
+{
+	this->bitmap = bmp;
+	this->sx = sx;
+	this->sy = sy;
+	this->w = w;
+	this->h = h;
+	this->xPos = xPos;
+	this->yPos = yPos;
+}
+
+//End of class DrawOrder
+
 //Start of Class Level
 
 
@@ -183,7 +198,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	}
 
 	//initalize the empty colors of the tileset
-	for (int i = 0; i < LAYERS; i++) {
+	for (int i = 0; i < LEVEL_LAYERS; i++) {
 		string tmp = ASSUMED_EMPTY_LAYER_PATH;
 		string txt = ".txt";
 		tmp = tmp + to_string(i + 1);
@@ -194,17 +209,22 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	//create the bitmap of the level
 	level->bitmaps.push_back(level->Create_Bitmap_From_CSV(level->TileMapCSV[0], level->TileSet, gameObj.display));
 	level->bitmaps.push_back(level->Create_Bitmap_From_CSV(level->TileMapCSV[1], level->TileSet, gameObj.display));
-	cout << "Created the whole bitmap\n";
+	cout << "Created Level bitmap\n";
 
 	add_Grid(0, TILE_WIDTH, TILE_HEIGHT, level->TileMapCSV[0][0].size(), level->TileMapCSV[0].size());	//initialize the grid for layer 1
 	level->grids[0]->ComputeTileGridBlocks2(level->TileMapCSV[0], level->TileSet, 128);
-	cout << "Created the whole grid for layer 1\n";
+	cout << "Created grid for layer 1\n";
 
 	add_Grid(1, TILE_WIDTH, TILE_HEIGHT, level->TileMapCSV[1][0].size(), level->TileMapCSV[1].size());  //initialize the grid for layer 2
 	level->grids[1]->ComputeTileGridBlocks2(level->TileMapCSV[1], level->TileSet, 64);
-	cout << "Created the whole grid for layer 2\n";
+	cout << "Created grid for layer 2\n";
 
 	createElevators();
+}
+
+void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)
+{
+	DrawingOrder[layer].push_back(dro);
 }
 
 //End of Class GameLogic 
@@ -216,6 +236,7 @@ Elevator::Elevator(unsigned int Row, unsigned int Col)
 	this->row = Row;
 	this->col = Col;
 	this->curr_row = Row + 4 * TILE_HEIGHT;	//to point to the bottom part of the elevator
+	this->DrawObj = NULL;
 
 	this->elevatorbitmap = al_create_bitmap(2 * TILE_WIDTH, TILE_HEIGHT); //create a bitmap for the bottom part of the elevator with dimensions (16,2x16)
 	al_set_target_bitmap(elevatorbitmap);
@@ -226,15 +247,22 @@ Elevator::Elevator(unsigned int Row, unsigned int Col)
 	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
 }
 
-void Elevator::Paint_Sprite_Elevator()
+void Elevator::Add_to_draw_queue()
 {
-	assert(gameObj.level != NULL);
+	if (this->DrawObj != NULL)	//in case i try to add to the queue again
+		return;
 
-	//paint the sprite over the layer 2 bitmap so that the renderer can paint it when the time comes
-	al_set_target_bitmap(gameObj.level->bitmaps[1]);
-	al_draw_bitmap_region(this->elevatorbitmap, MUL_TILE_WIDTH(0), 0, TILE_WIDTH, TILE_HEIGHT, col, curr_row, 0);
-	al_draw_bitmap_region(this->elevatorbitmap, MUL_TILE_WIDTH(1), 0, TILE_WIDTH, TILE_HEIGHT, col + TILE_WIDTH, curr_row, 0);
-	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
+	DrawOrder* drawObj = new DrawOrder(this->elevatorbitmap, 0, 0, 2*TILE_WIDTH, TILE_HEIGHT, this->col, this->curr_row);
+	this->DrawObj = drawObj;
+	gameObj.insert_DrawingOrder(drawObj, 1);
+}
+
+/*updates the height (row or y) of the draw object*/
+void Elevator::Update_draw_obj()
+{
+	assert(this->DrawObj != NULL);
+
+	this->DrawObj->yPos = this->curr_row;
 }
 
 void Elevator::hide_og_elevator() 
@@ -243,7 +271,7 @@ void Elevator::hide_og_elevator()
 
 	al_lock_bitmap(gameObj.level->bitmaps[1], ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READWRITE);
 	al_set_target_bitmap(gameObj.level->bitmaps[1]);
-	//(row+4) because we start from the upper part of the elevator
+	//(row+4) because row points to the upper part of the elevator and we want to hide the lower part which is 4 tiles apart
 	for (unsigned int y = row + 4*TILE_HEIGHT; y < row +4*TILE_HEIGHT + TILE_HEIGHT; y++) {
 		for (unsigned int x = col; x < col + 2 * TILE_WIDTH; x++) {
 			ALLEGRO_COLOR color = al_get_pixel(gameObj.level->bitmaps[1], x, y);
@@ -288,6 +316,11 @@ void Elevator::setCurrRow(unsigned int X)
 void Elevator::setCol(unsigned int Col)
 {
 	this->col = Col;
+}
+
+void Elevator::addToCurrRow(unsigned int X)
+{
+	this->curr_row += X;
 }
 
 //End of Class Elevator
@@ -1134,6 +1167,15 @@ void Init_Player(int PlayerX, int PlayerY)
 	player->Load_Player_Spritesheet();
 }
 
+void Load_Player_Spiresheet()
+{
+	player->PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
+	if (player->PlayerSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
 
 bool operator == (const ALLEGRO_COLOR c1, const ALLEGRO_COLOR c2)
 {
@@ -1207,7 +1249,8 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 	gameObj.level->grids.push_back(new Grid(layer, Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
-void add_Stalfos(int x,int y) {
+void add_Stalfos(int x,int y) 
+{
 	Stalfos stalfos = Stalfos(x, y);
 	stalfos.Init_frames_bounding_boxes();
 	stalfos.Load_Enemy_Spritesheet();
