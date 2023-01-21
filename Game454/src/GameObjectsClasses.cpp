@@ -743,11 +743,13 @@ void Stalfos::Init_frames_bounding_boxes() {
 
 Rect Stalfos::FrameToDraw() {
 
-	return FramesFalling[0];
 
-	/*if (state == E_State_Walking && direction == e_dir_right)
+	if (state == E_State_Walking && direction == e_dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Falling ) {
+		return FramesFalling[EnemySpriteNum];
 	}
 	else if (state == E_State_Attacking && direction == e_dir_right)
 	{
@@ -757,7 +759,7 @@ Rect Stalfos::FrameToDraw() {
 	{
 		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
 		exit(-1);
-	}*/
+	}
 }
 
 //End of Stalfos Class

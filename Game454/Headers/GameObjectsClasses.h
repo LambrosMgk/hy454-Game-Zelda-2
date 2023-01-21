@@ -81,7 +81,7 @@ enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
 enum Enemy_Direction {	e_dir_left, e_dir_right };
-enum Enemy_State { E_State_Walking, E_State_Attacking };
+enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling };
 
 
 //forward declaration
@@ -402,4 +402,3 @@ void add_Stalfos(int EnemyX, int EnemyY);
 
 void add_Wosu(int EnemyX, int EnemyY);
 
-void createWosus(int skelKnight_number);
