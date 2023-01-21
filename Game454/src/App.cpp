@@ -52,15 +52,16 @@ void app::Game::Initialise()
 	SetInput(&UserInput);
 	//SetAI();
 	SetPhysics(&Calculate_Physics);
-	//SetCollisionChecking();
+	SetCollisionChecking(&CheckCollisions);
 	//SetCommitDestructions();
-	//SetUserCode();	//add fps calculation
+	//SetUserCode();
 
 	allegro_startup();	//from custom header file al_init.h
 	Render_init();
 	User_Input_init();
 	Animator_Init();
 	Physics_Init();
+	Collisions_init();
 
 	Game::done = isDone;
 	game = this;
@@ -91,7 +92,7 @@ void app::Game::MainLoopIteration(void)
 	ProgressAnimations();
 	//AI();
 	Physics();
-	//CollisionChecking();
+	CollisionChecking();
 	//UserCode(); // hook for custom code at end
 	//CommitDestructions();
 }

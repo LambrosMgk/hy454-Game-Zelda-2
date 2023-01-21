@@ -5,6 +5,7 @@
 #include "User_Input.h"
 #include "ProgressAnimations.h"
 #include "Physics.h"
+#include "Collisions.h"
 
 
 namespace app

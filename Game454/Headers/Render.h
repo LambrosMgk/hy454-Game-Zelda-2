@@ -22,7 +22,7 @@ void Paint_Player_to_Screen(Rect r);
 
 void Paint_Enemies_to_Screen();
 
-void Draw_Level(Level* level);
+void Draw_Level(Level* level, unsigned int layer);
 
 void Load_Start_Screen();
 

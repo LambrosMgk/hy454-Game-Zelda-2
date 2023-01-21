@@ -44,16 +44,30 @@ void Animator()
 					exit(-1);
 				}
 
-				cout << "DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) = " << DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) << "\n";
+				//as the elevator is going down, if the next tile is a solid tile from layer 1 we must stop scrolling the elevator 
 				if (gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) + 2, DIV_TILE_WIDTH(elevators[act_elevator].getCol())) & GRID_SOLID_TILE)
 				{
+					cout << "Elevator state ended\n";
 					player->Set_State(State_Walking);
+					elevators[act_elevator].addToCurrRow(5);	//a small offset because otherwise it will look like link is inside the elevator
+					elevators[act_elevator].Update_draw_obj();
 					gameObj.level->active_elevator = -1;	//no active elevator
 				}
 				else
 				{
-					elevators[act_elevator].setCurrRow(elevators[act_elevator].getCurrRow() + player->Get_Speed_Y());
-					elevators[act_elevator].Paint_Sprite_Elevator();
+					elevators[act_elevator].addToCurrRow(2*player->Get_Speed_Y());
+					elevators[act_elevator].Update_draw_obj();
+				}
+
+				//change the layer 2 grid to allow the player to fall
+				if (gameObj.level->grids[1]->GetGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()), DIV_TILE_WIDTH(elevators[act_elevator].getCol())) & GRID_SOLID_TILE)
+				{
+					//left tile of elevator
+					gameObj.level->grids[1]->SetEmptyGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()), DIV_TILE_WIDTH(elevators[act_elevator].getCol()));
+					gameObj.level->grids[1]->SetSolidGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) + 1, DIV_TILE_WIDTH(elevators[act_elevator].getCol()));
+					//right tile of elevator
+					gameObj.level->grids[1]->SetEmptyGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()), DIV_TILE_WIDTH(elevators[act_elevator].getCol()) + 1);
+					gameObj.level->grids[1]->SetSolidGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) + 1, DIV_TILE_WIDTH(elevators[act_elevator].getCol()) + 1);
 				}
 				/*me ena timer tha kanoume scroll to active elevator kai me enan epipleon elegxo mporoume na doume
 				poia grid tiles tha allazoume apo solid se empty kai olo ayto until xtypisoume kati solid se kapoio layer
