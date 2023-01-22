@@ -12,10 +12,10 @@ void Paint_Player_to_Screen(Rect r)
 
 void Paint_Enemies_to_Screen()
 {
-	for (unsigned int i = 0; i < stalfoses.size(); i++)
+	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
-		Rect r = stalfoses[i].FrameToDraw();
-		al_draw_bitmap_region(stalfoses[i].EnemySpriteSheet, r.x, r.y, r.w, r.h, stalfoses[i].positionX, stalfoses[i].positionY, 0);
+		Rect r = Enemies[i]->FrameToDraw();
+		al_draw_bitmap_region(Enemies[i]->EnemySpriteSheet, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
 	}
 }
 
@@ -110,7 +110,13 @@ void DisplayGrid(unsigned int grid_num)
 		}
 	}
 
+	/*Player hitbox*/
 	al_draw_rectangle(player->positionX, player->positionY, player->positionX + player->FrameToDraw().w, player->positionY + player->FrameToDraw().h, al_map_rgba(0, 255, 0, 64), 1.0);
+	/*Enemies hitbox*/
+	for (unsigned int i = 0; i < Enemies.size(); i++)
+	{
+		al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(0, 255, 0, 64), 1.0);
+	}
 }
 
 void Renderer()
@@ -143,7 +149,9 @@ void Renderer()
 				{
 					//cout << "gameObj.DrawingOrder[i][j]->sx =" << gameObj.DrawingOrder[i][j]->sx << ",gameObj.DrawingOrder[i][j]->sy = " << gameObj.DrawingOrder[i][j]->sy << '\n';
 					//cout << "gameObj.DrawingOrder[i][j]->xPos = " << gameObj.DrawingOrder[i][j]->xPos << " ,gameObj.DrawingOrder[i][j]->yPos = " << gameObj.DrawingOrder[i][j]->yPos << '\n';
-					al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
+					cout << "gameObj.level->ScreenX == " << gameObj.level->ScreenX << ", gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W = " << gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W << '\n';
+					if ((gameObj.level->ScreenX == gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W) && (gameObj.level->ScreenY == gameObj.DrawingOrder[i][j]->yPos / DISPLAY_H))
+						al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
 				}
 			}
 			Paint_Enemies_to_Screen();
