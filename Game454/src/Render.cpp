@@ -16,7 +16,12 @@ void Paint_Enemies_to_Screen()
 	{
 		Rect r = Enemies[i]->FrameToDraw();
 		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
-			al_draw_bitmap_region(Enemies[i]->EnemySpriteSheet, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+		{
+			if (Enemies[i]->Get_Direction() == dir_left)
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetLeft, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+			else
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+		}
 	}
 }
 
