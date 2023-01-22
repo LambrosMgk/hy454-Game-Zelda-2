@@ -407,7 +407,6 @@ Player::Player(int _positionX, int _positionY)
 	positionY = _positionY;
 	screenX = 0;
 	screenY = 0;
-
 }
 
 Player::~Player()
@@ -514,6 +513,10 @@ void Player::Scroll_Player(float ScrollDistanceX, float ScrollDistanceY)
 	{
 		this->positionY += ScrollDistanceY;
 	}
+	/*else if ((state == State_CrounchAttacking || state == State_Crounching) && ScrollDistanceY > 0)	//allow the player only to fall
+	{
+		this->positionY += ScrollDistanceY;
+	}*/
 }
 
 void Player::Init_frames_bounding_boxes()
@@ -686,24 +689,14 @@ void Player::Heal(float health_gain)
 	this->Health += health_gain;
 }
 
-void Player::SetSwordX(int x)
+void Player::Set_HurtInvicibility(bool hi)
 {
-	this->SwordX = x;
+	this->HurtInvicibility = hi;
 }
 
-int Player::GetSwordX()
+bool Player::Get_HurtInvicibility()
 {
-	return this->SwordX;
-}
-
-void Player::SetSwordY(int y)
-{
-	this->SwordY = y;
-}
-
-int Player::GetSwordY()
-{
-	return this->SwordY;
+	return this->HurtInvicibility;
 }
 
 //end of class Player functions
@@ -1748,7 +1741,6 @@ void Init_Player(int PlayerX, int PlayerY)
 	player = new Player(PlayerX, PlayerY);
 	player->Init_frames_bounding_boxes();
 	player->Load_Player_Spritesheet();
-	player->HurtTimer =  al_create_timer(1.0);	//1 sec of invicibility, useful for timing incoming damage
 }
 
 void Load_Player_Spiresheet()

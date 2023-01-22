@@ -215,12 +215,12 @@ class Player //player might be in layer 3 for drawing and compare with layer 1 f
 private:
 	Player_State state = State_Walking;
 	Player_Direction direction = dir_right;
+	
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 	float Health = 10;
-	int SwordX = -1, SwordY = -1;
+	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
-	ALLEGRO_TIMER* HurtTimer;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
@@ -272,13 +272,9 @@ public:
 
 	void Heal(float health_gain);
 
-	void SetSwordX(int x);
+	void Set_HurtInvicibility(bool hi);
 
-	int GetSwordX();
-
-	void SetSwordY(int y);
-
-	int GetSwordY();
+	bool Get_HurtInvicibility();
 };
 
 class TileColorsHolder final
