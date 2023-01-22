@@ -1109,18 +1109,6 @@ int Enemy::Get_Speed_Y()
 	return this->scrollDistanceY;
 }
 
-void Enemy::Set_State(Enemy_State state)
-{
-	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
-	{
-		this->state = state;
-	}
-	else if (this->state == E_State_Attacking && state == E_State_Walking) //Attacking -> Walking
-	{
-		this->state = state;
-	}
-}
-
 Enemy_State Enemy::Get_State()
 {
 	return this->state;
@@ -1663,7 +1651,7 @@ void GumaAxe::Init_frames_bounding_boxes()
 	Rect* r;
 	int i = 0;
 
-	//FramesLounging
+	//FramesLunging
 	for (int i = 0; i < 4; i++)
 	{
 		r = new Rect;
@@ -1699,7 +1687,137 @@ void GumaAxe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
 
 //Start of PowerUps
 
+PowerUps::PowerUps(int posX, int posY)
+{
+	positionX = posX;
+	positionY = posY;
+}
+
+PowerUps::~PowerUps()
+{
+
+}
+
+void PowerUps::Load_PowerUps_Spritesheet()
+{
+	this->PowerUpSpriteSheet = al_load_bitmap(ITEMS_OBJECTS_PATH);
+	if (this->PowerUpSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize PowerUpSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
+
 //End of Class PowerUps
+
+
+//Start of RedPotion
+void RedPotion::Init_frames_bounding_boxes() {
+	Rect* r;
+
+	//RedPotionFrames
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	r->y = 16 - 5;
+	r->x = 48 + 2;
+
+	RedPotionFrame = *r;
+	
+}
+
+Rect RedPotion::FrameToDraw(){
+	return RedPotionFrame;
+}
+//End of RedPotion
+
+//Start of BluePotion
+void BluePotion::Init_frames_bounding_boxes() {
+	Rect* r;
+
+	//BluePotionFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	r->y = 16 - 5;
+	r->x = 16 + 5;
+
+	BluePotionFrame = *r;
+
+}
+
+Rect BluePotion::FrameToDraw() {
+	return BluePotionFrame;
+}
+
+//End of BluePotion
+
+//Start of PointBag
+
+void PointBag::Init_frames_bounding_boxes() {
+	Rect* r;
+
+	//PointBagFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	r->y = 16 - 5;
+	r->x = 0;
+
+	PointBagFrame = *r;
+
+}
+
+Rect PointBag::FrameToDraw() {
+	return PointBagFrame;
+}
+//End of PointBag
+
+//Start of Key class
+
+void Key::Init_frames_bounding_boxes() {
+	Rect* r;
+
+	//KeyFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	r->y = 16 - 5;
+	r->x = 96 + 5;
+
+	KeyFrame = *r;
+}
+
+Rect Key::FrameToDraw() {
+	return KeyFrame;
+}
+//End of Key class
+
+//Start of UpDoll class
+
+void UpDoll::Init_frames_bounding_boxes() {
+	Rect* r;
+
+	//UpDollFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	r->y = 16 - 5;
+	r->x = 64 + 6;
+
+	UpDollFrame = *r;
+}
+
+Rect UpDoll::FrameToDraw() {
+	return UpDollFrame;
+}
+
+//End of UpDoll class
 
 void Init_Player(int PlayerX, int PlayerY)
 {
@@ -1708,7 +1826,7 @@ void Init_Player(int PlayerX, int PlayerY)
 	player->Load_Player_Spritesheet();
 }
 
-void Load_Player_Spiresheet()
+void Load_Player_Spritesheet()
 {
 	player->PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
 	if (player->PlayerSpriteSheet == NULL)

@@ -68,6 +68,11 @@
 #define ENEMY_SPRITE_WIDTH 16
 #define ENEMY_SPRITE_HEIGHT 16
 
+//Items Object sprites vary so its better to go with 16 pixels
+#define OBJECT_SPRITE_WIDTH 16
+#define OBJECT_SPRITE_HEIGHT 16
+
+
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
@@ -553,7 +558,7 @@ class PowerUps
 {
 public:
 	int positionX, positionY;
-	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
+	ALLEGRO_BITMAP* PowerUpSpriteSheet = NULL;
 
 	PowerUps(int posX, int posY);
 
@@ -566,9 +571,68 @@ public:
 	void Load_PowerUps_Spritesheet();
 };
 
-class Potions : public PowerUps 
+class RedPotion : public PowerUps 
 {
+private:
+	Rect RedPotionFrame;
 
+public:
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+};
+
+class BluePotion : public PowerUps
+{
+private:
+	Rect BluePotionFrame;
+
+public:
+
+	void Init_frames_bounding_boxes();
+
+	virtual Rect FrameToDraw();
+
+};
+
+class PointBag : public PowerUps
+{
+private:
+	Rect PointBagFrame;
+
+public:
+
+	void Init_frames_bounding_boxes();
+
+	virtual Rect FrameToDraw();
+
+};
+
+class Key : public PowerUps
+{
+private:
+	Rect KeyFrame;
+
+public:
+
+	void Init_frames_bounding_boxes();
+
+	virtual Rect FrameToDraw();
+
+};
+
+class UpDoll : public PowerUps
+{
+private:
+	Rect UpDollFrame;
+
+public:
+
+	void Init_frames_bounding_boxes();
+
+	virtual Rect FrameToDraw();
 
 };
 
@@ -604,3 +668,7 @@ void add_PalaceBot(int EnemyX, int EnemyY);
 void add_Wosu(int EnemyX, int EnemyY);
 
 void add_Guma(int EnemyX, int EnemyY);
+
+void add_RedPotion(int x, int y);
+
+void add_BluePotion(int x, int y);
