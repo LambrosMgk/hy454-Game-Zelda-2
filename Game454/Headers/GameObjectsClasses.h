@@ -377,6 +377,7 @@ protected:
 	Enemy_Direction direction = e_dir_right;
 
 	float Health = 1.0;
+	int Points = 1;
 public:
 	int positionX, positionY;
 	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
@@ -419,6 +420,10 @@ public:
 	void Take_Damage(float health_damage);
 
 	void Heal(float health_gain);
+
+	void Set_Points(int points);
+
+	int Get_Points();
 };
 
 class Stalfos : public Enemy

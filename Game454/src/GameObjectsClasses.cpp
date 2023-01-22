@@ -814,6 +814,16 @@ void Enemy::Heal(float health_gain)
 	this->Health += health_gain;
 }
 
+void Enemy::Set_Points(int points)
+{
+	this->Points = points;
+}
+
+int Enemy::Get_Points()
+{
+	return this->Points;
+}
+
 //end of class enemy
 
 //Start of Stalfos Class
@@ -1628,6 +1638,8 @@ void add_Stalfos(int x,int y)
 	Stalfos *stalfos = new Stalfos(x, y);
 	stalfos->Init_frames_bounding_boxes();
 	stalfos->Load_Enemy_Spritesheet();
+	stalfos->Set_Health(32);
+	stalfos->Set_Points(30);
 	Enemies.push_back(stalfos);
 }
 
@@ -1636,6 +1648,8 @@ void add_PalaceBot(int x, int y)
 	PalaceBot *pbot = new PalaceBot(x, y);
 	pbot->Init_frames_bounding_boxes();
 	pbot->Load_Enemy_Spritesheet();
+	pbot->Set_Health(16);
+	pbot->Set_Points(10);
 	Enemies.push_back(pbot);
 }
 
@@ -1644,6 +1658,8 @@ void add_Wosu(int x, int y)
 	Wosu* wosu = new Wosu(x, y);
 	wosu->Init_frames_bounding_boxes();
 	wosu->Load_Enemy_Spritesheet();
+	wosu->Set_Health(8);
+	wosu->Set_Points(0);
 	Enemies.push_back(wosu);
 }
 
@@ -1652,5 +1668,7 @@ void add_Guma(int x, int y)
 	Guma* guma = new Guma(x, y);
 	guma->Init_frames_bounding_boxes();
 	guma->Load_Enemy_Spritesheet();
+	guma->Set_Health(64);
+	guma->Set_Points(50);
 	Enemies.push_back(guma);
 }
