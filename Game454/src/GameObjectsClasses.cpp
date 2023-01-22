@@ -1837,7 +1837,6 @@ void add_Stalfos(int x,int y)
 {
 	Stalfos *stalfos = new Stalfos(x, y);
 	stalfos->Init_frames_bounding_boxes();
-	stalfos->Load_Enemy_Spritesheet();
 	stalfos->Set_Health(32);
 	stalfos->Set_Points(30);
 	stalfos->Load_Enemy_Spritesheet(true);
@@ -1848,7 +1847,6 @@ void add_PalaceBot(int x, int y)
 {
 	PalaceBot *pbot = new PalaceBot(x, y);
 	pbot->Init_frames_bounding_boxes();
-	pbot->Load_Enemy_Spritesheet();
 	pbot->Set_Health(16);
 	pbot->Set_Points(10);
 	pbot->Load_Enemy_Spritesheet(true);
@@ -1859,7 +1857,6 @@ void add_Wosu(int x, int y)
 {
 	Wosu* wosu = new Wosu(x, y);
 	wosu->Init_frames_bounding_boxes();
-	wosu->Load_Enemy_Spritesheet();
 	wosu->Set_Health(8);
 	wosu->Set_Points(0);
 	wosu->Load_Enemy_Spritesheet(true);
@@ -1870,7 +1867,6 @@ void add_Guma(int x, int y)
 {
 	Guma* guma = new Guma(x, y);
 	guma->Init_frames_bounding_boxes();
-	guma->Load_Enemy_Spritesheet();
 	guma->Set_Health(64);
 	guma->Set_Points(50);
 	guma->Load_Enemy_Spritesheet(true);
