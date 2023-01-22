@@ -85,10 +85,8 @@ struct Rect { int x, y, w, h; };
 struct Point { int x, y; };
 
 enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
-enum Player_Direction { dir_left, dir_right };
+enum Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
-enum Enemy_Direction {	e_dir_left, e_dir_right };
-enum Projectile_Direction { p_dir_left, p_dir_right };
 enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling,E_State_Jumping };
 
 
@@ -131,6 +129,7 @@ class Level
 {
 public:
 	ALLEGRO_BITMAP* TileSet = NULL;
+	ALLEGRO_BITMAP* EnemySpriteSheetLeft = NULL, * EnemySpriteSheetRight = NULL;
 	std::vector<ALLEGRO_BITMAP*> bitmaps;	//bitmaps vector has the bitmaps of all the layers of the map
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
@@ -158,6 +157,8 @@ in case of bad file path exits program with -1*/
 	void Paint_To_Bitmap(ALLEGRO_BITMAP* bitmap, vector<vector<int>> CSV, ALLEGRO_BITMAP* Tileset, ALLEGRO_DISPLAY* display);
 
 	void Scroll_Bitmap();
+
+	void Load_Enemy_SpriteSheets();
 };
 
 class GameLogic
@@ -219,7 +220,7 @@ class Player //player might be in layer 3 for drawing and compare with layer 1 f
 {
 private:
 	Player_State state = State_Walking;
-	Player_Direction direction = dir_right;
+	Direction direction = dir_right;
 	
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 	float Health = 10;
@@ -253,9 +254,9 @@ public:
 
 	int Get_Speed_Y();
 
-	void set_Direction(Player_Direction direction);
+	void Set_Direction(Direction direction);
 
-	Player_Direction get_Direction();
+	Direction Get_Direction();
 
 	void Set_State(Player_State state);
 
@@ -374,13 +375,12 @@ protected:
 	Enemy_State state = E_State_Walking;
 	unsigned int EnemySpriteNum = 0;	//counter for animation
 	int scrollDistanceX = 2, scrollDistanceY = 3;
-	Enemy_Direction direction = e_dir_right;
+	Direction direction = dir_right;
 
 	float Health = 1.0;
 	int Points = 1;
 public:
 	int positionX, positionY;
-	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
 	
 	Enemy(int posX, int posY);
 
@@ -404,11 +404,13 @@ public:
 
 	int Get_Speed_Y();
 
+	void Set_Direction(Direction direction);
+
+	Direction Get_Direction();
+
 	virtual void Set_State(Enemy_State state) = 0;
 
 	Enemy_State Get_State();
-
-	void Load_Enemy_Spritesheet(boolean mode);
 
 	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 
@@ -512,7 +514,7 @@ class Projectile
 protected:
 		unsigned int ProjectileSpriteNum = 0;	//counter for animation
 		int scrollDistanceX = 2, scrollDistanceY = 1;
-		Projectile_Direction direction = p_dir_right;
+		Direction direction = dir_right;
 public:
 	int positionX, positionY;
 	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
@@ -551,7 +553,6 @@ public:
 	Rect FrameToDraw();
 
 	void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY);
-
 };
 
 class PowerUps 

@@ -90,11 +90,11 @@ void UserInput(void)
 			}
 				break;
 			case ALLEGRO_KEY_LEFT:
-				player->set_Direction(dir_left);
+				player->Set_Direction(dir_left);
 				scrollLeft = true;
 				break;
 			case ALLEGRO_KEY_RIGHT:
-				player->set_Direction(dir_right);
+				player->Set_Direction(dir_right);
 				scrollRight = true;
 				break;
 			case ALLEGRO_KEY_A:			// Jump

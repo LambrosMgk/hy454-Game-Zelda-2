@@ -162,6 +162,18 @@ void Level::Scroll_Bitmap()
 	}
 }
 
+void Level::Load_Enemy_SpriteSheets()
+{
+	EnemySpriteSheetLeft = al_load_bitmap(ENEMY1_SPRITES_FLIPPED_PATH);
+	EnemySpriteSheetRight = al_load_bitmap(ENEMY1_SPRITES_PATH);
+
+	if (EnemySpriteSheetLeft == NULL || EnemySpriteSheetRight == NULL)
+	{
+		fprintf(stderr, "\nLevel : Failed to initialize Enemy SpriteSheets (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
+
 //End of Class Level
 
 //Start of Class GameLogic
@@ -225,8 +237,6 @@ void GameLogic::Load_Level(unsigned short levelNum)
 {
 	Init_Player(StartPlayerPositionX, StartPlayerPositionY);
 	
-	add_Guma(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
-
 	Level* level = new Level();
 	gameObj.level = level;
 	level->load_tileset(TILESET_PATH);
@@ -238,6 +248,9 @@ void GameLogic::Load_Level(unsigned short levelNum)
 		fprintf(stderr, "ReadTextMap returned empty vector.\n");
 		exit(-1);
 	}
+
+	level->Load_Enemy_SpriteSheets();
+	add_Guma(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
 
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LEVEL_LAYERS; i++) {
@@ -443,7 +456,7 @@ int Player::Get_Speed_Y()
 	return this->scrollDistanceY;
 }
 
-void Player::set_Direction(Player_Direction direction)
+void Player::Set_Direction(Direction direction)
 {
 	if (direction != dir_left && direction != dir_right)
 	{
@@ -454,7 +467,7 @@ void Player::set_Direction(Player_Direction direction)
 	this->direction = direction;
 }
 
-Player_Direction Player::get_Direction()
+Direction Player::Get_Direction()
 {
 	return this->direction;
 }
@@ -1109,24 +1122,25 @@ int Enemy::Get_Speed_Y()
 	return this->scrollDistanceY;
 }
 
+void Enemy::Set_Direction(Direction direction)
+{
+	if (direction != dir_left && direction != dir_right)
+	{
+		cout << "Error in Enemy Set_Direction, direction = " << direction << " doesn't exists\n";
+		exit(-1);
+	}
+
+	this->direction = direction;
+}
+
+Direction Enemy::Get_Direction()
+{
+	return this->direction;
+}
+
 Enemy_State Enemy::Get_State()
 {
 	return this->state;
-}
-
-void Enemy::Load_Enemy_Spritesheet(boolean mode)
-{
-
-	if (mode)
-		this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
-	else
-		this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_FLIPPED_PATH);
-
-	if (this->EnemySpriteSheet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize EnemySpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
 }
 
 float Enemy::Get_Health()
@@ -1251,13 +1265,10 @@ void Stalfos::Init_frames_bounding_boxes() {
 		}
 		FramesSlashLeft.push_back(*r);
 	}
-
-	
-	
 }
 
-void Stalfos::Set_State(Enemy_State state) {
-	
+void Stalfos::Set_State(Enemy_State state) 
+{
 	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
 	{
 		this->state = state;
@@ -1266,7 +1277,6 @@ void Stalfos::Set_State(Enemy_State state) {
 	{
 		this->state = state;
 	}
-	
 }
 
 void Stalfos::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
@@ -1278,24 +1288,25 @@ void Stalfos::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 	}
 }
 
-Rect Stalfos::FrameToDraw() {
-
-
-	if (state == E_State_Walking && direction == e_dir_right)
+Rect Stalfos::FrameToDraw() 
+{
+	if (state == E_State_Walking && direction == dir_left) 
+	{
+		return FramesWalkingLeft[EnemySpriteNum];
+	}
+	else if (state == E_State_Walking && direction == dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Walking && direction == e_dir_left) {
-		return FramesWalkingLeft[EnemySpriteNum];
-	}
-	else if (state == E_State_Falling ) {
+	else if (state == E_State_Falling)
+	{
 		return FramesFalling[EnemySpriteNum];
 	}
-	else if (state == E_State_Attacking && direction == e_dir_right)
+	else if (state == E_State_Attacking && direction == dir_right)
 	{
 		return FramesSlashRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Attacking && direction == e_dir_left)
+	else if (state == E_State_Attacking && direction == dir_left)
 	{
 		return FramesSlashLeft[EnemySpriteNum];
 	}
@@ -1315,12 +1326,12 @@ PalaceBot::PalaceBot(int x, int y) : Enemy(x, y)
 
 }
 
-void PalaceBot::Init_frames_bounding_boxes() {
+void PalaceBot::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 	int i = 0;
 
 	//FramesWalking
-	
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w =  ENEMY_SPRITE_WIDTH;
@@ -1341,8 +1352,8 @@ void PalaceBot::Init_frames_bounding_boxes() {
 		
 }
 
-void PalaceBot::Set_State(Enemy_State state) {
-
+void PalaceBot::Set_State(Enemy_State state) 
+{
 	if (this->state == E_State_Walking && state == E_State_Jumping) //Walking -> Jumping
 	{
 		this->state = state;
@@ -1351,12 +1362,10 @@ void PalaceBot::Set_State(Enemy_State state) {
 	{
 		this->state = state;
 	}
-
 }
 
-Rect PalaceBot::FrameToDraw() {
-
-	
+Rect PalaceBot::FrameToDraw() 
+{
 	if (state == E_State_Walking)
 	{
 		return FramesWalking[EnemySpriteNum];
@@ -1389,7 +1398,8 @@ Wosu::Wosu(int x, int y) : Enemy(x, y)
 
 }
 
-void Wosu::Init_frames_bounding_boxes() {
+void Wosu::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 	int i = 0;
 
@@ -1428,23 +1438,23 @@ void Wosu::Init_frames_bounding_boxes() {
 
 }
 
-void Wosu::Set_State(Enemy_State state) {
+void Wosu::Set_State(Enemy_State state) 
+{
 
 	if (this->state == E_State_Walking) //Walking 
 	{
 		this->state = state;
 	}
-
 }
 
-Rect Wosu::FrameToDraw() {
-
-	
-	if (state == E_State_Walking && direction == e_dir_right)
+Rect Wosu::FrameToDraw() 
+{
+	if (state == E_State_Walking && direction == dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Walking && direction == e_dir_left) {
+	else if (state == E_State_Walking && direction == dir_left)
+	{
 		return FramesWalkingLeft[EnemySpriteNum];
 	}
 	else
@@ -1544,8 +1554,8 @@ void Guma::Init_frames_bounding_boxes()
 
 }
 
-void Guma::Set_State(Enemy_State state) {
-
+void Guma::Set_State(Enemy_State state) 
+{
 	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
 	{
 		this->state = state;
@@ -1554,24 +1564,22 @@ void Guma::Set_State(Enemy_State state) {
 	{
 		this->state = state;
 	}
-
 }
 
-Rect Guma::FrameToDraw() {
-
-	
-	if (state == E_State_Walking && direction == e_dir_right)
+Rect Guma::FrameToDraw() 
+{
+	if (state == E_State_Walking && direction == dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Walking && direction == e_dir_left) {
+	else if (state == E_State_Walking && direction == dir_left) {
 		return FramesWalkingLeft[EnemySpriteNum];
 	}
-	else if (state == E_State_Attacking && direction == e_dir_right)
+	else if (state == E_State_Attacking && direction == dir_right)
 	{
 		return FramesAttackingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Attacking && direction == e_dir_left)
+	else if (state == E_State_Attacking && direction == dir_left)
 	{
 		return FramesAttackingLeft[EnemySpriteNum];
 	}
@@ -1914,7 +1922,6 @@ void add_Stalfos(int x,int y)
 	stalfos->Init_frames_bounding_boxes();
 	stalfos->Set_Health(32);
 	stalfos->Set_Points(30);
-	stalfos->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(stalfos);
 }
 
@@ -1924,7 +1931,6 @@ void add_PalaceBot(int x, int y)
 	pbot->Init_frames_bounding_boxes();
 	pbot->Set_Health(16);
 	pbot->Set_Points(10);
-	pbot->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(pbot);
 }
 
@@ -1934,7 +1940,6 @@ void add_Wosu(int x, int y)
 	wosu->Init_frames_bounding_boxes();
 	wosu->Set_Health(8);
 	wosu->Set_Points(0);
-	wosu->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(wosu);
 }
 
@@ -1944,6 +1949,5 @@ void add_Guma(int x, int y)
 	guma->Init_frames_bounding_boxes();
 	guma->Set_Health(64);
 	guma->Set_Points(50);
-	guma->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(guma);
 }
