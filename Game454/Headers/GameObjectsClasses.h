@@ -97,6 +97,7 @@ class Elevator;
 
 
 
+extern ALLEGRO_TIMER* FPStimer;
 // keeps colors that are assumed to be empty
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
@@ -219,6 +220,7 @@ private:
 	int SwordX = -1, SwordY = -1;
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
+	ALLEGRO_TIMER* HurtTimer;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;
@@ -374,6 +376,7 @@ protected:
 	Enemy_Direction direction = e_dir_right;
 
 	float Health = 1.0;
+	int Points = 1;
 public:
 	int positionX, positionY;
 	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
@@ -415,6 +418,10 @@ public:
 	void Take_Damage(float health_damage);
 
 	void Heal(float health_gain);
+
+	void Set_Points(int points);
+
+	int Get_Points();
 };
 
 class Stalfos : public Enemy

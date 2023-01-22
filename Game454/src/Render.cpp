@@ -2,7 +2,7 @@
 
 bool draw = false;
 ALLEGRO_TIMER* FPStimer;
-ALLEGRO_EVENT_QUEUE* timerQueue;
+ALLEGRO_EVENT_QUEUE* RenderTimerQueue;
 
 /*By screen i mean the target bitmap (which by default is the backbuffer of the display)*/
 void Paint_Player_to_Screen(Rect r)
@@ -43,8 +43,8 @@ void Load_Start_Screen()
 void Render_init()
 {
 	FPStimer = al_create_timer(1.0 / FPS);
-	timerQueue = al_create_event_queue();
-	al_register_event_source(timerQueue, al_get_timer_event_source(FPStimer));
+	RenderTimerQueue = al_create_event_queue();
+	al_register_event_source(RenderTimerQueue, al_get_timer_event_source(FPStimer));
 	al_start_timer(FPStimer);	//a video said not to initialize any variables after this cuz it might mess up the timer, we'll see
 
 	al_set_new_display_flags(ALLEGRO_WINDOWED);
@@ -115,7 +115,7 @@ void DisplayGrid(unsigned int grid_num)
 	/*Enemies hitbox*/
 	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
-		al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(0, 255, 0, 64), 1.0);
+		al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(255, 0, 0, 64), 1.0);
 	}
 }
 
@@ -124,9 +124,9 @@ void Renderer()
 	ALLEGRO_EVENT event;
 	//al_wait_for_event(timerQueue, &event);
 
-	if (!al_is_event_queue_empty(timerQueue))	//time to draw, every 0.0167 of a second (60 fps)
+	if (!al_is_event_queue_empty(RenderTimerQueue))	//time to draw, every 0.0167 of a second (60 fps)
 	{
-		if (!al_get_next_event(timerQueue, &event))
+		if (!al_get_next_event(RenderTimerQueue, &event))
 		{
 			std::cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
 			exit(-1);
