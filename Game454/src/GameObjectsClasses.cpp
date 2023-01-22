@@ -6,8 +6,7 @@ std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
-std::vector<Stalfos> stalfoses;
-std::vector<PalaceBot> pbots;
+std::vector<Enemy*> Enemies;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -146,12 +145,14 @@ void Level::Scroll_Bitmap()
 	if (player->positionX > DISPLAY_W)	//scroll left
 	{
 		cameraX -= DISPLAY_W;
+		ScreenX++;
 		player->screenX++;
 		player->positionX = 5;	//scroll the player to the left side of the screen
 	}
 	else if (player->positionX < 0) //scroll right
 	{
 		cameraX += DISPLAY_W;
+		ScreenX--;
 		player->screenX--;
 		player->positionX = DISPLAY_W - 10;
 	}
@@ -164,6 +165,46 @@ void Level::Scroll_Bitmap()
 //End of Class Level
 
 //Start of Class GameLogic
+
+void GameLogic::Play_Music(const char* path)
+{
+	if (song != NULL)
+	{
+		al_destroy_sample(song);
+		song = NULL;
+	}
+	if (songInstance != NULL)
+	{
+		al_destroy_sample_instance(songInstance);
+		songInstance = NULL;
+	}
+
+	song = al_load_sample(path);
+	if (song == NULL)
+	{
+		cout << "Error in game object : sample song empty\n";
+		exit(-1);
+	}
+	songInstance = al_create_sample_instance(song);
+	al_set_sample_instance_playmode(songInstance, ALLEGRO_PLAYMODE_LOOP);
+	al_attach_sample_instance_to_mixer(songInstance, al_get_default_mixer());
+	if (!al_play_sample_instance(songInstance))
+	{
+		cout << "Error in game object when playing start screen music...\n";
+		exit(-1);
+	}
+}
+
+void GameLogic::Stop_Music()
+{
+	al_stop_sample_instance(songInstance);
+}
+
+void GameLogic::Clear()
+{
+	al_destroy_sample(song);
+	al_destroy_sample_instance(songInstance);
+}
 
 Game_State GameLogic::Get_State()
 {
@@ -573,7 +614,8 @@ void Player::Init_frames_bounding_boxes()
 
 }
 
-void Player::Load_Player_Spritesheet() {
+void Player::Load_Player_Spritesheet() 
+{
 
 	this->PlayerSpriteSheet = al_load_bitmap(LINK_SPRITES_PATH);
 	if (this->PlayerSpriteSheet == NULL)
@@ -581,8 +623,6 @@ void Player::Load_Player_Spritesheet() {
 		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
 		exit(-1);
 	}
-	
-
 }
 
 Rect Player::FrameToDraw()
@@ -624,6 +664,46 @@ Rect Player::FrameToDraw()
 		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
 		exit(-1);
 	}
+}
+
+float Player::Get_Health()
+{
+	return this->Health;
+}
+
+void Player::Set_Health(float health)
+{
+	this->Health = health;
+}
+
+void Player::Take_Damage(float health_damage)
+{
+	this->Health -= health_damage;
+}
+
+void Player::Heal(float health_gain)
+{
+	this->Health += health_gain;
+}
+
+void Player::SetSwordX(int x)
+{
+	this->SwordX = x;
+}
+
+int Player::GetSwordX()
+{
+	return this->SwordX;
+}
+
+void Player::SetSwordY(int y)
+{
+	this->SwordY = y;
+}
+
+int Player::GetSwordY()
+{
+	return this->SwordY;
 }
 
 //end of class Player functions
@@ -711,6 +791,27 @@ void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 		this->positionX += ScrollDistanceX;
 		this->positionY += ScrollDistanceY;
 	}
+}
+
+
+float Enemy::Get_Health()
+{
+	return this->Health;
+}
+
+void Enemy::Set_Health(float health)
+{
+	this->Health = health;
+}
+
+void Enemy::Take_Damage(float health_damage)
+{
+	this->Health -= health_damage;
+}
+
+void Enemy::Heal(float health_gain)
+{
+	this->Health += health_gain;
 }
 
 //end of class enemy

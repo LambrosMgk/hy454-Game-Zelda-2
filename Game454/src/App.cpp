@@ -63,6 +63,7 @@ void app::Game::Initialise()
 	Physics_Init();
 	Collisions_init();
 
+
 	Game::done = isDone;
 	game = this;
 }
@@ -70,6 +71,7 @@ void app::Game::Initialise()
 void app::Game::Load()
 {
 	Load_Start_Screen();
+	gameObj.Play_Music(START_SCREEN_MUSIC);
 }
 
 void app::Game::Clear()

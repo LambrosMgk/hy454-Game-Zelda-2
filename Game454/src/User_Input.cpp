@@ -1,11 +1,11 @@
 #include "..\\Headers\\User_Input.h"
 
-ALLEGRO_EVENT_QUEUE* EventQueue;
+ALLEGRO_EVENT_QUEUE* UserInput_EventQueue;
 
 void User_Input_init()
 {
-	EventQueue = al_create_event_queue();
-	al_register_event_source(EventQueue, al_get_keyboard_event_source());
+	UserInput_EventQueue = al_create_event_queue();
+	al_register_event_source(UserInput_EventQueue, al_get_keyboard_event_source());
 	gameObj.Set_State(StartingScreen);
 }
 
@@ -19,10 +19,10 @@ bool isDone()
 /*Handles all user input*/
 void UserInput(void)
 {
-	while (!al_is_event_queue_empty(EventQueue)) //Check all the user input
+	while (!al_is_event_queue_empty(UserInput_EventQueue)) //Check all the user input
 	{
 		ALLEGRO_EVENT event;
-		if (!al_get_next_event(EventQueue, &event))
+		if (!al_get_next_event(UserInput_EventQueue, &event))
 		{
 			std::cout << "Error : EventQueue empty when !al_is_event_queue_empty() returned false\n";
 			exit(-1);
@@ -36,6 +36,8 @@ void UserInput(void)
 				{
 				case ALLEGRO_KEY_ENTER:			//Enter == continue, load first level
 					gameObj.Set_State(PlayingLevel1);
+					gameObj.Stop_Music();
+					gameObj.Play_Music(LEVEL_1_MUSIC);
 					break;
 				}
 			}

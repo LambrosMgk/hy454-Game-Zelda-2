@@ -18,6 +18,8 @@
 #define ENEMY1_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-1.gif"
 #define ENEMY2_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-2.gif"
 #define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects.png"
+#define START_SCREEN_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
+#define LEVEL_1_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -101,13 +103,13 @@ extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
-extern std::vector<Stalfos> stalfoses;
-extern std::vector<PalaceBot> pbots;
+extern std::vector<Enemy*> Enemies;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
 //used in physics and animations
 
+/*useful for drawing stuff between layers*/
 class DrawOrder
 {
 public:
@@ -133,6 +135,7 @@ public:
 	unsigned char* divIndex = NULL, * modIndex = NULL;
 	unsigned short TILESET_WIDTH = 0, TILESET_HEIGHT = 0;
 	int cameraX = 0, cameraY = 0;
+	int ScreenX = 0, ScreenY = 0;	/*like the player class cameras will represent pixels and Screens will represent how many screen from the start(upper left corner)*/
 
 	/*loads a bitmap from the given filepath, sets the global variables TILESET_WIDTH and TILESET_HEIGHT then returns the loaded tileset as a bitmap
 in case of bad file path exits program with -1*/
@@ -156,6 +159,8 @@ class GameLogic
 {
 private:
 	Game_State GameState = StartingScreen;
+	ALLEGRO_SAMPLE* song = NULL;
+	ALLEGRO_SAMPLE_INSTANCE* songInstance = NULL;
 public:
 	/*Allows me to draw in order stuff from the same layer e.g. i want to draw layer 2 but layer 2 has a moving elevator which must
 	be drawn without changing the layer 2 bitmap, so it must be drawn after layer 2 but before layer 3 (if we add a layer 3)
@@ -164,6 +169,12 @@ public:
 	ALLEGRO_DISPLAY* display = NULL;
 	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL;
 	Level *level = NULL;
+
+	void Play_Music(const char* path);
+
+	void Stop_Music();
+
+	void Clear();
 
 	Game_State Get_State();
 
@@ -205,6 +216,8 @@ private:
 	Player_State state = State_Walking;
 	Player_Direction direction = dir_right;
 	int scrollDistanceX = 2, scrollDistanceY = 3;
+	float Health = 10;
+	int SwordX = -1, SwordY = -1;
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
 	int positionX, positionY;
@@ -249,6 +262,22 @@ public:
 	void Load_Player_Spritesheet();
 
 	Rect FrameToDraw();
+
+	float Get_Health();
+
+	void Set_Health(float health);
+
+	void Take_Damage(float health_damage);
+
+	void Heal(float health_gain);
+
+	void SetSwordX(int x);
+
+	int GetSwordX();
+
+	void SetSwordY(int y);
+
+	int GetSwordY();
 };
 
 class TileColorsHolder final
@@ -344,6 +373,8 @@ protected:
 	unsigned int EnemySpriteNum = 0;	//counter for animation
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 	Enemy_Direction direction = e_dir_right;
+
+	float Health = 1.0;
 public:
 	int positionX, positionY;
 	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
@@ -377,6 +408,15 @@ public:
 
 	void Load_Enemy_Spritesheet();
 
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	float Get_Health();
+
+	void Set_Health(float health);
+
+	void Take_Damage(float health_damage);
+
+	void Heal(float health_gain);
 	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 };
 

@@ -69,9 +69,6 @@ void Animator()
 					gameObj.level->grids[1]->SetEmptyGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()), DIV_TILE_WIDTH(elevators[act_elevator].getCol()) + 1);
 					gameObj.level->grids[1]->SetSolidGridTile(DIV_TILE_HEIGHT(elevators[act_elevator].getCurrRow()) + 1, DIV_TILE_WIDTH(elevators[act_elevator].getCol()) + 1);
 				}
-				/*me ena timer tha kanoume scroll to active elevator kai me enan epipleon elegxo mporoume na doume
-				poia grid tiles tha allazoume apo solid se empty kai olo ayto until xtypisoume kati solid se kapoio layer
-				(logika mono to layer 1 tha xreiastei na checkaroume mias kai auto exei tiles-toubla)*/
 			}
 			else if (event.any.source == al_get_timer_event_source(AttackTimer) && player->Get_State() == State_Attacking)
 			{
