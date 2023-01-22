@@ -773,26 +773,20 @@ Enemy_State Enemy::Get_State()
 	return this->state;
 }
 
-void Enemy::Load_Enemy_Spritesheet()
+void Enemy::Load_Enemy_Spritesheet(boolean mode)
 {
-	this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
+
+	if (mode)
+		this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
+	else
+		this->EnemySpriteSheet = al_load_bitmap(ENEMY1_SPRITES_FLIPPED_PATH);
+
 	if (this->EnemySpriteSheet == NULL)
 	{
-		fprintf(stderr, "\nFailed to initialize PlayerSpriteSheet (al_load_bitmap() failed).\n");
+		fprintf(stderr, "\nFailed to initialize EnemySpriteSheet (al_load_bitmap() failed).\n");
 		exit(-1);
 	}
 }
-
-
-void Enemy::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
-{
-	if (state == E_State_Walking)
-	{
-		this->positionX += ScrollDistanceX;
-		this->positionY += ScrollDistanceY;
-	}
-}
-
 
 float Enemy::Get_Health()
 {
@@ -870,8 +864,44 @@ void Stalfos::Init_frames_bounding_boxes() {
 	r->y = 432 + 10;
 	r->x = 448 + 5;
 	
-
 	FramesFalling.push_back(*r);
+
+	//FramesWalkingLeft 
+	for (i = 0; i < 2; i++)
+	{
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = ENEMY_SPRITE_WIDTH;
+
+		r->y = 448 + 5;
+		if (i == 0)
+			r->x = 272 + 3;
+		else
+			r->x = 288 + 12;
+		FramesWalkingLeft.push_back(*r);
+	}
+
+	//FramesSlashLeft 
+	for (i = 0; i < 3; i++)
+	{
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->y = 448 + 5;
+		if (i == 0) {
+			r->w = ENEMY_SPRITE_WIDTH*2;
+			r->x = 192 - 1;
+		}
+		else {
+			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 2;
+			if (i == 1)
+				r->x = 224 + 3;
+			else
+				r->x = 256 - 3;
+		}
+		FramesSlashLeft.push_back(*r);
+	}
+
+	
 	
 }
 
@@ -1027,6 +1057,22 @@ void Wosu::Init_frames_bounding_boxes() {
 
 		FramesWalkingRight.push_back(*r);
 	}
+
+	//FramesWalkingLeft
+	for (int i = 0; i < 2; i++) {
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2 ;
+		r->w = ENEMY_SPRITE_WIDTH;
+
+		r->y = 768 + 2;
+
+		if (i == 0)
+			r->x = 544 + 5;
+		else if (i == 1)
+			r->x = 576;
+
+		FramesWalkingLeft.push_back(*r);
+	}
 	
 
 }
@@ -1094,30 +1140,53 @@ void Guma::Init_frames_bounding_boxes() {
 	}
 
 	//FramesAttackingRight
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 2; i++) {
 		r = new Rect;
 		
-		if (i > 1) {
-			r->h = ENEMY_SPRITE_HEIGHT;
-			r->w = 2*ENEMY_SPRITE_WIDTH;
-			r->y = 816 + 13;
-			if (i == 2)
-				r->x = 496-1;
-			else
-				r->x = 528;
-		}
-		else {
+		
 			r->h = ENEMY_SPRITE_HEIGHT * 2;
 			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
 			r->y = 816 + 5;
 			if (i == 0)
 				r->x = 432 - 1;
-			else 
+			else
 				r->x = 464 - 3;
-		}	
 
-		
-		FramesAttackingRight.push_back(*r);
+
+
+			FramesAttackingRight.push_back(*r);
+	}
+
+	//FramesWalkingLeft
+	for (int i = 0; i < 2; i++) {
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = ENEMY_SPRITE_WIDTH;
+
+		r->y = 816 + 5;
+		if (i == 0)
+			r->x = 192 + 3;
+		else if (i == 1)
+			r->x = 208 + 12;
+		FramesWalkingRight.push_back(*r);
+	}
+
+	//FramesAttackingLeft
+	for (int i = 0; i < 2; i++) {
+		r = new Rect;
+
+
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
+		r->y = 816 + 5;
+		if (i == 0)
+			r->x = 128 + 5;
+		else
+			r->x = 160 + 4;
+
+
+
+		FramesAttackingLeft.push_back(*r);
 	}
 
 
@@ -1138,8 +1207,8 @@ void Guma::Set_State(Enemy_State state) {
 
 Rect Guma::FrameToDraw() {
 
-	return FramesAttackingRight[3];
-	/*if (state == E_State_Walking && direction == e_dir_right)
+	
+	if (state == E_State_Walking && direction == e_dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
@@ -1158,7 +1227,7 @@ Rect Guma::FrameToDraw() {
 	{
 		fprintf(stderr, "Error with Guma state : invalid value %d.\n", this->state);
 		exit(-1);
-	}*/
+	}
 }
 
 void Guma::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
@@ -1172,6 +1241,137 @@ void Guma::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 //End of Guma Class
 
+//Start of Projectile Class
+
+Projectile::Projectile(int posX, int posY)
+{
+	positionX = posX;
+	positionY = posY;
+}
+
+Projectile::~Projectile()
+{
+
+}
+
+void Projectile::Set_Speed_X(int speedX)
+{
+	this->scrollDistanceX = speedX;
+}
+
+void Projectile::Increment_Speed_X()
+{
+	this->scrollDistanceX++;
+}
+
+int Projectile::Get_Speed_X()
+{
+	return this->scrollDistanceX;
+}
+
+void Projectile::Set_Speed_Y(int speedY)
+{
+	this->scrollDistanceY = speedY;
+}
+
+void Projectile::Increment_Speed_Y()
+{
+	this->scrollDistanceY++;
+}
+
+void Projectile::Decrement_Speed_Y()
+{
+	this->scrollDistanceY--;
+}
+
+int Projectile::Get_Speed_Y()
+{
+	return this->scrollDistanceY;
+}
+
+void Projectile::Load_Projectile_Spritesheet()
+{
+	this->ProjectileSpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
+	if (this->ProjectileSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize ProjectileSpriteSheet (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
+
+
+//End of Projectile Class
+
+//Start of Axe Class
+
+Axe::Axe(int x, int y) : Projectile(x, y)
+{
+
+}
+
+void Axe::Init_frames_bounding_boxes() {
+	Rect* r;
+	int i = 0;
+
+	//FramesLounging
+	for (int i = 0; i < 4; i++) {
+		r = new Rect;
+		
+		r->h = ENEMY_SPRITE_HEIGHT;
+		r->w = 2 * ENEMY_SPRITE_WIDTH;
+		r->y = 816 + 13;
+		if (i == 0)
+			r->x = 496 - 1;
+		else if (i == 1)
+			r->x = 512 - 1;
+		else if (i == 2)
+			r->x = 528 + 1;
+		else
+			r->x = 544 + 4;
+		
+		FramesLounging.push_back(*r);
+	}
+
+}
+
+/*Rect Axe::FrameToDraw() {
+
+	if (state == E_State_Walking && direction == e_dir_right)
+	{
+		return FramesWalkingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Walking && direction == e_dir_left) {
+		return FramesWalkingLeft[EnemySpriteNum];
+	}
+	else if (state == E_State_Attacking && direction == e_dir_right)
+	{
+		return FramesAttackingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Attacking && direction == e_dir_left)
+	{
+		return FramesAttackingLeft[EnemySpriteNum];
+	}
+	else
+	{
+		fprintf(stderr, "Error with Guma state : invalid value %d.\n", this->state);
+		exit(-1);
+	}
+}*/
+
+/*void Axe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
+{
+	if (state == E_State_Walking)
+	{
+		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+}*/
+
+//End of Axe Class
+
+//Start of PowerUps
+
+//End of Class PowerUps
 
 //Class TileColorsHolder
 
@@ -1626,7 +1826,7 @@ void add_Stalfos(int x,int y)
 {
 	Stalfos *stalfos = new Stalfos(x, y);
 	stalfos->Init_frames_bounding_boxes();
-	stalfos->Load_Enemy_Spritesheet();
+	stalfos->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(stalfos);
 }
 
@@ -1634,7 +1834,7 @@ void add_PalaceBot(int x, int y)
 {
 	PalaceBot *pbot = new PalaceBot(x, y);
 	pbot->Init_frames_bounding_boxes();
-	pbot->Load_Enemy_Spritesheet();
+	pbot->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(pbot);
 }
 
@@ -1642,7 +1842,7 @@ void add_Wosu(int x, int y)
 {
 	Wosu* wosu = new Wosu(x, y);
 	wosu->Init_frames_bounding_boxes();
-	wosu->Load_Enemy_Spritesheet();
+	wosu->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(wosu);
 }
 
@@ -1650,6 +1850,6 @@ void add_Guma(int x, int y)
 {
 	Guma* guma = new Guma(x, y);
 	guma->Init_frames_bounding_boxes();
-	guma->Load_Enemy_Spritesheet();
+	guma->Load_Enemy_Spritesheet(true);
 	Enemies.push_back(guma);
 }

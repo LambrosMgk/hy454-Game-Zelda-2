@@ -16,7 +16,7 @@
 #define ASSUMED_EMPTY_LAYER_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer"
 #define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
 #define ENEMY1_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-1.gif"
-#define ENEMY2_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-2.gif"
+#define ENEMY1_SPRITES_FLIPPED_PATH "UnitTests\\Media\\enemies-sprites-1-flipped.gif"
 #define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects.png"
 #define START_SCREEN_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
 #define LEVEL_1_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
@@ -83,6 +83,7 @@ enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
 enum Enemy_Direction {	e_dir_left, e_dir_right };
+enum Projectile_Direction { p_dir_left, p_dir_right };
 enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling,E_State_Jumping };
 
 
@@ -93,8 +94,6 @@ class Player;
 class Enemy;
 class Grid;
 class Elevator;
-class Stalfos;
-class PalaceBot;
 
 
 
@@ -379,7 +378,6 @@ public:
 	int positionX, positionY;
 	ALLEGRO_BITMAP* EnemySpriteSheet = NULL;
 	
-
 	Enemy(int posX, int posY);
 
 	~Enemy();
@@ -406,7 +404,7 @@ public:
 
 	Enemy_State Get_State();
 
-	void Load_Enemy_Spritesheet();
+	void Load_Enemy_Spritesheet(boolean mode);
 
 	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 
@@ -507,6 +505,8 @@ void Init_Player(int PlayerX, int PlayerY);
 
 void Load_Player_Spiresheet();
 
+void Load_Enemy_SpriteSheet();
+
 void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight);
 
 /*added these 3 overloards so that set<ALLEGRO_COLOR> could work*/
@@ -531,3 +531,75 @@ void add_PalaceBot(int EnemyX, int EnemyY);
 void add_Wosu(int EnemyX, int EnemyY);
 
 void add_Guma(int EnemyX, int EnemyY);
+
+class Projectile{
+protected:
+		unsigned int ProjectileSpriteNum = 0;	//counter for animation
+		int scrollDistanceX = 2, scrollDistanceY = 3;
+		Projectile_Direction direction = p_dir_right;
+public:
+	int positionX, positionY;
+	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
+
+	Projectile(int posX, int posY);
+
+	~Projectile();
+
+	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual Rect FrameToDraw() = 0;
+
+	void Set_Speed_X(int speedX);
+
+	void Increment_Speed_X();
+
+	int Get_Speed_X();
+
+	void Set_Speed_Y(int speedY);
+
+	void Increment_Speed_Y();
+
+	void Decrement_Speed_Y();
+
+	int Get_Speed_Y();
+
+	void Load_Projectile_Spritesheet();
+
+	virtual void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY) = 0;
+};
+
+class Axe : public Projectile {
+private:
+	std::vector<Rect> FramesLounging;
+
+public:
+	Axe(int x, int y);
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+	void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY);
+
+};
+
+class PowerUps {
+public:
+	int positionX, positionY;
+	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
+
+	PowerUps(int posX, int posY);
+
+	~PowerUps();
+
+	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual Rect FrameToDraw() = 0;
+
+	void Load_PowerUps_Spritesheet();
+};
+
+class Potions : public PowerUps {
+
+
+};
