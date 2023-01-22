@@ -408,7 +408,7 @@ public:
 
 	void Load_Enemy_Spritesheet();
 
-	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 
 	float Get_Health();
 
@@ -417,7 +417,6 @@ public:
 	void Take_Damage(float health_damage);
 
 	void Heal(float health_gain);
-	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 };
 
 class Stalfos : public Enemy
