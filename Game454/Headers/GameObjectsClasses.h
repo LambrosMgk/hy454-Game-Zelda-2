@@ -98,6 +98,7 @@ class PalaceBot;
 
 
 
+extern ALLEGRO_TIMER* FPStimer;
 // keeps colors that are assumed to be empty
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
@@ -220,6 +221,7 @@ private:
 	int SwordX = -1, SwordY = -1;
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
+	ALLEGRO_TIMER* HurtTimer;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
 	unsigned int LinkSpriteNum = 0;

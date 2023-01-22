@@ -1538,6 +1538,7 @@ void Init_Player(int PlayerX, int PlayerY)
 	player = new Player(PlayerX, PlayerY);
 	player->Init_frames_bounding_boxes();
 	player->Load_Player_Spritesheet();
+	player->HurtTimer =  al_create_timer(1.0);	//1 sec of invicibility, useful for timing incoming damage
 }
 
 void Load_Player_Spiresheet()
