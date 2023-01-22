@@ -81,7 +81,7 @@ enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Player_Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
 enum Enemy_Direction {	e_dir_left, e_dir_right };
-enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling };
+enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling,E_State_Jumping };
 
 
 //forward declaration
@@ -92,6 +92,7 @@ class Enemy;
 class Grid;
 class Elevator;
 class Stalfos;
+class PalaceBot;
 
 
 
@@ -101,6 +102,7 @@ extern GameLogic gameObj;	//object that holds the game state and other useful in
 extern Player* player;
 extern std::vector<Elevator> elevators;
 extern std::vector<Stalfos> stalfoses;
+extern std::vector<PalaceBot> pbots;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -369,13 +371,13 @@ public:
 
 	int Get_Speed_Y();
 
-	void Set_State(Enemy_State state);
+	virtual void Set_State(Enemy_State state) = 0;
 
 	Enemy_State Get_State();
 
 	void Load_Enemy_Spritesheet();
 
-	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 };
 
 class Stalfos : public Enemy
@@ -394,7 +396,32 @@ public :
 
 	Rect FrameToDraw();
 
+	void Set_State(Enemy_State state);
+
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 };
+
+class PalaceBot : public Enemy
+{
+private:
+	std::vector<Rect> FramesWalking;
+	std::vector<Rect> FramesJumping;
+
+public:
+	PalaceBot(int x, int y);
+
+	Enemy_State Get_State();
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+	void Set_State(Enemy_State state);
+
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+};
+
+
 
 void createElevators();
 
@@ -420,6 +447,8 @@ The format of the file should be numbers (indices) seperated by commas*/
 void Init_emptyTileColorsHolder(const char* filepath);
 
 void add_Stalfos(int EnemyX, int EnemyY);
+
+void add_PalaceBot(int EnemyX, int EnemyY);
 
 void add_Wosu(int EnemyX, int EnemyY);
 

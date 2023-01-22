@@ -17,6 +17,10 @@ void Paint_Enemies_to_Screen()
 		Rect r = stalfoses[i].FrameToDraw();
 		al_draw_bitmap_region(stalfoses[i].EnemySpriteSheet, r.x, r.y, r.w, r.h, stalfoses[i].positionX, stalfoses[i].positionY, 0);
 	}
+	for (unsigned int i = 0; i < pbots.size(); i++) {
+		Rect r = pbots[i].FrameToDraw();
+		al_draw_bitmap_region(pbots[i].EnemySpriteSheet, r.x, r.y, r.w, r.h, pbots[i].positionX, pbots[i].positionY, 0);
+	}
 }
 
 void Draw_Level(Level *level, unsigned int layer)

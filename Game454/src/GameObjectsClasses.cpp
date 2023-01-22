@@ -7,6 +7,7 @@ GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
 std::vector<Stalfos> stalfoses;
+std::vector<PalaceBot> pbots;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -183,7 +184,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 {
 	Init_Player(StartPlayerPositionX, StartPlayerPositionY);
 	
-	add_Stalfos(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
+	add_PalaceBot(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
 
 	Level* level = new Level();
 	gameObj.level = level;
@@ -773,6 +774,27 @@ void Stalfos::Init_frames_bounding_boxes() {
 	
 }
 
+void Stalfos::Set_State(Enemy_State state) {
+	
+	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Attacking && state == E_State_Walking) //Attacking -> Walking
+	{
+		this->state = state;
+	}
+	
+}
+
+void Stalfos::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
+{
+	if (state == E_State_Walking)
+	{
+		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+}
 
 Rect Stalfos::FrameToDraw() {
 
@@ -796,6 +818,80 @@ Rect Stalfos::FrameToDraw() {
 }
 
 //End of Stalfos Class
+
+//Start of PalaceBot
+
+PalaceBot::PalaceBot(int x, int y) : Enemy(x, y)
+{
+
+}
+
+void PalaceBot::Init_frames_bounding_boxes() {
+	Rect* r;
+	int i = 0;
+
+	//FramesWalking
+	
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w =  ENEMY_SPRITE_WIDTH;
+
+	r->y = 688 + 8;
+	r->x = 160 + 3;
+	FramesWalking.push_back(*r);
+	
+
+	//FramesJumping
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+
+	r->y = 688 + 7;
+	r->x = 176 + 5;
+	FramesJumping.push_back(*r);
+		
+}
+
+void PalaceBot::Set_State(Enemy_State state) {
+
+	if (this->state == E_State_Walking && state == E_State_Jumping) //Walking -> Jumping
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Jumping && state == E_State_Walking) //Jumping -> Walking
+	{
+		this->state = state;
+	}
+
+}
+
+Rect PalaceBot::FrameToDraw() {
+
+	
+	if (state == E_State_Walking && direction == e_dir_right)
+	{
+		return FramesWalking[EnemySpriteNum];
+	}
+	else if (state == E_State_Jumping)
+	{
+		return FramesJumping[EnemySpriteNum];
+	}
+	else
+	{
+		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
+		exit(-1);
+	}
+}
+
+void PalaceBot::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
+{
+	if (state == E_State_Jumping)
+	{
+		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+}
+//End of PalaceBot
 
 
 //Start of Wosu Class
@@ -1257,4 +1353,12 @@ void add_Stalfos(int x,int y)
 	stalfos.Init_frames_bounding_boxes();
 	stalfos.Load_Enemy_Spritesheet();
 	stalfoses.push_back(stalfos);
+}
+
+void add_PalaceBot(int x, int y)
+{
+	PalaceBot pbot = PalaceBot(x, y);
+	pbot.Init_frames_bounding_boxes();
+	pbot.Load_Enemy_Spritesheet();
+	pbots.push_back(pbot);
 }
