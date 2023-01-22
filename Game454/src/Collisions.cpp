@@ -36,10 +36,10 @@ void CheckCollisions()
 
 				if (player->Get_State() == State_Walking && player->Get_HurtInvicibility() == false)
 				{
-					if (!((Enemies[i]->positionX + r.w < player->positionX) ||
-						(player->positionX + rP.w < Enemies[i]->positionX) ||
-						(Enemies[i]->positionY + r.h < player->positionY) ||
-						(player->positionY + rP.h < Enemies[i]->positionY))) /*No overlap condition*/
+					if (!((Enemies[i]->positionX + r.w < player->positionX + player->screenX*DISPLAY_W) ||
+						(player->positionX + rP.w + player->screenX * DISPLAY_W < Enemies[i]->positionX) ||
+						(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
+						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY))) /*No overlap condition*/
 					{
 						cout << "Player Collision with " << typeid(*Enemies[i]).name() << '\n';
 						//take damage and start an invicibility timer

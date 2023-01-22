@@ -502,6 +502,76 @@ public:
 
 };
 
+class Projectile
+{
+protected:
+		unsigned int ProjectileSpriteNum = 0;	//counter for animation
+		int scrollDistanceX = 2, scrollDistanceY = 1;
+		Projectile_Direction direction = p_dir_right;
+public:
+	int positionX, positionY;
+	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
+
+	Projectile(int posX, int posY);
+
+	~Projectile();
+
+	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual Rect FrameToDraw() = 0;
+
+	void Set_Speed_X(int speedX);
+
+	int Get_Speed_X();
+
+	void Set_Speed_Y(int speedY);
+
+	int Get_Speed_Y();
+
+	void Load_Projectile_Spritesheet();
+
+	virtual void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY) = 0;
+};
+
+class GumaAxe : public Projectile 
+{
+private:
+	std::vector<Rect> LungeFrames;
+
+public:
+	GumaAxe(int x, int y);
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+	void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY);
+
+};
+
+class PowerUps 
+{
+public:
+	int positionX, positionY;
+	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
+
+	PowerUps(int posX, int posY);
+
+	~PowerUps();
+
+	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual Rect FrameToDraw() = 0;
+
+	void Load_PowerUps_Spritesheet();
+};
+
+class Potions : public PowerUps 
+{
+
+
+};
+
 void createElevators();
 
 void Init_Player(int PlayerX, int PlayerY);
@@ -534,75 +604,3 @@ void add_PalaceBot(int EnemyX, int EnemyY);
 void add_Wosu(int EnemyX, int EnemyY);
 
 void add_Guma(int EnemyX, int EnemyY);
-
-class Projectile{
-protected:
-		unsigned int ProjectileSpriteNum = 0;	//counter for animation
-		int scrollDistanceX = 2, scrollDistanceY = 3;
-		Projectile_Direction direction = p_dir_right;
-public:
-	int positionX, positionY;
-	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
-
-	Projectile(int posX, int posY);
-
-	~Projectile();
-
-	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
-
-	virtual Rect FrameToDraw() = 0;
-
-	void Set_Speed_X(int speedX);
-
-	void Increment_Speed_X();
-
-	int Get_Speed_X();
-
-	void Set_Speed_Y(int speedY);
-
-	void Increment_Speed_Y();
-
-	void Decrement_Speed_Y();
-
-	int Get_Speed_Y();
-
-	void Load_Projectile_Spritesheet();
-
-	virtual void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY) = 0;
-};
-
-class Axe : public Projectile {
-private:
-	std::vector<Rect> FramesLounging;
-
-public:
-	Axe(int x, int y);
-
-	void Init_frames_bounding_boxes();
-
-	Rect FrameToDraw();
-
-	void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY);
-
-};
-
-class PowerUps {
-public:
-	int positionX, positionY;
-	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
-
-	PowerUps(int posX, int posY);
-
-	~PowerUps();
-
-	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
-
-	virtual Rect FrameToDraw() = 0;
-
-	void Load_PowerUps_Spritesheet();
-};
-
-class Potions : public PowerUps {
-
-
-};

@@ -15,7 +15,8 @@ void Paint_Enemies_to_Screen()
 	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
 		Rect r = Enemies[i]->FrameToDraw();
-		al_draw_bitmap_region(Enemies[i]->EnemySpriteSheet, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
+			al_draw_bitmap_region(Enemies[i]->EnemySpriteSheet, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
 	}
 }
 
@@ -115,7 +116,8 @@ void DisplayGrid(unsigned int grid_num)
 	/*Enemies hitbox*/
 	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
-		al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(255, 0, 0, 64), 1.0);
+		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
+			al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(255, 0, 0, 64), 1.0);
 	}
 }
 

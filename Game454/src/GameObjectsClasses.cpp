@@ -701,6 +701,366 @@ bool Player::Get_HurtInvicibility()
 
 //end of class Player functions
 
+//Start of Class TileColorsHolder
+
+void TileColorsHolder::Insert(ALLEGRO_BITMAP* bmp, Index index)
+{
+	if (indices.find(index) == indices.end())
+	{
+		indices.insert(index);
+		al_lock_bitmap(bmp, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+		auto width = al_get_bitmap_width(bmp), height = al_get_bitmap_height(bmp);
+		for (auto i = 0; i < width; i++)
+		{
+			for (auto j = 0; j < height; j++)
+			{
+				/*ALLEGRO_COLOR* color = new ALLEGRO_COLOR;
+				*color =*/
+				colors.insert(al_get_pixel(bmp, i, j));
+			}
+		}
+		al_unlock_bitmap(bmp);
+	}
+}
+
+bool TileColorsHolder::ColorIn(ALLEGRO_COLOR c) const
+{
+	set<ALLEGRO_COLOR>::iterator ptr = colors.begin();
+
+	while (ptr != colors.end())
+	{
+		if (ptr->r == c.r && ptr->g == c.g && ptr->b == c.b)
+		{
+			return true;
+		}
+		ptr = next(ptr);
+	}
+
+	return false;
+}
+
+bool TileColorsHolder::IndexIn(Index index)
+{
+	return indices.find(index) != indices.end();
+}
+
+//End of Class TileColorsHolder
+
+//Start of Class Grid
+
+Grid::Grid(unsigned int layer_num, unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
+{
+	Grid_Element_Width = _Grid_Element_Width;
+	Grid_Element_Height = _Grid_Element_Height;
+	layer = layer_num;
+
+
+	if (TILE_WIDTH % Grid_Element_Width != 0)
+	{
+		cout << "TILE_WIDTH % GRID_ELEMENT_WIDTH must be zero!";
+		exit(-1);
+	}
+	if (TILE_HEIGHT % Grid_Element_Height != 0)
+	{
+		cout << "TILE_HEIGHT % GRID_ELEMENT_HEIGHT must be zero!";
+		exit(-1);
+	}
+
+	Grid_Block_Columns = TILE_WIDTH / Grid_Element_Width;
+	Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
+	Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
+	Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap (bitmap, our level not the tileset)
+	Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap (number of tiles)
+
+	/*cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
+	cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
+	cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
+	*/
+
+	grid = new byte * [Grid_Max_Height];
+	for (unsigned int i = 0; i < Grid_Max_Height; i++)
+		grid[i] = new byte[Grid_Max_Width];
+
+	MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
+	MAX_PIXEL_HEIGHT = MUL_TILE_HEIGHT(MAX_HEIGHT);
+}
+
+Grid::~Grid()	//Destructor
+{
+	//Free the memory for the grid array
+	for (unsigned int i = 0; i < Grid_Max_Height; i++)
+		delete[] grid[i];
+	delete[] grid;
+}
+
+
+void Grid::SetGridTile(unsigned short row, unsigned short col, byte index)
+{
+	grid[row][col] = index;
+}
+
+byte Grid::GetGridTile(unsigned short row, unsigned short col)
+{
+	return grid[row][col];
+}
+
+void Grid::SetSolidGridTile(unsigned short row, unsigned short col)
+{
+	SetGridTile(row, col, GRID_SOLID_TILE);
+}
+
+void Grid::SetEmptyGridTile(unsigned short row, unsigned short col)
+{
+	SetGridTile(row, col, GRID_EMPTY_TILE);
+}
+
+void Grid::SetGridTileFlags(unsigned short row, unsigned short col, byte flags)
+{
+	SetGridTile(row, col, flags);
+}
+
+void Grid::SetGridTileTopSolidOnly(unsigned short row, unsigned short col)
+{
+	SetGridTileFlags(row, col, GRID_TOP_SOLID_MASK);
+}
+
+bool Grid::CanPassGridTile(unsigned short row, unsigned short col, byte flags) // i.e. checks if flags set
+{
+	return (GetGridTile(row, col) & flags) == 0;	//changed from != 0
+}
+
+/*Returns the row based on the TILE_HEIGHT (not the Grid_element_height)*/
+int Grid::getPlayerBottomRow(Player* player) {
+	return (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / TILE_HEIGHT;
+}
+
+/*Returns the column based on the TILE_WIDTH (not the Grid_element_width)*/
+int Grid::getPlayerLeftCol(Player* player) {
+	return (player->positionX + player->screenX * DISPLAY_W) / TILE_WIDTH;
+}
+
+int Grid::getPlayerRightCol(Player* player) {
+	return (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / TILE_WIDTH;
+}
+
+int Grid::GetIndexFromLayer(int gridRow, int gridCol)
+{
+	//For a grid to exist it means that a level object already exists
+	return gameObj.level->TileMapCSV[layer][gridRow][gridCol];
+}
+
+void Grid::FilterGridMotion(Player* player, int* dx, int* dy)
+{
+	assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);	//can't have the player pass 2 blocks instead of 1 and bypass some random wall
+
+	// try horizontal move
+	if (*dx < 0)
+		FilterGridMotionLeft(player, dx);
+	else if (*dx > 0)
+		FilterGridMotionRight(player, dx);
+
+	// try vertical move
+	if (*dy < 0)
+		FilterGridMotionUp(player, dy);
+	else if (*dy > 0)
+		FilterGridMotionDown(player, dy);
+}
+
+void Grid::FilterGridMotionLeft(Player* player, int* dx)
+{
+	auto x1_next = player->positionX + player->screenX * DISPLAY_W + *dx;
+	if (x1_next < 0)
+		*dx = -player->positionX;
+	else
+	{
+		auto newCol = (x1_next) / Grid_Element_Width;
+		auto currCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+		if (newCol != currCol)
+		{
+			assert(newCol + 1 == currCol); // we really move left
+			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
+			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
+			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
+			for (auto row = startRow; row <= endRow; ++row)
+				if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
+				{
+					*dx = Grid_Element_Width * (currCol)-(player->positionX + player->screenX * DISPLAY_W);
+					//cout << "*dx = " << *dx << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterGridMotionRight(Player* player, int* dx)
+{
+	unsigned int x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1;
+	unsigned int x2_next = x2 + *dx;
+	if (x2_next >= MAX_PIXEL_WIDTH)
+		*dx = (MAX_PIXEL_WIDTH - 1) - x2;
+	else
+	{
+		auto newCol = (x2_next) / Grid_Element_Width;
+		auto currCol = (x2) / Grid_Element_Width;
+		if (newCol != currCol)
+		{
+			assert(newCol - 1 == currCol); // we really move right
+			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
+			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
+			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
+			for (auto row = startRow; row <= endRow; ++row)
+				if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
+				{
+					*dx = (Grid_Element_Width * (newCol)-1) - (x2);
+					//cout << "*dx = " << *dx << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterGridMotionUp(Player* player, int* dy)
+{
+	auto x1_next = player->positionY + player->screenY * DISPLAY_H + *dy;
+	if (x1_next < 0)
+		*dy = -player->positionY;
+	else
+	{
+		auto newRow = (x1_next) / Grid_Element_Height;
+		auto currRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
+		if (newRow != currRow)
+		{
+			assert(newRow + 1 == currRow); // we really move up
+			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
+			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+			for (auto col = startCol; col <= endCol; ++col)
+				if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
+				{
+					*dy = Grid_Element_Height * (currRow)-(player->positionY + player->screenY * DISPLAY_H);
+					//cout << "*dy = " << *dy << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterGridMotionDown(Player* player, int* dy)
+{
+	unsigned int x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
+	auto x2_next = x2 + *dy;
+	if (x2_next >= MAX_PIXEL_HEIGHT)
+		*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
+	else
+	{
+		auto newRow = (x2_next) / Grid_Element_Height;
+		auto currRow = (x2) / Grid_Element_Height;
+		if (newRow != currRow)
+		{
+			assert(newRow - 1 == currRow); // we really move down
+			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
+			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
+			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+			for (auto col = startCol; col <= endCol; ++col) {
+
+				if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
+				{
+					player->jumping = false;
+					*dy = (Grid_Element_Width * (newRow)-1) - (x2);
+					//cout << "*dy = " << *dy << "\n";
+					break;
+				}
+			}
+
+		}
+	}
+}
+
+/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
+{
+	for (auto row = 0; row < al_get_bitmap_height(map); ++row)
+		for (auto col = 0; col < MAX_WIDTH; ++col)
+		{
+			memset(
+				grid,
+				IsTileIndexAssumedEmpty(GetTile(map, col, row)) ? GRID_EMPTY_TILE : GRID_SOLID_TILE,
+				GRID_ELEMENTS_PER_TILE
+			);
+			//grid += GRID_ELEMENTS_PER_TILE;
+		}
+}*/
+
+bool Grid::ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, byte solidThreshold)
+{
+	auto n = 0;
+
+	al_lock_bitmap(gridElement, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
+	for (byte i = 0; i < Grid_Element_Width; i++)
+	{
+		for (byte j = 0; j < Grid_Element_Height; j++)
+		{
+			ALLEGRO_COLOR c = al_get_pixel(gridElement, i, j);
+			//byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
+			//byte rt = 0, gt = 0, bt = 0;//, at = 0;
+			//al_unmap_rgb(c, &r, &g, &b);
+			/*al_unmap_rgb(transColor, &rt, &gt, &bt);*/
+
+			if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(layer, c))
+				++n;
+		}
+	}//cout << "\nn = " << n << '\n';
+	al_unlock_bitmap(gridElement);
+
+	return n <= solidThreshold;
+}
+
+void Grid::ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold)
+{
+	if (map.size() == 0)
+	{
+		cout << "ComputeTileGridBlocks2 got called with bad argument \"map\".";
+		return;
+	}
+	auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);		//e.g. 16x16
+	auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);	//e.g. 8x8
+
+	for (unsigned int row = 0; row < map.size(); ++row)
+		for (unsigned int col = 0; col < map[0].size(); ++col)
+		{
+			auto index = map[row][col];
+			al_set_target_bitmap(tileElem);	//set as target the tileElem and copy/paint the tile onto it
+			al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(gameObj.level->modIndex[index]), MUL_TILE_HEIGHT(gameObj.level->divIndex[index]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
+			al_set_target_bitmap(al_get_backbuffer(gameObj.display));	//reset the target back to the display
+
+			if (IsTileIndexAssumedEmpty(layer, index) || index == -1)
+			{
+				//printf("this->grid[%d][%d] = %d\n", row, col, this->grid[row][col]);
+				this->grid[row][col] = GRID_EMPTY_TILE;
+			}
+			else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
+			{
+				al_set_target_bitmap(gridElem);
+				for (unsigned int i = 0; i < Grid_Elements_Per_Tile; i++)
+				{
+					auto x = i % Grid_Block_Rows;
+					auto y = i / Grid_Block_Rows;
+
+					al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(gameObj.level->modIndex[index]) + x * Grid_Element_Width, MUL_TILE_HEIGHT(gameObj.level->divIndex[index]) + y * Grid_Element_Height, Grid_Element_Width, Grid_Element_Height, 0, 0, 0);
+
+					auto isEmpty = ComputeIsGridIndexEmpty(gridElem, solidThreshold);
+					this->grid[row][col] = isEmpty ? GRID_EMPTY_TILE : GRID_SOLID_TILE;
+					//printf("\nthis->grid[%d][%d] = %d", row, col, this->grid[row][col]);
+				}
+				al_set_target_bitmap(al_get_backbuffer(gameObj.display));
+			}
+		}
+
+	al_destroy_bitmap(tileElem);
+	al_destroy_bitmap(gridElem);
+}
+
+//End of Class Grid
+
 //start of class Enemy functions
 
 Enemy::Enemy(int posX, int posY)
@@ -1124,7 +1484,8 @@ Guma::Guma(int x, int y) : Enemy(x, y)
 
 }
 
-void Guma::Init_frames_bounding_boxes() {
+void Guma::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 	int i = 0;
 
@@ -1262,11 +1623,6 @@ void Projectile::Set_Speed_X(int speedX)
 	this->scrollDistanceX = speedX;
 }
 
-void Projectile::Increment_Speed_X()
-{
-	this->scrollDistanceX++;
-}
-
 int Projectile::Get_Speed_X()
 {
 	return this->scrollDistanceX;
@@ -1275,16 +1631,6 @@ int Projectile::Get_Speed_X()
 void Projectile::Set_Speed_Y(int speedY)
 {
 	this->scrollDistanceY = speedY;
-}
-
-void Projectile::Increment_Speed_Y()
-{
-	this->scrollDistanceY++;
-}
-
-void Projectile::Decrement_Speed_Y()
-{
-	this->scrollDistanceY--;
 }
 
 int Projectile::Get_Speed_Y()
@@ -1307,17 +1653,19 @@ void Projectile::Load_Projectile_Spritesheet()
 
 //Start of Axe Class
 
-Axe::Axe(int x, int y) : Projectile(x, y)
+GumaAxe::GumaAxe(int x, int y) : Projectile(x, y)
 {
 
 }
 
-void Axe::Init_frames_bounding_boxes() {
+void GumaAxe::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 	int i = 0;
 
 	//FramesLounging
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		r = new Rect;
 		
 		r->h = ENEMY_SPRITE_HEIGHT;
@@ -1332,409 +1680,26 @@ void Axe::Init_frames_bounding_boxes() {
 		else
 			r->x = 544 + 4;
 		
-		FramesLounging.push_back(*r);
+		LungeFrames.push_back(*r);
 	}
-
 }
 
-/*Rect Axe::FrameToDraw() {
-
-	if (state == E_State_Walking && direction == e_dir_right)
-	{
-		return FramesWalkingRight[EnemySpriteNum];
-	}
-	else if (state == E_State_Walking && direction == e_dir_left) {
-		return FramesWalkingLeft[EnemySpriteNum];
-	}
-	else if (state == E_State_Attacking && direction == e_dir_right)
-	{
-		return FramesAttackingRight[EnemySpriteNum];
-	}
-	else if (state == E_State_Attacking && direction == e_dir_left)
-	{
-		return FramesAttackingLeft[EnemySpriteNum];
-	}
-	else
-	{
-		fprintf(stderr, "Error with Guma state : invalid value %d.\n", this->state);
-		exit(-1);
-	}
-}*/
-
-/*void Axe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
+Rect GumaAxe::FrameToDraw() 
 {
-	if (state == E_State_Walking)
-	{
-		this->positionX += ScrollDistanceX;
-		this->positionY += ScrollDistanceY;
-	}
-}*/
+	return LungeFrames[ProjectileSpriteNum];
+}
+
+void GumaAxe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
+{
+	this->positionX += ScrollDistanceX;
+	this->positionY += ScrollDistanceY;
+}
 
 //End of Axe Class
 
 //Start of PowerUps
 
 //End of Class PowerUps
-
-//Class TileColorsHolder
-
-void TileColorsHolder::Insert(ALLEGRO_BITMAP* bmp, Index index)
-{
-	if (indices.find(index) == indices.end())
-	{
-		indices.insert(index);
-		al_lock_bitmap(bmp, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
-		auto width = al_get_bitmap_width(bmp), height = al_get_bitmap_height(bmp);
-		for (auto i = 0; i < width; i++)
-		{
-			for (auto j = 0; j < height; j++)
-			{
-				/*ALLEGRO_COLOR* color = new ALLEGRO_COLOR;
-				*color =*/
-				colors.insert(al_get_pixel(bmp, i, j));
-			}
-		}
-		al_unlock_bitmap(bmp);
-	}
-}
-
-bool TileColorsHolder::ColorIn(ALLEGRO_COLOR c) const
-{
-	set<ALLEGRO_COLOR>::iterator ptr = colors.begin();
-
-	while (ptr != colors.end())
-	{
-		if (ptr->r == c.r && ptr->g == c.g && ptr->b == c.b)
-		{
-			return true;
-		}
-		ptr = next(ptr);
-	}
-
-	return false;
-}
-
-bool TileColorsHolder::IndexIn(Index index)
-{
-	return indices.find(index) != indices.end();
-}
-
-//End of Class TileColorsHolder
-
-//Class Grid
-
-Grid::Grid(unsigned int layer_num, unsigned int _Grid_Element_Width, unsigned int _Grid_Element_Height, unsigned int MAX_WIDTH, unsigned int MAX_HEIGHT)
-{
-	Grid_Element_Width = _Grid_Element_Width;
-	Grid_Element_Height = _Grid_Element_Height;
-	layer = layer_num;
-
-
-	if (TILE_WIDTH % Grid_Element_Width != 0)
-	{
-		cout << "TILE_WIDTH % GRID_ELEMENT_WIDTH must be zero!";
-		exit(-1);
-	}
-	if (TILE_HEIGHT % Grid_Element_Height != 0)
-	{
-		cout << "TILE_HEIGHT % GRID_ELEMENT_HEIGHT must be zero!";
-		exit(-1);
-	}
-
-	Grid_Block_Columns = TILE_WIDTH / Grid_Element_Width;
-	Grid_Block_Rows = TILE_HEIGHT / Grid_Element_Height;
-	Grid_Elements_Per_Tile = Grid_Block_Rows * Grid_Block_Columns;
-	Grid_Max_Width = MAX_WIDTH * Grid_Block_Columns;	//MAX_WIDTH of the tilemap (bitmap, our level not the tileset)
-	Grid_Max_Height = MAX_HEIGHT * Grid_Block_Rows;		//MAX_HEIGHT of the tilemap (number of tiles)
-
-	/*cout << "Grid created with : Grid_Block_Columns = " << Grid_Block_Columns << " Grid_Block_Rows = " << Grid_Block_Rows << '\n';
-	cout << "Grid_Elements_Per_Tile = " << Grid_Elements_Per_Tile << "\n";
-	cout << "Grid_Max_Width = " << Grid_Max_Width << " Grid_Max_Height" << Grid_Max_Height << '\n';
-	*/
-
-	grid = new byte * [Grid_Max_Height];
-	for (unsigned int i = 0; i < Grid_Max_Height; i++)
-		grid[i] = new byte[Grid_Max_Width];
-
-	MAX_PIXEL_WIDTH = MUL_TILE_WIDTH(MAX_WIDTH);
-	MAX_PIXEL_HEIGHT = MUL_TILE_HEIGHT(MAX_HEIGHT);
-}
-
-Grid::~Grid()	//Destructor
-{
-	//Free the memory for the grid array
-	for (unsigned int i = 0; i < Grid_Max_Height; i++)
-		delete[] grid[i];
-	delete[] grid;
-}
-
-
-void Grid::SetGridTile(unsigned short row, unsigned short col, byte index)
-{
-	grid[row][col] = index;
-}
-
-byte Grid::GetGridTile(unsigned short row, unsigned short col)
-{
-	return grid[row][col];
-}
-
-void Grid::SetSolidGridTile(unsigned short row, unsigned short col)
-{
-	SetGridTile(row, col, GRID_SOLID_TILE);
-}
-
-void Grid::SetEmptyGridTile(unsigned short row, unsigned short col)
-{
-	SetGridTile(row, col, GRID_EMPTY_TILE);
-}
-
-void Grid::SetGridTileFlags(unsigned short row, unsigned short col, byte flags)
-{
-	SetGridTile(row, col, flags);
-}
-
-void Grid::SetGridTileTopSolidOnly(unsigned short row, unsigned short col)
-{
-	SetGridTileFlags(row, col, GRID_TOP_SOLID_MASK);
-}
-
-bool Grid::CanPassGridTile(unsigned short row, unsigned short col, byte flags) // i.e. checks if flags set
-{
-	return (GetGridTile(row, col) & flags) == 0;	//changed from != 0
-}
-
-/*Returns the row based on the TILE_HEIGHT (not the Grid_element_height)*/
-int Grid::getPlayerBottomRow(Player* player) {
-	return (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / TILE_HEIGHT;
-}
-
-/*Returns the column based on the TILE_WIDTH (not the Grid_element_width)*/
-int Grid::getPlayerLeftCol(Player* player) {
-	return (player->positionX + player->screenX * DISPLAY_W) / TILE_WIDTH;
-}
-
-int Grid::getPlayerRightCol(Player* player) {
-	return (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / TILE_WIDTH;
-}
-
-int Grid::GetIndexFromLayer(int gridRow, int gridCol)
-{
-	//For a grid to exist it means that a level object already exists
-	return gameObj.level->TileMapCSV[layer][gridRow][gridCol];
-}
-
-void Grid::FilterGridMotion(Player* player, int* dx, int* dy)
-{
-	assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);	//can't have the player pass 2 blocks instead of 1 and bypass some random wall
-
-	// try horizontal move
-	if (*dx < 0)
-		FilterGridMotionLeft(player, dx);
-	else if (*dx > 0)
-		FilterGridMotionRight(player, dx);
-
-	// try vertical move
-	if (*dy < 0)
-		FilterGridMotionUp(player, dy);
-	else if (*dy > 0)
-		FilterGridMotionDown(player, dy);
-}
-
-void Grid::FilterGridMotionLeft(Player* player, int* dx)
-{
-	auto x1_next = player->positionX + player->screenX * DISPLAY_W + *dx;
-	if (x1_next < 0)
-		*dx = -player->positionX;
-	else
-	{
-		auto newCol = (x1_next) / Grid_Element_Width;
-		auto currCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-		if (newCol != currCol)
-		{
-			assert(newCol + 1 == currCol); // we really move left
-			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
-			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
-			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
-			for (auto row = startRow; row <= endRow; ++row)
-				if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
-				{
-					*dx = Grid_Element_Width * (currCol)-(player->positionX + player->screenX * DISPLAY_W);
-					//cout << "*dx = " << *dx << "\n";
-					break;
-				}
-		}
-	}
-}
-
-void Grid::FilterGridMotionRight(Player* player, int* dx)
-{
-	unsigned int x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1;
-	unsigned int x2_next = x2 + *dx;
-	if (x2_next >= MAX_PIXEL_WIDTH)
-		*dx = (MAX_PIXEL_WIDTH - 1) - x2;
-	else
-	{
-		auto newCol = (x2_next) / Grid_Element_Width;
-		auto currCol = (x2) / Grid_Element_Width;
-		if (newCol != currCol)
-		{
-			assert(newCol - 1 == currCol); // we really move right
-			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
-			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
-			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
-			for (auto row = startRow; row <= endRow; ++row)
-				if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
-				{
-					*dx = (Grid_Element_Width * (newCol)-1) - (x2);
-					//cout << "*dx = " << *dx << "\n";
-					break;
-				}
-		}
-	}
-}
-
-void Grid::FilterGridMotionUp(Player* player, int* dy)
-{
-	auto x1_next = player->positionY + player->screenY * DISPLAY_H + *dy;
-	if (x1_next < 0)
-		*dy = -player->positionY;
-	else
-	{
-		auto newRow = (x1_next) / Grid_Element_Height;
-		auto currRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
-		if (newRow != currRow)
-		{
-			assert(newRow + 1 == currRow); // we really move up
-			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
-			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
-			for (auto col = startCol; col <= endCol; ++col)
-				if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
-				{
-					*dy = Grid_Element_Height * (currRow)-(player->positionY + player->screenY * DISPLAY_H);
-					//cout << "*dy = " << *dy << "\n";
-					break;
-				}
-		}
-	}
-}
-
-void Grid::FilterGridMotionDown(Player* player, int* dy)
-{
-	unsigned int x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
-	auto x2_next = x2 + *dy;
-	if (x2_next >= MAX_PIXEL_HEIGHT)
-		*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
-	else
-	{
-		auto newRow = (x2_next) / Grid_Element_Height;
-		auto currRow = (x2) / Grid_Element_Height;
-		if (newRow != currRow)
-		{
-			assert(newRow - 1 == currRow); // we really move down
-			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
-			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
-			for (auto col = startCol; col <= endCol; ++col) {
-
-				if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
-				{
-					player->jumping = false;
-					*dy = (Grid_Element_Width * (newRow)-1) - (x2);
-					//cout << "*dy = " << *dy << "\n";
-					break;
-				}
-			}
-
-		}
-	}
-}
-
-/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
-{
-	for (auto row = 0; row < al_get_bitmap_height(map); ++row)
-		for (auto col = 0; col < MAX_WIDTH; ++col)
-		{
-			memset(
-				grid,
-				IsTileIndexAssumedEmpty(GetTile(map, col, row)) ? GRID_EMPTY_TILE : GRID_SOLID_TILE,
-				GRID_ELEMENTS_PER_TILE
-			);
-			//grid += GRID_ELEMENTS_PER_TILE;
-		}
-}*/
-
-bool Grid::ComputeIsGridIndexEmpty(ALLEGRO_BITMAP* gridElement, byte solidThreshold)
-{
-	auto n = 0;
-
-	al_lock_bitmap(gridElement, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READONLY);
-	for (byte i = 0; i < Grid_Element_Width; i++)
-	{
-		for (byte j = 0; j < Grid_Element_Height; j++)
-		{
-			ALLEGRO_COLOR c = al_get_pixel(gridElement, i, j);
-			//byte r = 0, g = 0, b = 0;//, a = 0; i don't think i need alpha
-			//byte rt = 0, gt = 0, bt = 0;//, at = 0;
-			//al_unmap_rgb(c, &r, &g, &b);
-			/*al_unmap_rgb(transColor, &rt, &gt, &bt);*/
-
-			if (/*(r != rt && g != gt && b != bt) && */ !IsTileColorEmpty(layer, c))
-				++n;
-		}
-	}//cout << "\nn = " << n << '\n';
-	al_unlock_bitmap(gridElement);
-
-	return n <= solidThreshold;
-}
-
-void Grid::ComputeTileGridBlocks2(vector<vector<int>> map, ALLEGRO_BITMAP* tileSet, byte solidThreshold)
-{
-	if (map.size() == 0)
-	{
-		cout << "ComputeTileGridBlocks2 got called with bad argument \"map\".";
-		return;
-	}
-	auto tileElem = al_create_bitmap(TILE_WIDTH, TILE_HEIGHT);		//e.g. 16x16
-	auto gridElem = al_create_bitmap(Grid_Element_Width, Grid_Element_Height);	//e.g. 8x8
-
-	for (unsigned int row = 0; row < map.size(); ++row)
-		for (unsigned int col = 0; col < map[0].size(); ++col)
-		{
-			auto index = map[row][col];
-			al_set_target_bitmap(tileElem);	//set as target the tileElem and copy/paint the tile onto it
-			al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(gameObj.level->modIndex[index]), MUL_TILE_HEIGHT(gameObj.level->divIndex[index]), TILE_WIDTH, TILE_HEIGHT, 0, 0, 0);
-			al_set_target_bitmap(al_get_backbuffer(gameObj.display));	//reset the target back to the display
-
-			if (IsTileIndexAssumedEmpty(layer, index) || index == -1)
-			{
-				//printf("this->grid[%d][%d] = %d\n", row, col, this->grid[row][col]);
-				this->grid[row][col] = GRID_EMPTY_TILE;
-			}
-			else /*subdivide the tile Grid_Elements_Per_Tile times and check the colors of each sub-tile to see which are solid*/
-			{
-				al_set_target_bitmap(gridElem);
-				for (unsigned int i = 0; i < Grid_Elements_Per_Tile; i++)
-				{
-					auto x = i % Grid_Block_Rows;
-					auto y = i / Grid_Block_Rows;
-
-					al_draw_bitmap_region(tileSet, MUL_TILE_WIDTH(gameObj.level->modIndex[index]) + x * Grid_Element_Width, MUL_TILE_HEIGHT(gameObj.level->divIndex[index]) + y * Grid_Element_Height, Grid_Element_Width, Grid_Element_Height, 0, 0, 0);
-
-					auto isEmpty = ComputeIsGridIndexEmpty(gridElem, solidThreshold);
-					this->grid[row][col] = isEmpty ? GRID_EMPTY_TILE : GRID_SOLID_TILE;
-					//printf("\nthis->grid[%d][%d] = %d", row, col, this->grid[row][col]);
-				}
-				al_set_target_bitmap(al_get_backbuffer(gameObj.display));
-			}
-		}
-
-	al_destroy_bitmap(tileElem);
-	al_destroy_bitmap(gridElem);
-}
-
-//End of Class Grid
 
 void Init_Player(int PlayerX, int PlayerY)
 {
