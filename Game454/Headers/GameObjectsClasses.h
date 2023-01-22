@@ -422,8 +422,8 @@ public:
 class Stalfos : public Enemy
 {
 private:
-	std::vector<Rect> FramesWalkingRight;
-	std::vector<Rect> FramesSlashRight;
+	std::vector<Rect> FramesWalkingRight,FramesWalkingLeft;
+	std::vector<Rect> FramesSlashRight,FramesSlashLeft;
 	std::vector<Rect> FramesFalling;
 	
 public :
@@ -460,7 +460,46 @@ public:
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 };
 
+class Wosu : public Enemy
+{
+private:
+	std::vector<Rect> FramesWalkingLeft,FramesWalkingRight;
 
+public:
+	Wosu(int x, int y);
+
+	Enemy_State Get_State();
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+	void Set_State(Enemy_State state);
+
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+};
+
+class Guma : public Enemy
+{
+private:
+	std::vector<Rect> FramesWalkingLeft, FramesWalkingRight;
+	std::vector<Rect> FramesAttackingLeft, FramesAttackingRight;
+
+public:
+	Guma(int x, int y);
+
+	Enemy_State Get_State();
+
+	void Init_frames_bounding_boxes();
+
+	Rect FrameToDraw();
+
+	void Set_State(Enemy_State state);
+
+	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+};
 
 void createElevators();
 
@@ -491,3 +530,4 @@ void add_PalaceBot(int EnemyX, int EnemyY);
 
 void add_Wosu(int EnemyX, int EnemyY);
 
+void add_Guma(int EnemyX, int EnemyY);

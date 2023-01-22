@@ -225,7 +225,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 {
 	Init_Player(StartPlayerPositionX, StartPlayerPositionY);
 	
-	add_PalaceBot(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
+	add_Guma(5 * TILE_WIDTH + 20,11 * TILE_HEIGHT - 1);
 
 	Level* level = new Level();
 	gameObj.level = level;
@@ -904,6 +904,9 @@ Rect Stalfos::FrameToDraw() {
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
+	else if (state == E_State_Walking && direction == e_dir_left) {
+		return FramesWalkingLeft[EnemySpriteNum];
+	}
 	else if (state == E_State_Falling ) {
 		return FramesFalling[EnemySpriteNum];
 	}
@@ -911,9 +914,13 @@ Rect Stalfos::FrameToDraw() {
 	{
 		return FramesSlashRight[EnemySpriteNum];
 	}
+	else if (state == E_State_Attacking && direction == e_dir_left)
+	{
+		return FramesSlashLeft[EnemySpriteNum];
+	}
 	else
 	{
-		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
+		fprintf(stderr, "Error with Stalfos state : invalid value %d.\n", this->state);
 		exit(-1);
 	}
 }
@@ -969,7 +976,7 @@ void PalaceBot::Set_State(Enemy_State state) {
 Rect PalaceBot::FrameToDraw() {
 
 	
-	if (state == E_State_Walking && direction == e_dir_right)
+	if (state == E_State_Walking)
 	{
 		return FramesWalking[EnemySpriteNum];
 	}
@@ -979,7 +986,7 @@ Rect PalaceBot::FrameToDraw() {
 	}
 	else
 	{
-		fprintf(stderr, "Error with player state : invalid value %d.\n", this->state);
+		fprintf(stderr, "Error with PalaceBot state : invalid value %d.\n", this->state);
 		exit(-1);
 	}
 }
@@ -996,8 +1003,175 @@ void PalaceBot::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 
 //Start of Wosu Class
+Wosu::Wosu(int x, int y) : Enemy(x, y)
+{
+
+}
+
+void Wosu::Init_frames_bounding_boxes() {
+	Rect* r;
+	int i = 0;
+
+	//FramesWalkingRight
+	for (int i = 0; i < 2; i++) {
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT*2;
+		r->w = ENEMY_SPRITE_WIDTH;
+
+		r->y = 768 + 2;
+
+		if (i == 0)
+			r->x = 16 + 5;
+		else if(i == 1)
+			r->x = 48;
+
+		FramesWalkingRight.push_back(*r);
+	}
+	
+
+}
+
+void Wosu::Set_State(Enemy_State state) {
+
+	if (this->state == E_State_Walking) //Walking 
+	{
+		this->state = state;
+	}
+
+}
+
+Rect Wosu::FrameToDraw() {
+
+	
+	if (state == E_State_Walking && direction == e_dir_right)
+	{
+		return FramesWalkingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Walking && direction == e_dir_left) {
+		return FramesWalkingLeft[EnemySpriteNum];
+	}
+	else
+	{
+		fprintf(stderr, "Error with Wosu state : invalid value %d.\n", this->state);
+		exit(-1);
+	}
+}
+
+void Wosu::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
+{
+	if (state == E_State_Walking)
+	{
+		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+}
 
 //End Wosu Class
+
+//Start of Guma Class
+
+Guma::Guma(int x, int y) : Enemy(x, y)
+{
+
+}
+
+void Guma::Init_frames_bounding_boxes() {
+	Rect* r;
+	int i = 0;
+
+	//FramesWalkingRight
+	for (int i = 0; i < 2; i++) {
+		r = new Rect;
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = ENEMY_SPRITE_WIDTH;
+
+		r->y = 816 + 5;
+		if (i == 0)
+			r->x = 368 + 10;
+		else if (i == 1)
+			r->x = 400 + 4;
+		FramesWalkingRight.push_back(*r);
+	}
+
+	//FramesAttackingRight
+	for (int i = 0; i < 4; i++) {
+		r = new Rect;
+		
+		if (i > 1) {
+			r->h = ENEMY_SPRITE_HEIGHT;
+			r->w = 2*ENEMY_SPRITE_WIDTH;
+			r->y = 816 + 13;
+			if (i == 2)
+				r->x = 496-1;
+			else
+				r->x = 528;
+		}
+		else {
+			r->h = ENEMY_SPRITE_HEIGHT * 2;
+			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
+			r->y = 816 + 5;
+			if (i == 0)
+				r->x = 432 - 1;
+			else 
+				r->x = 464 - 3;
+		}	
+
+		
+		FramesAttackingRight.push_back(*r);
+	}
+
+
+}
+
+void Guma::Set_State(Enemy_State state) {
+
+	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Attacking && state == E_State_Walking) //Attacking -> Walking
+	{
+		this->state = state;
+	}
+
+}
+
+Rect Guma::FrameToDraw() {
+
+	return FramesAttackingRight[3];
+	/*if (state == E_State_Walking && direction == e_dir_right)
+	{
+		return FramesWalkingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Walking && direction == e_dir_left) {
+		return FramesWalkingLeft[EnemySpriteNum];
+	}
+	else if (state == E_State_Attacking && direction == e_dir_right)
+	{
+		return FramesAttackingRight[EnemySpriteNum];
+	}
+	else if (state == E_State_Attacking && direction == e_dir_left)
+	{
+		return FramesAttackingLeft[EnemySpriteNum];
+	}
+	else
+	{
+		fprintf(stderr, "Error with Guma state : invalid value %d.\n", this->state);
+		exit(-1);
+	}*/
+}
+
+void Guma::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
+{
+	if (state == E_State_Walking)
+	{
+		this->positionX += ScrollDistanceX;
+		this->positionY += ScrollDistanceY;
+	}
+}
+
+//End of Guma Class
+
 
 //Class TileColorsHolder
 
@@ -1462,4 +1636,20 @@ void add_PalaceBot(int x, int y)
 	pbot->Init_frames_bounding_boxes();
 	pbot->Load_Enemy_Spritesheet();
 	Enemies.push_back(pbot);
+}
+
+void add_Wosu(int x, int y)
+{
+	Wosu* wosu = new Wosu(x, y);
+	wosu->Init_frames_bounding_boxes();
+	wosu->Load_Enemy_Spritesheet();
+	Enemies.push_back(wosu);
+}
+
+void add_Guma(int x, int y)
+{
+	Guma* guma = new Guma(x, y);
+	guma->Init_frames_bounding_boxes();
+	guma->Load_Enemy_Spritesheet();
+	Enemies.push_back(guma);
 }
