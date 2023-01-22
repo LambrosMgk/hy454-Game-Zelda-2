@@ -17,10 +17,6 @@ void Paint_Enemies_to_Screen()
 		Rect r = Enemies[i]->FrameToDraw();
 		al_draw_bitmap_region(Enemies[i]->EnemySpriteSheet, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
 	}
-	for (unsigned int i = 0; i < pbots.size(); i++) {
-		Rect r = pbots[i].FrameToDraw();
-		al_draw_bitmap_region(pbots[i].EnemySpriteSheet, r.x, r.y, r.w, r.h, pbots[i].positionX, pbots[i].positionY, 0);
-	}
 }
 
 void Draw_Level(Level *level, unsigned int layer)
@@ -151,9 +147,6 @@ void Renderer()
 				Draw_Level(gameObj.level, i);
 				for (unsigned int j = 0; j < gameObj.DrawingOrder[i].size(); j++)
 				{
-					//cout << "gameObj.DrawingOrder[i][j]->sx =" << gameObj.DrawingOrder[i][j]->sx << ",gameObj.DrawingOrder[i][j]->sy = " << gameObj.DrawingOrder[i][j]->sy << '\n';
-					//cout << "gameObj.DrawingOrder[i][j]->xPos = " << gameObj.DrawingOrder[i][j]->xPos << " ,gameObj.DrawingOrder[i][j]->yPos = " << gameObj.DrawingOrder[i][j]->yPos << '\n';
-					cout << "gameObj.level->ScreenX == " << gameObj.level->ScreenX << ", gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W = " << gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W << '\n';
 					if ((gameObj.level->ScreenX == gameObj.DrawingOrder[i][j]->xPos / DISPLAY_W) && (gameObj.level->ScreenY == gameObj.DrawingOrder[i][j]->yPos / DISPLAY_H))
 						al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
 				}

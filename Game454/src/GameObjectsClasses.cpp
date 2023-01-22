@@ -1450,16 +1450,16 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 
 void add_Stalfos(int x,int y) 
 {
-	Stalfos stalfos = Stalfos(x, y);
-	stalfos.Init_frames_bounding_boxes();
-	stalfos.Load_Enemy_Spritesheet();
-	stalfoses.push_back(stalfos);
+	Stalfos *stalfos = new Stalfos(x, y);
+	stalfos->Init_frames_bounding_boxes();
+	stalfos->Load_Enemy_Spritesheet();
+	Enemies.push_back(stalfos);
 }
 
 void add_PalaceBot(int x, int y)
 {
-	PalaceBot pbot = PalaceBot(x, y);
-	pbot.Init_frames_bounding_boxes();
-	pbot.Load_Enemy_Spritesheet();
-	pbots.push_back(pbot);
+	PalaceBot *pbot = new PalaceBot(x, y);
+	pbot->Init_frames_bounding_boxes();
+	pbot->Load_Enemy_Spritesheet();
+	Enemies.push_back(pbot);
 }
