@@ -157,9 +157,19 @@ void Level::Scroll_Bitmap()
 		player->screenX--;
 		player->positionX = DISPLAY_W - 10;
 	}
-	else if (player->positionY / DISPLAY_H > cameraY / DISPLAY_H)	//check if this statemnet if correct
+	else if (player->positionY > DISPLAY_H)	//check if this statemnet if correct
 	{
-
+		cameraY -= DISPLAY_H;
+		ScreenY++;
+		player->screenY++;
+		player->positionY = 5;
+	}
+	else if (player->positionY < 0)	//check if this statemnet if correct
+	{
+		cameraY += DISPLAY_H;
+		ScreenY--;
+		player->screenY--;
+		player->positionY = DISPLAY_H - 10;
 	}
 }
 
@@ -229,9 +239,9 @@ void Level::Load_Object_SpriteSheets()
 	unsigned char r, g, b;
 
 	al_unmap_rgb(purple, &pr, &pg, &pb);
-	for (unsigned int i = 0; i < al_get_bitmap_height(ObjectSpriteSheet); i++)
+	for (auto i = 0; i < al_get_bitmap_height(ObjectSpriteSheet); i++)
 	{
-		for (unsigned int j = 0; j < al_get_bitmap_width(ObjectSpriteSheet); j++)
+		for (auto j = 0; j < al_get_bitmap_width(ObjectSpriteSheet); j++)
 		{
 			c = al_get_pixel(ObjectSpriteSheet, i, j);
 			
@@ -410,6 +420,9 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	cout << "Loaded Objects\n";
 
 	createElevators();
+
+	//Level loaded play some music
+	//gameObj.Play_Music(LEVEL_1_MUSIC);
 }
 
 void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)
@@ -845,6 +858,27 @@ void Player::Set_HurtInvicibility(bool hi)
 bool Player::Get_HurtInvicibility()
 {
 	return this->HurtInvicibility;
+}
+
+void Player::Add_Key()
+{
+	this->Keys++;
+}
+
+void Player::Remove_Key()
+{
+	if(this->Keys > 0)
+		this->Keys--;
+}
+
+void Player::Set_Keys(unsigned short keys)
+{
+	this->Keys = keys;
+}
+
+unsigned short Player::Get_Keys()
+{
+	return this->Keys;
 }
 
 //end of class Player functions

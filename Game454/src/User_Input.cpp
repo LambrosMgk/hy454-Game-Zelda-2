@@ -37,7 +37,6 @@ void UserInput(void)
 				case ALLEGRO_KEY_ENTER:			//Enter == continue, load first level
 					gameObj.Set_State(PlayingLevel1);
 					gameObj.Stop_Music();
-					//gameObj.Play_Music(LEVEL_1_MUSIC);
 					break;
 				}
 			}

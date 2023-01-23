@@ -75,6 +75,10 @@
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
+#define DOOR_UPPER_ID 23
+#define DOOR_MIDDLE_ID 33
+#define DOOR_LOWER_ID 43
+
 //these ids are transparent tiles from the parapa tileset which will help us "paint" enemies in Tiled
 //and read the layer 2 csv to know where to spawn them
 #define STALFOS_ID 56
@@ -307,6 +311,14 @@ public:
 	void Set_HurtInvicibility(bool hi);
 
 	bool Get_HurtInvicibility();
+
+	void Add_Key();
+
+	void Remove_Key();
+
+	void Set_Keys(unsigned short keys);
+
+	unsigned short Get_Keys();
 };
 
 class TileColorsHolder final
