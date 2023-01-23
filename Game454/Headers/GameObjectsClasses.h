@@ -17,7 +17,7 @@
 #define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
 #define ENEMY1_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-1.gif"
 #define ENEMY1_SPRITES_FLIPPED_PATH "UnitTests\\Media\\enemies-sprites-1-flipped.gif"
-#define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects.png"
+#define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects-sprites.png"
 #define START_SCREEN_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
 #define LEVEL_1_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
 
@@ -68,8 +68,7 @@
 #define ENEMY_SPRITE_WIDTH 16
 #define ENEMY_SPRITE_HEIGHT 16
 
-//Items Object sprites vary so its better to go with 16 pixels
-#define OBJECT_SPRITE_WIDTH 16
+#define OBJECT_SPRITE_WIDTH 8
 #define OBJECT_SPRITE_HEIGHT 16
 
 
@@ -97,6 +96,7 @@ class Player;
 class Enemy;
 class Grid;
 class Elevator;
+class PowerUps;
 
 
 
@@ -107,6 +107,7 @@ extern GameLogic gameObj;	//object that holds the game state and other useful in
 extern Player* player;
 extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
+extern std::vector<PowerUps*> Power_Ups;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -130,6 +131,7 @@ class Level
 public:
 	ALLEGRO_BITMAP* TileSet = NULL;
 	ALLEGRO_BITMAP* EnemySpriteSheetLeft = NULL, * EnemySpriteSheetRight = NULL;
+	ALLEGRO_BITMAP* ObjectSpriteSheet = NULL;
 	std::vector<ALLEGRO_BITMAP*> bitmaps;	//bitmaps vector has the bitmaps of all the layers of the map
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
@@ -159,6 +161,8 @@ in case of bad file path exits program with -1*/
 	void Scroll_Bitmap();
 
 	void Load_Enemy_SpriteSheets();
+
+	void Load_Object_SpriteSheets();
 };
 
 class GameLogic
@@ -559,7 +563,6 @@ class PowerUps
 {
 public:
 	int positionX, positionY;
-	ALLEGRO_BITMAP* PowerUpSpriteSheet = NULL;
 
 	PowerUps(int posX, int posY);
 
@@ -568,8 +571,6 @@ public:
 	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
 
 	virtual Rect FrameToDraw() = 0;
-
-	void Load_PowerUps_Spritesheet();
 };
 
 class RedPotion : public PowerUps 
@@ -578,6 +579,7 @@ private:
 	Rect RedPotionFrame;
 
 public:
+	RedPotion(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
@@ -591,6 +593,7 @@ private:
 	Rect BluePotionFrame;
 
 public:
+	BluePotion(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
@@ -604,6 +607,7 @@ private:
 	Rect PointBagFrame;
 
 public:
+	PointBag(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
@@ -617,6 +621,7 @@ private:
 	Rect KeyFrame;
 
 public:
+	Key(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
@@ -630,6 +635,7 @@ private:
 	Rect UpDollFrame;
 
 public:
+	UpDoll(int x, int y);
 
 	void Init_frames_bounding_boxes();
 

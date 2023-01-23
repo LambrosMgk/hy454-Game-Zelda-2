@@ -7,6 +7,7 @@ GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
+std::vector<PowerUps*> Power_Ups;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -174,6 +175,16 @@ void Level::Load_Enemy_SpriteSheets()
 	}
 }
 
+void Level::Load_Object_SpriteSheets()
+{
+	ObjectSpriteSheet = al_load_bitmap(ITEMS_OBJECTS_PATH);
+
+	if (ObjectSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nLevel : Failed to initialize PowerUps SpriteSheets (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+}
 //End of Class Level
 
 //Start of Class GameLogic
@@ -250,7 +261,8 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	}
 
 	level->Load_Enemy_SpriteSheets();
-	add_Guma(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
+	level->Load_Object_SpriteSheets();
+	add_RedPotion(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
 
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LEVEL_LAYERS; i++) {
@@ -1706,20 +1718,17 @@ PowerUps::~PowerUps()
 
 }
 
-void PowerUps::Load_PowerUps_Spritesheet()
-{
-	this->PowerUpSpriteSheet = al_load_bitmap(ITEMS_OBJECTS_PATH);
-	if (this->PowerUpSpriteSheet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize PowerUpSpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
-}
-
 //End of Class PowerUps
 
 
 //Start of RedPotion
+RedPotion::RedPotion(int x, int y) : PowerUps(x, y) {
+	RedPotionFrame.h = 0;
+	RedPotionFrame.w = 0;
+	RedPotionFrame.x = 0;
+	RedPotionFrame.y = 0;
+}
+
 void RedPotion::Init_frames_bounding_boxes() {
 	Rect* r;
 
@@ -1741,6 +1750,13 @@ Rect RedPotion::FrameToDraw(){
 //End of RedPotion
 
 //Start of BluePotion
+BluePotion::BluePotion(int x, int y) : PowerUps(x, y) {
+	BluePotionFrame.h = 0;
+	BluePotionFrame.w = 0;
+	BluePotionFrame.x = 0;
+	BluePotionFrame.y = 0;
+}
+
 void BluePotion::Init_frames_bounding_boxes() {
 	Rect* r;
 
@@ -1763,6 +1779,12 @@ Rect BluePotion::FrameToDraw() {
 //End of BluePotion
 
 //Start of PointBag
+PointBag::PointBag(int x, int y) : PowerUps(x, y) {
+	PointBagFrame.h = 0;
+	PointBagFrame.w = 0;
+	PointBagFrame.x = 0;
+	PointBagFrame.y = 0;
+}
 
 void PointBag::Init_frames_bounding_boxes() {
 	Rect* r;
@@ -1785,6 +1807,12 @@ Rect PointBag::FrameToDraw() {
 //End of PointBag
 
 //Start of Key class
+Key::Key(int x, int y) : PowerUps(x, y) {
+	KeyFrame.h = 0;
+	KeyFrame.w = 0;
+	KeyFrame.x = 0;
+	KeyFrame.y = 0;
+}
 
 void Key::Init_frames_bounding_boxes() {
 	Rect* r;
@@ -1806,6 +1834,12 @@ Rect Key::FrameToDraw() {
 //End of Key class
 
 //Start of UpDoll class
+UpDoll::UpDoll(int x, int y) : PowerUps(x, y) {
+	UpDollFrame.h = 0;
+	UpDollFrame.w = 0;
+	UpDollFrame.x = 0;
+	UpDollFrame.y = 0;
+}
 
 void UpDoll::Init_frames_bounding_boxes() {
 	Rect* r;
@@ -1950,4 +1984,34 @@ void add_Guma(int x, int y)
 	guma->Set_Health(64);
 	guma->Set_Points(50);
 	Enemies.push_back(guma);
+}
+
+void add_RedPotion(int x,int y) {
+	RedPotion* rpotion = new RedPotion(x,y);
+	rpotion->Init_frames_bounding_boxes();
+	Power_Ups.push_back(rpotion);
+}
+
+void add_BluePotion(int x, int y) {
+	BluePotion* bpotion = new BluePotion(x,y);
+	bpotion->Init_frames_bounding_boxes();
+	Power_Ups.push_back(bpotion);
+}
+
+void add_PointBag(int x, int y) {
+	PointBag* pbag = new PointBag(x, y);
+	pbag->Init_frames_bounding_boxes();
+	Power_Ups.push_back(pbag);
+}
+
+void add_Key(int x, int y) {
+	Key* k = new Key(x, y);
+	k->Init_frames_bounding_boxes();
+	Power_Ups.push_back(k);
+}
+
+void add_UpDoll(int x, int y) {
+	UpDoll* updoll = new UpDoll(x, y);
+	updoll->Init_frames_bounding_boxes();
+	Power_Ups.push_back(updoll);
 }

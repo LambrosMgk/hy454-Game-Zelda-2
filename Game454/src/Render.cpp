@@ -25,6 +25,18 @@ void Paint_Enemies_to_Screen()
 	}
 }
 
+void Paint_PowerUps_to_Screen()
+{
+	for (unsigned int i = 0; i < Power_Ups.size(); i++)
+	{
+		Rect r = Power_Ups[i]->FrameToDraw();
+		if ((gameObj.level->ScreenX == Power_Ups[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Power_Ups[i]->positionY / DISPLAY_H))
+		{
+			al_draw_bitmap_region(gameObj.level->ObjectSpriteSheet, r.x, r.y, r.w, r.h, Power_Ups[i]->positionX, Power_Ups[i]->positionY, 0);
+		}
+	}
+}
+
 void Draw_Level(Level *level, unsigned int layer)
 {
 	assert(level != NULL);
@@ -158,6 +170,7 @@ void Renderer()
 						al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
 				}
 			}
+			Paint_PowerUps_to_Screen();
 			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
 
