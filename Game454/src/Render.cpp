@@ -15,6 +15,7 @@ void Paint_Enemies_to_Screen()
 	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
 		Rect r = Enemies[i]->FrameToDraw();
+		//cout << "gameObj.level->ScreenX = " << gameObj.level->ScreenX << " Enemies[i]->positionX / DISPLAY_W = " << Enemies[i]->positionX / DISPLAY_W << '\n';
 		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
 		{
 			if (Enemies[i]->Get_Direction() == dir_left)

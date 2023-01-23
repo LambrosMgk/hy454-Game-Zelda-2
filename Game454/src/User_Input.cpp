@@ -57,8 +57,8 @@ void UserInput(void)
 				if ((grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerLeftCol(player)) == ELEVATORID1 ||
 					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerLeftCol(player)) == ELEVATORID2)
 					&&
-					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID1 ||
-					grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID2)
+					(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID1 ||
+						grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) + 1, grid->getPlayerRightCol(player)) == ELEVATORID2))
 				{
 					player->Set_State(State_Elevator);
 					if (elevators.size() == 0)
@@ -66,7 +66,7 @@ void UserInput(void)
 						cout << "Error : elevators vector is empty!\n";
 						exit(-1);
 					}
-
+					
 					for (unsigned int i = 0; i < elevators.size(); i++)
 					{
 						//grid->getPlayerBottomRow(player) - 3 to match the upper part of the elevator
