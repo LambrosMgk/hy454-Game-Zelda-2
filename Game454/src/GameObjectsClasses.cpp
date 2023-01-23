@@ -175,6 +175,33 @@ void Level::Load_Enemy_SpriteSheets()
 	}
 }
 
+/*Must be called after loading the csv files, enemy type and position is based on transparent tiles in the csv*/
+void Level::Load_Enemies()
+{
+	for (unsigned int i = 0; i < TileMapCSV[1].size(); i++)
+	{
+		for (unsigned int j = 0; j < TileMapCSV[1][i].size(); j++)
+		{
+			if (TileMapCSV[1][i][j] == STALFOS_ID)
+			{
+				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT);	// i goes through rows == height == Y, j goes through columns == width == X
+			}
+			else if (TileMapCSV[1][i][j] == PALACE_BOT_ID)
+			{
+				add_PalaceBot(j * TILE_WIDTH, i * TILE_HEIGHT);
+			}
+			else if (TileMapCSV[1][i][j] == WOSU_ID)
+			{
+				add_Wosu(j * TILE_WIDTH, i * TILE_HEIGHT);
+			}
+			else if (TileMapCSV[1][i][j] == GUMA_ID)
+			{
+				add_Guma(j * TILE_WIDTH, i * TILE_HEIGHT);
+			}
+		}
+	}
+}
+
 void Level::Load_Object_SpriteSheets()
 {
 	ObjectSpriteSheet = al_load_bitmap(ITEMS_OBJECTS_PATH);
@@ -261,7 +288,9 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	}
 
 	level->Load_Enemy_SpriteSheets();
+	level->Load_Enemies();
 	level->Load_Object_SpriteSheets();
+	
 	add_RedPotion(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
 
 	//initalize the empty colors of the tileset
@@ -392,7 +421,7 @@ void Elevator::addToCurrRow(unsigned int X)
 
 //End of Class Elevator
 
-void createElevators() 
+void createElevators()
 {
 	bool isTopElev = false;	//flag to help skip the lower part of the elevator
 	
@@ -405,7 +434,7 @@ void createElevators()
 				//search if i already added this elevator e.g. if i add the top part the for-loop will eventually hit the bottom part and it might mistake it as a new elevator
 				for (unsigned int k = 0; k < elevators.size(); k++)
 				{
-					if (elevators[k].getRow() == row - 4 && elevators[k].getCol() == col)	//if the upper part is already added don't create new elevator
+					if (DIV_TILE_HEIGHT(elevators[k].getRow()) == row - 4 && DIV_TILE_WIDTH(elevators[k].getCol()) == col)	//if the upper part is already added don't create new elevator
 					{
 						isTopElev = true;
 						break;
@@ -414,7 +443,7 @@ void createElevators()
 
 				if (isTopElev != true)
 				{
-					//cout << "Created elevator at row = " << row << "and col = " << col << "\n";
+					cout << "Created elevator at row = " << row << "and col = " << col << "\n";
 					elevators.push_back(Elevator(MUL_TILE_HEIGHT(row), MUL_TILE_WIDTH(col)));
 				}
 
@@ -547,36 +576,36 @@ void Player::Scroll_Player(float ScrollDistanceX, float ScrollDistanceY)
 void Player::Init_frames_bounding_boxes()
 {
 	Rect* r;
-	int i = 0, k = 0;
+	int i = 0;
 
 	//FramesWalkingLeft
-	for (i = 0, k = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT * 2;
-		r->w = i % 2 == 1 ? LINK_SPRITE_WIDTH : LINK_SPRITE_WIDTH * 2;
-		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16; 
+		r->w = LINK_SPRITE_WIDTH;
 		r->y = 0;
-		if (i == 3)
-			k -= 32;
-		r->x = k;
 		FramesWalkingLeft.push_back(*r);
 	}
+	FramesWalkingLeft[0].x = LINK_SPRITE_WIDTH / 2;
+	FramesWalkingLeft[1].x = 3 * LINK_SPRITE_WIDTH;
+	FramesWalkingLeft[2].x = 5 * LINK_SPRITE_WIDTH + LINK_SPRITE_WIDTH / 2;
+	FramesWalkingLeft[3].x = 8 * LINK_SPRITE_WIDTH;
 	std::reverse(FramesWalkingLeft.begin(), FramesWalkingLeft.end());
 
 	//FramesWalkingRight
-	for (i = 0, k = 160; i < 4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		r = new Rect;
 		r->h = LINK_SPRITE_HEIGHT * 2;
-		r->w = i % 2 == 1 ? LINK_SPRITE_WIDTH : LINK_SPRITE_WIDTH * 2;
-		k = i % 2 == 1 ? k + i * 16 + 32 : k + i * 16;
+		r->w = LINK_SPRITE_WIDTH;
 		r->y = 0;
-		if (i == 3)
-			k -= 32;
-		r->x = k;
 		FramesWalkingRight.push_back(*r);
 	}
+	FramesWalkingRight[0].x = 10 * LINK_SPRITE_WIDTH + LINK_SPRITE_WIDTH / 2;
+	FramesWalkingRight[1].x = 13 * LINK_SPRITE_WIDTH;
+	FramesWalkingRight[2].x = 15 * LINK_SPRITE_WIDTH + LINK_SPRITE_WIDTH / 2;
+	FramesWalkingRight[3].x = 18 * LINK_SPRITE_WIDTH;
 
 	//FramesCrounch (left)
 	r = new Rect;
@@ -861,11 +890,11 @@ int Grid::getPlayerBottomRow(Player* player) {
 
 /*Returns the column based on the TILE_WIDTH (not the Grid_element_width)*/
 int Grid::getPlayerLeftCol(Player* player) {
-	return (player->positionX + player->screenX * DISPLAY_W) / TILE_WIDTH;
+	return DIV_TILE_WIDTH(player->positionX + player->screenX * DISPLAY_W);
 }
 
 int Grid::getPlayerRightCol(Player* player) {
-	return (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / TILE_WIDTH;
+	return DIV_TILE_WIDTH(player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH - 1);
 }
 
 int Grid::GetIndexFromLayer(int gridRow, int gridCol)

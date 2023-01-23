@@ -75,6 +75,13 @@
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
+//these ids are transparent tiles from the parapa tileset which will help us "paint" enemies in Tiled
+//and read the layer 2 csv to know where to spawn them
+#define STALFOS_ID 56
+#define PALACE_BOT_ID 57
+#define WOSU_ID 58
+#define GUMA_ID 59
+
 using namespace std;
 
 
@@ -161,6 +168,8 @@ in case of bad file path exits program with -1*/
 	void Scroll_Bitmap();
 
 	void Load_Enemy_SpriteSheets();
+
+	void Load_Enemies();
 
 	void Load_Object_SpriteSheets();
 };
@@ -489,7 +498,6 @@ public:
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
-
 };
 
 class Guma : public Enemy
@@ -510,7 +518,6 @@ public:
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
-
 };
 
 class Projectile
@@ -584,7 +591,6 @@ public:
 	void Init_frames_bounding_boxes();
 
 	Rect FrameToDraw();
-
 };
 
 class BluePotion : public PowerUps
@@ -598,7 +604,6 @@ public:
 	void Init_frames_bounding_boxes();
 
 	virtual Rect FrameToDraw();
-
 };
 
 class PointBag : public PowerUps
@@ -612,7 +617,6 @@ public:
 	void Init_frames_bounding_boxes();
 
 	virtual Rect FrameToDraw();
-
 };
 
 class Key : public PowerUps
@@ -626,7 +630,6 @@ public:
 	void Init_frames_bounding_boxes();
 
 	virtual Rect FrameToDraw();
-
 };
 
 class UpDoll : public PowerUps
@@ -640,7 +643,6 @@ public:
 	void Init_frames_bounding_boxes();
 
 	virtual Rect FrameToDraw();
-
 };
 
 void createElevators();
