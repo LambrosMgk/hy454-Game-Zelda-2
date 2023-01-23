@@ -679,3 +679,9 @@ void add_Guma(int EnemyX, int EnemyY);
 void add_RedPotion(int x, int y);
 
 void add_BluePotion(int x, int y);
+
+void add_PointBag(int x, int y);
+
+void add_Key(int x, int y);
+
+void add_UpDoll(int x, int y);
