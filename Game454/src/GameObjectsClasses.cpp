@@ -175,28 +175,35 @@ void Level::Load_Enemy_SpriteSheets()
 	}
 }
 
-/*Must be called after loading the csv files, enemy type and position is based on transparent tiles in the csv*/
+/*Must be called after loading the csv files, enemy type and position is based on transparent tiles in the csv
+and after creating the grids because some tiles of the grid will be changed*/
 void Level::Load_Enemies()
 {
 	for (unsigned int i = 0; i < TileMapCSV[1].size(); i++)
 	{
 		for (unsigned int j = 0; j < TileMapCSV[1][i].size(); j++)
 		{
+			// i goes through rows == height == Y, j goes through columns == width == X
 			if (TileMapCSV[1][i][j] == STALFOS_ID)
 			{
-				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT);	// i goes through rows == height == Y, j goes through columns == width == X
+				//"spawner" tiles are always place at the bottom so for a stalfos to be drawn correctly we must go 1 tile up
+				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT + -TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);	//some transparent tiles that i use for spawn marking are marked as solid which is wrong
 			}
 			else if (TileMapCSV[1][i][j] == PALACE_BOT_ID)
 			{
 				add_PalaceBot(j * TILE_WIDTH, i * TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == WOSU_ID)
 			{
-				add_Wosu(j * TILE_WIDTH, i * TILE_HEIGHT);
+				add_Wosu(j * TILE_WIDTH, i * TILE_HEIGHT - TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == GUMA_ID)
 			{
-				add_Guma(j * TILE_WIDTH, i * TILE_HEIGHT);
+				add_Guma(j * TILE_WIDTH, i * TILE_HEIGHT - TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 		}
 	}
@@ -287,11 +294,6 @@ void GameLogic::Load_Level(unsigned short levelNum)
 		exit(-1);
 	}
 
-	level->Load_Enemy_SpriteSheets();
-	level->Load_Enemies();
-	level->Load_Object_SpriteSheets();
-	
-	add_RedPotion(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
 
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LEVEL_LAYERS; i++) {
@@ -314,6 +316,14 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	add_Grid(1, TILE_WIDTH, TILE_HEIGHT, level->TileMapCSV[1][0].size(), level->TileMapCSV[1].size());  //initialize the grid for layer 2
 	level->grids[1]->ComputeTileGridBlocks2(level->TileMapCSV[1], level->TileSet, 64);
 	cout << "Created grid for layer 2\n";
+
+	level->Load_Enemy_SpriteSheets();
+	cout << "Loaded Enemies sprite sheets\n";
+	level->Load_Enemies();
+	cout << "Loaded Enemies\n";
+	level->Load_Object_SpriteSheets();
+	cout << "Loaded Ojbect spritesheet\n";
+	//level->Load_Objects();
 
 	createElevators();
 }
