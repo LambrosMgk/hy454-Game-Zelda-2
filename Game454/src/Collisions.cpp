@@ -168,7 +168,15 @@ void CheckCollisions()
 				al_set_target_bitmap(al_get_backbuffer(gameObj.display));
 				al_unlock_bitmap(gameObj.level->bitmaps[1]);
 
-				//play door opening animation? (set timer in animation)
+				if(player->Get_Direction() == dir_left)
+					Doors.push_back(new Door(MUL_TILE_WIDTH(grid->getPlayerLeftCol(player) - 1), MUL_TILE_HEIGHT(grid->getPlayerBottomRow(player) - 2)));
+				else	
+					Doors.push_back(new Door(MUL_TILE_WIDTH(grid->getPlayerRightCol(player) + 1), MUL_TILE_HEIGHT(grid->getPlayerBottomRow(player) - 2)));
+				Doors[Doors.size() - 1]->Add_To_Draw_Queue();
+				Doors[Doors.size() - 1]->SetActive(true);
+
+				//set timer in animation
+				al_start_timer(DoorTimer);
 			}
 		}
 	}

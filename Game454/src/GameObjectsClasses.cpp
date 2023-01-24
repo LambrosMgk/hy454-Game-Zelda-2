@@ -8,6 +8,7 @@ Player* player = NULL;
 std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
 std::vector<Collectable*> Collectables;
+std::vector<Door*> Doors;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -239,9 +240,9 @@ void Level::Load_Object_SpriteSheets()
 	unsigned char r, g, b;
 
 	al_unmap_rgb(purple, &pr, &pg, &pb);
-	for (auto i = 0; i < al_get_bitmap_height(ObjectSpriteSheet); i++)
+	for (auto i = 0; i < al_get_bitmap_width(ObjectSpriteSheet); i++)
 	{
-		for (auto j = 0; j < al_get_bitmap_width(ObjectSpriteSheet); j++)
+		for (auto j = 0; j <  al_get_bitmap_height(ObjectSpriteSheet); j++)
 		{
 			c = al_get_pixel(ObjectSpriteSheet, i, j);
 			
@@ -559,6 +560,81 @@ void createElevators()
 		}
 	}
 }
+
+//Start of class Door
+
+Door::Door(unsigned int _posX, unsigned int _posY) : posX(_posX), posY(_posY)
+{
+	this->Init_Frames();
+}
+
+void Door::Init_Frames()
+{
+	Rect* r = NULL;
+
+	for(unsigned short i = 0; i < 17; i++)
+	{
+		r = new Rect();
+		r->x = 184 - 1 + i + i * OBJECT_SPRITE_WIDTH;
+		if (i > 7)
+			r->x -= OBJECT_SPRITE_WIDTH;	//offset because sprite sheet is bad
+		r->y = 48 - 6;
+		r->w = OBJECT_SPRITE_WIDTH;
+		r->h = 3 * OBJECT_SPRITE_HEIGHT;
+
+		this->UnlockFrames.push_back(r);
+	}
+}
+
+Rect* Door::Get_Frame(unsigned short i)
+{
+	return this->UnlockFrames[i];
+}
+
+void Door::Add_To_Draw_Queue()
+{
+	if (this->DrawObj != NULL)
+		return;
+
+	Rect *r = this->Get_Frame(0);
+	this->DrawObj = new DrawOrder(gameObj.level->ObjectSpriteSheet, r->x, r->y, r->w, r->h, this->posX, this->posY);
+	gameObj.insert_DrawingOrder(this->DrawObj, 1);
+}
+
+/*removes the DrawOrder object from the draw queue, also destroys it*/
+void Door::Remove_From_Draw_Queue()
+{
+	for (unsigned short i = 0; i < gameObj.DrawingOrder[1].size(); i++)
+	{
+		if (gameObj.DrawingOrder[1][i] == this->DrawObj)
+		{
+			gameObj.DrawingOrder[1].erase(gameObj.DrawingOrder[1].begin() + i);
+			delete this->DrawObj;
+			this->DrawObj = NULL;
+			//cout << "Removed door draw obj from queue\n";
+		}
+	}
+}
+
+void Door::Update_Draw_Obj()
+{
+	assert(this->DrawObj != NULL);
+
+	Rect* r = this->Get_Frame(this->DoorSpriteNum);
+	this->DrawObj->sx = r->x;
+}
+
+void Door::SetActive(bool act)
+{
+	this->is_active = act;
+}
+
+bool Door::IsActive()
+{
+	return this->is_active;
+}
+
+//End of class Door
 
 //Class Player functions
 

@@ -118,10 +118,12 @@ class Enemy;
 class Grid;
 class Elevator;
 class Collectable;
+class Door;
 
 
 
 extern ALLEGRO_TIMER* FPStimer;
+extern ALLEGRO_TIMER* DoorTimer;
 // keeps colors that are assumed to be empty
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
@@ -129,6 +131,7 @@ extern Player* player;
 extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
 extern std::vector<Collectable*> Collectables;
+extern std::vector<Door*> Doors;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -243,6 +246,34 @@ public:
 	void setCol(unsigned int Y);
 
 	void addToCurrRow(unsigned int X);
+};
+
+/*created when player collides with a door to help me with the animation*/
+class Door
+{
+private:
+	DrawOrder* DrawObj;
+	std::vector<Rect*> UnlockFrames;
+	bool is_active = false;
+public:
+	unsigned short DoorSpriteNum = 0;
+	unsigned int posX, posY;
+
+	Door(unsigned int _posX, unsigned int _posY);
+
+	void Init_Frames();
+
+	Rect* Get_Frame(unsigned short i);
+
+	void Add_To_Draw_Queue();
+
+	void Remove_From_Draw_Queue();
+
+	void Update_Draw_Obj();
+
+	void SetActive(bool act);
+
+	bool IsActive();
 };
 
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
