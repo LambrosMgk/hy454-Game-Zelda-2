@@ -126,6 +126,30 @@ void Animator()
 				StartAttack = true;
 				al_start_timer(AttackTimer);
 			}
+
+			//Animation for the enemies
+			for (unsigned short i = 0; i < Enemies.size(); i++)
+			{
+				if (typeid(*Enemies[i]).name() == typeid(Stalfos).name())
+				{
+
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
+				{
+
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(Wosu).name())
+				{
+					Wosu* wosu = dynamic_cast<Wosu*>(Enemies[i]);	//do this to get access to Wosu specific functions
+					assert(wosu != NULL);
+
+					wosu->Increment_Sprite_Counter();
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
+				{
+
+				}
+			}
 		}
 	}
 }

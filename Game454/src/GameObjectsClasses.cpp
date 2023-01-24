@@ -1332,6 +1332,11 @@ Enemy::~Enemy()
 
 }
 
+void Enemy::Reset_Sprite_Counter()
+{
+	this->EnemySpriteNum = 0;
+}
+
 void Enemy::Set_Speed_X(int speedX)
 {
 	this->scrollDistanceX = speedX;
@@ -1512,6 +1517,22 @@ void Stalfos::Init_frames_bounding_boxes() {
 	}
 }
 
+void Stalfos::Increment_Sprite_Counter()
+{
+	if (this->state == E_State_Walking)
+	{
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking
+	}
+	else if (this->state == E_State_Attacking)
+	{
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 3;	//3 frames for attacking
+	}
+	else if (this->state == E_State_Falling)
+	{
+		this->EnemySpriteNum = 0;	//1 frame for falling
+	}
+}
+
 void Stalfos::Set_State(Enemy_State state) 
 {
 	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
@@ -1597,6 +1618,18 @@ void PalaceBot::Init_frames_bounding_boxes()
 		
 }
 
+void PalaceBot::Increment_Sprite_Counter()
+{
+	if (this->state == E_State_Walking)
+	{
+		this->EnemySpriteNum = 0;	//1 frame for walking
+	}
+	else if (this->state == E_State_Jumping)
+	{
+		this->EnemySpriteNum = 0;	//1 frames for jumping
+	}
+}
+
 void PalaceBot::Set_State(Enemy_State state) 
 {
 	if (this->state == E_State_Walking && state == E_State_Jumping) //Walking -> Jumping
@@ -1640,7 +1673,25 @@ void PalaceBot::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 //Start of Wosu Class
 Wosu::Wosu(int x, int y) : Enemy(x, y)
 {
-
+	StartPosX = positionX;
+	StartPosY = positionY;
+	//check the tiles in the direction wosu is looking at and if there is any solid tiles or screen changing
+	//change the direction of wosu to try and create a nice walking pattern
+	//by default all enemies look to the right, so we check for that direction
+	unsigned short screenX = this->positionX / DISPLAY_W;
+	for (unsigned short i = 1; i < this->WalkingTilesDistance; i++)
+	{
+		if (gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(this->positionY), DIV_TILE_WIDTH(this->positionX) + i) & GRID_SOLID_TILE)
+		{
+			this->direction = dir_left;
+			break;
+		}
+		if ((this->positionX + i * TILE_WIDTH) / DISPLAY_W > screenX)
+		{
+			this->direction = dir_left;
+			break;
+		}
+	}
 }
 
 void Wosu::Init_frames_bounding_boxes() 
@@ -1679,14 +1730,20 @@ void Wosu::Init_frames_bounding_boxes()
 
 		FramesWalkingLeft.push_back(*r);
 	}
-	
+}
 
+void Wosu::Increment_Sprite_Counter()
+{
+	if (this->state == E_State_Walking)
+	{
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking
+	}
 }
 
 void Wosu::Set_State(Enemy_State state) 
 {
 
-	if (this->state == E_State_Walking) //Walking 
+	if (this->state == E_State_Walking && state == E_State_Walking) //Walking -> Walking
 	{
 		this->state = state;
 	}
@@ -1713,8 +1770,23 @@ void Wosu::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 {
 	if (state == E_State_Walking)
 	{
-		this->positionX += ScrollDistanceX;
-		this->positionY += ScrollDistanceY;
+		if (direction == dir_left)
+		{
+			this->positionX -= ScrollDistanceX;
+			//if wosu walked 6 or more tiles its time to turn back
+			if (DIV_TILE_WIDTH(this->StartPosX - this->positionX) >= 6)
+			{
+				this->direction = dir_right;
+			}
+		}
+		else
+		{
+			this->positionX += ScrollDistanceX;
+			if (DIV_TILE_WIDTH(abs(this->StartPosX - this->positionX)) >= 6)
+			{
+				this->direction = dir_left;
+			}
+		}
 	}
 }
 
@@ -1795,8 +1867,14 @@ void Guma::Init_frames_bounding_boxes()
 
 		FramesAttackingLeft.push_back(*r);
 	}
+}
 
-
+void Guma::Increment_Sprite_Counter()
+{
+	if (this->state == E_State_Walking || this->state == E_State_Attacking)
+	{
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking or attacking
+	}
 }
 
 void Guma::Set_State(Enemy_State state) 

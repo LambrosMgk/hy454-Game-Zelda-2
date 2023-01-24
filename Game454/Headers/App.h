@@ -6,6 +6,7 @@
 #include "ProgressAnimations.h"
 #include "Physics.h"
 #include "Collisions.h"
+#include "AI.h"
 
 
 namespace app

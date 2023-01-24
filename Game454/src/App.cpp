@@ -50,7 +50,7 @@ void app::Game::Initialise()
 	SetRender(&Renderer);
 	SetProgressAnimations(&Animator);
 	SetInput(&UserInput);
-	//SetAI();
+	SetAI(&Calculate_AI);
 	SetPhysics(&Calculate_Physics);
 	SetCollisionChecking(&CheckCollisions);
 	//SetCommitDestructions();
@@ -62,6 +62,7 @@ void app::Game::Initialise()
 	Animator_Init();
 	Physics_Init();
 	Collisions_init();
+	AI_Init();
 
 
 	Game::done = isDone;
@@ -83,7 +84,7 @@ void app::Game::Clear()
 
 void app::Game::MainLoop(void)
 {
-	while (!IsFinished())
+	while (!IsFinished())	//maybe remove the fps queues from the other files and merge them here under a single fps timer
 		MainLoopIteration();
 }
 
@@ -92,7 +93,7 @@ void app::Game::MainLoopIteration(void)
 	Render();
 	Input();
 	ProgressAnimations();
-	//AI();
+	AI();
 	Physics();
 	CollisionChecking();
 	//UserCode(); // hook for custom code at end

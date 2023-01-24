@@ -282,7 +282,7 @@ private:
 	Player_State state = State_Walking;
 	Direction direction = dir_right;
 	
-	int scrollDistanceX = 2, scrollDistanceY = 3;
+	int scrollDistanceX = 5, scrollDistanceY = 3;
 	float Health = 10;
 	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
@@ -443,7 +443,7 @@ class Enemy
 protected:
 	Enemy_State state = E_State_Walking;
 	unsigned int EnemySpriteNum = 0;	//counter for animation
-	int scrollDistanceX = 2, scrollDistanceY = 3;
+	int scrollDistanceX = 1, scrollDistanceY = 3;
 	Direction direction = dir_right;
 
 	float Health = 1.0;
@@ -456,6 +456,10 @@ public:
 	~Enemy();
 
 	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
+
+	virtual void Increment_Sprite_Counter() = 0;
+
+	void Reset_Sprite_Counter();
 
 	virtual Rect FrameToDraw() = 0;
 
@@ -515,6 +519,8 @@ public :
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	void Increment_Sprite_Counter();
 };
 
 class PalaceBot : public Enemy
@@ -535,13 +541,16 @@ public:
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	void Increment_Sprite_Counter();
 };
 
 class Wosu : public Enemy
 {
 private:
 	std::vector<Rect> FramesWalkingLeft,FramesWalkingRight;
-
+	unsigned short WalkingTilesDistance = 6;
+	short StartPosX = 0, StartPosY = 0;
 public:
 	Wosu(int x, int y);
 
@@ -554,6 +563,8 @@ public:
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	void Increment_Sprite_Counter();
 };
 
 class Guma : public Enemy
@@ -574,6 +585,8 @@ public:
 	void Set_State(Enemy_State state);
 
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
+
+	void Increment_Sprite_Counter();
 };
 
 class Projectile
