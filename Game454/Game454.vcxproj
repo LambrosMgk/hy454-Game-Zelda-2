@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="src\AI.cpp" />
     <ClCompile Include="src\al_init.cpp" />
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\Collisions.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="src\User_Input.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Headers\AI.h" />
     <ClInclude Include="Headers\al_init.h" />
     <ClInclude Include="Headers\App.h" />
     <ClInclude Include="Headers\Collisions.h" />

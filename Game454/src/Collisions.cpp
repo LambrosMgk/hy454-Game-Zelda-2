@@ -58,6 +58,7 @@ void CheckCollisions()
 						(player->positionY + rP.h < Enemies[i]->positionY))) /*No overlap condition*/
 					{
 						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << '\n';
+
 					}
 				}
 				else if (player->Get_State() == State_CrounchAttacking)
