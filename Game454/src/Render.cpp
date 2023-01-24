@@ -19,21 +19,21 @@ void Paint_Enemies_to_Screen()
 		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
 		{
 			if (Enemies[i]->Get_Direction() == dir_left)
-				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetLeft, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetLeft, r.x, r.y, r.w, r.h, Enemies[i]->positionX % DISPLAY_W, Enemies[i]->positionY % DISPLAY_H, 0);
 			else
-				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, Enemies[i]->positionX, Enemies[i]->positionY, 0);
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, Enemies[i]->positionX % DISPLAY_W, Enemies[i]->positionY % DISPLAY_H, 0);
 		}
 	}
 }
 
-void Paint_PowerUps_to_Screen()
+void Paint_Collectables_to_Screen()
 {
-	for (unsigned int i = 0; i < Power_Ups.size(); i++)
+	for (unsigned int i = 0; i < Collectables.size(); i++)
 	{
-		Rect r = Power_Ups[i]->FrameToDraw();
-		if ((gameObj.level->ScreenX == Power_Ups[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Power_Ups[i]->positionY / DISPLAY_H))
+		Rect r = Collectables[i]->FrameToDraw();
+		if ((gameObj.level->ScreenX == Collectables[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Collectables[i]->positionY / DISPLAY_H))
 		{
-			al_draw_bitmap_region(gameObj.level->ObjectSpriteSheet, r.x, r.y, r.w, r.h, Power_Ups[i]->positionX, Power_Ups[i]->positionY, 0);
+			al_draw_bitmap_region(gameObj.level->ObjectSpriteSheet, r.x, r.y, r.w, r.h, Collectables[i]->positionX % DISPLAY_W, Collectables[i]->positionY % DISPLAY_H, 0);
 		}
 	}
 }
@@ -130,12 +130,18 @@ void DisplayGrid(unsigned int grid_num)
 	}
 
 	/*Player hitbox*/
-	al_draw_rectangle(player->positionX, player->positionY, player->positionX + player->FrameToDraw().w, player->positionY + player->FrameToDraw().h, al_map_rgba(0, 255, 0, 64), 1.0);
+	al_draw_rectangle(player->positionX, player->positionY, player->positionX + player->FrameToDraw().w, player->positionY + player->FrameToDraw().h, al_map_rgba(0, 255, 0, 64), 2.0);
 	/*Enemies hitbox*/
 	for (unsigned int i = 0; i < Enemies.size(); i++)
 	{
 		if ((gameObj.level->ScreenX == Enemies[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Enemies[i]->positionY / DISPLAY_H))
-			al_draw_rectangle(Enemies[i]->positionX, Enemies[i]->positionY, Enemies[i]->positionX + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY + Enemies[i]->FrameToDraw().h, al_map_rgba(255, 0, 0, 64), 1.0);
+			al_draw_rectangle(Enemies[i]->positionX % DISPLAY_W, Enemies[i]->positionY % DISPLAY_H, Enemies[i]->positionX % DISPLAY_W + Enemies[i]->FrameToDraw().w, Enemies[i]->positionY % DISPLAY_H + Enemies[i]->FrameToDraw().h, al_map_rgba(255, 0, 0, 64), 2.0);
+	}
+	/*Collectables hitbox*/
+	for (unsigned int i = 0; i < Collectables.size(); i++)
+	{
+		if ((gameObj.level->ScreenX == Collectables[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Collectables[i]->positionY / DISPLAY_H))
+			al_draw_rectangle(Collectables[i]->positionX % DISPLAY_W, Collectables[i]->positionY % DISPLAY_H, Collectables[i]->positionX % DISPLAY_W + Collectables[i]->FrameToDraw().w, Collectables[i]->positionY % DISPLAY_H + Collectables[i]->FrameToDraw().h, al_map_rgba(0, 0, 255, 64), 2.0);
 	}
 }
 
@@ -171,7 +177,7 @@ void Renderer()
 						al_draw_bitmap_region(gameObj.DrawingOrder[i][j]->bitmap, gameObj.DrawingOrder[i][j]->sx, gameObj.DrawingOrder[i][j]->sy, gameObj.DrawingOrder[i][j]->w, gameObj.DrawingOrder[i][j]->h, gameObj.DrawingOrder[i][j]->xPos % DISPLAY_W, gameObj.DrawingOrder[i][j]->yPos % DISPLAY_H, 0);
 				}
 			}
-			Paint_PowerUps_to_Screen();
+			Paint_Collectables_to_Screen();
 			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
 

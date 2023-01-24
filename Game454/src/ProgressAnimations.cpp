@@ -1,16 +1,19 @@
 #include "..\\Headers\\ProgressAnimations.h"
 
 ALLEGRO_TIMER* AnimationTimer, * AttackTimer;
+ALLEGRO_TIMER* DoorTimer;
 ALLEGRO_EVENT_QUEUE* AnimatorQueue;
-bool StartAttack = false;
+bool StartAttack = false, DoorActive = false;
 
 void Animator_Init()
 {
 	AnimationTimer = al_create_timer(1.0 / 5.0);
 	AttackTimer = al_create_timer(1.0 / 10.0);
+	DoorTimer = al_create_timer(3.0 / 17.0);
 	AnimatorQueue = al_create_event_queue();
 	al_register_event_source(AnimatorQueue, al_get_timer_event_source(AnimationTimer));
 	al_register_event_source(AnimatorQueue, al_get_timer_event_source(AttackTimer));
+	al_register_event_source(AnimatorQueue, al_get_timer_event_source(DoorTimer));
 	al_start_timer(AnimationTimer);
 }
 
@@ -28,7 +31,30 @@ void Animator()
 		}
 		if (player != NULL)	//animator will be called from the start of the game when we haven't initialized a player yet
 		{
-			if (player->Get_State() == State_Walking)
+			if (event.any.source == al_get_timer_event_source(DoorTimer))	//door unlock animation
+			{
+				DoorActive = false;	//if the for loop doesn't change this its time to stop the timer
+				for (unsigned short i = 0; i < Doors.size(); i++)
+				{
+					if (Doors[i]->IsActive())
+					{
+						DoorActive = true;
+						Doors[i]->DoorSpriteNum++;
+						Doors[i]->Update_Draw_Obj();
+						if (Doors[i]->DoorSpriteNum >= 16)
+						{
+							//cout << "Removing from queue\n";
+							Doors[i]->Remove_From_Draw_Queue();
+							delete Doors[i];
+							Doors.erase(Doors.begin() + i);
+						}
+					}
+				}
+
+				if (DoorActive == false)
+					al_stop_timer(DoorTimer);
+			}
+			else if (player->Get_State() == State_Walking)
 			{
 				if (scrollLeft == true || scrollRight == true)	//walking
 					player->LinkSpriteNum = ++player->LinkSpriteNum % 4;
@@ -100,7 +126,6 @@ void Animator()
 				StartAttack = true;
 				al_start_timer(AttackTimer);
 			}
-
 		}
 	}
 }

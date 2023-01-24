@@ -75,12 +75,26 @@
 #define ELEVATORID1 12
 #define ELEVATORID2 13
 
+#define DOOR_UPPER_ID 23
+#define DOOR_MIDDLE_ID 33
+#define DOOR_LOWER_ID 43
+
 //these ids are transparent tiles from the parapa tileset which will help us "paint" enemies in Tiled
 //and read the layer 2 csv to know where to spawn them
 #define STALFOS_ID 56
 #define PALACE_BOT_ID 57
 #define WOSU_ID 58
 #define GUMA_ID 59
+
+#define BLUEPOTION1_ID 76
+#define BLUEPOTION2_ID 77
+#define BLUEPOTION3_ID 78
+#define REDPOTION1_ID 79
+#define REDPOTION2_ID 86
+#define REDPOTION3_ID 87
+#define POINTBAG_ID 88
+#define UPDOLL_ID 89
+#define SIMPLE_KEY_ID 96
 
 using namespace std;
 
@@ -103,18 +117,21 @@ class Player;
 class Enemy;
 class Grid;
 class Elevator;
-class PowerUps;
+class Collectable;
+class Door;
 
 
 
 extern ALLEGRO_TIMER* FPStimer;
+extern ALLEGRO_TIMER* DoorTimer;
 // keeps colors that are assumed to be empty
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
 extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
-extern std::vector<PowerUps*> Power_Ups;
+extern std::vector<Collectable*> Collectables;
+extern std::vector<Door*> Doors;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -172,6 +189,8 @@ in case of bad file path exits program with -1*/
 	void Load_Enemies();
 
 	void Load_Object_SpriteSheets();
+
+	void Load_Objects();
 };
 
 class GameLogic
@@ -229,6 +248,34 @@ public:
 	void addToCurrRow(unsigned int X);
 };
 
+/*created when player collides with a door to help me with the animation*/
+class Door
+{
+private:
+	DrawOrder* DrawObj;
+	std::vector<Rect*> UnlockFrames;
+	bool is_active = false;
+public:
+	unsigned short DoorSpriteNum = 0;
+	unsigned int posX, posY;
+
+	Door(unsigned int _posX, unsigned int _posY);
+
+	void Init_Frames();
+
+	Rect* Get_Frame(unsigned short i);
+
+	void Add_To_Draw_Queue();
+
+	void Remove_From_Draw_Queue();
+
+	void Update_Draw_Obj();
+
+	void SetActive(bool act);
+
+	bool IsActive();
+};
+
 class Player //player might be in layer 3 for drawing and compare with layer 1 for block collisions? enemies are a different story
 {
 private:
@@ -237,6 +284,7 @@ private:
 	
 	int scrollDistanceX = 2, scrollDistanceY = 3;
 	float Health = 10;
+	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
@@ -294,6 +342,14 @@ public:
 	void Set_HurtInvicibility(bool hi);
 
 	bool Get_HurtInvicibility();
+
+	void Add_Key();
+
+	void Remove_Key();
+
+	void Set_Keys(unsigned short keys);
+
+	unsigned short Get_Keys();
 };
 
 class TileColorsHolder final
@@ -566,47 +622,59 @@ public:
 	void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY);
 };
 
-class PowerUps 
+class Collectable
 {
 public:
 	int positionX, positionY;
 
-	PowerUps(int posX, int posY);
+	Collectable(int posX, int posY);
 
-	~PowerUps();
+	~Collectable();
 
 	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
 
 	virtual Rect FrameToDraw() = 0;
 };
 
-class RedPotion : public PowerUps 
+class RedPotion : public Collectable
 {
 private:
 	Rect RedPotionFrame;
-
+	unsigned short restore = 0;
 public:
 	RedPotion(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
+	void Init_frames_bounding_boxes(unsigned short id);
+
 	Rect FrameToDraw();
+
+	void Set_Restore_Amount(unsigned short amount);
+
+	unsigned short Get_Restore_Amount();
 };
 
-class BluePotion : public PowerUps
+class BluePotion : public Collectable
 {
 private:
 	Rect BluePotionFrame;
-
+	unsigned short restore = 0;
 public:
 	BluePotion(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
-	virtual Rect FrameToDraw();
+	void Init_frames_bounding_boxes(unsigned short id);
+
+	Rect FrameToDraw();
+
+	void Set_Restore_Amount(unsigned short amount);
+
+	unsigned short Get_Restore_Amount();
 };
 
-class PointBag : public PowerUps
+class PointBag : public Collectable
 {
 private:
 	Rect PointBagFrame;
@@ -616,23 +684,23 @@ public:
 
 	void Init_frames_bounding_boxes();
 
-	virtual Rect FrameToDraw();
+	Rect FrameToDraw();
 };
 
-class Key : public PowerUps
+class SimpleKey : public Collectable
 {
 private:
 	Rect KeyFrame;
 
 public:
-	Key(int x, int y);
+	SimpleKey(int x, int y);
 
 	void Init_frames_bounding_boxes();
 
-	virtual Rect FrameToDraw();
+	Rect FrameToDraw();
 };
 
-class UpDoll : public PowerUps
+class UpDoll : public Collectable
 {
 private:
 	Rect UpDollFrame;
@@ -642,7 +710,7 @@ public:
 
 	void Init_frames_bounding_boxes();
 
-	virtual Rect FrameToDraw();
+	Rect FrameToDraw();
 };
 
 void createElevators();
@@ -678,12 +746,12 @@ void add_Wosu(int EnemyX, int EnemyY);
 
 void add_Guma(int EnemyX, int EnemyY);
 
-void add_RedPotion(int x, int y);
+void add_RedPotion(int x, int y, unsigned short restore_amount, short id);
 
-void add_BluePotion(int x, int y);
+void add_BluePotion(int x, int y, unsigned short restore_amount, short id);
 
 void add_PointBag(int x, int y);
 
-void add_Key(int x, int y);
+void add_SimpleKey(int x, int y);
 
 void add_UpDoll(int x, int y);

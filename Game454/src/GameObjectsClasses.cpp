@@ -7,7 +7,8 @@ GameLogic gameObj;
 Player* player = NULL;
 std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
-std::vector<PowerUps*> Power_Ups;
+std::vector<Collectable*> Collectables;
+std::vector<Door*> Doors;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -157,9 +158,19 @@ void Level::Scroll_Bitmap()
 		player->screenX--;
 		player->positionX = DISPLAY_W - 10;
 	}
-	else if (player->positionY / DISPLAY_H > cameraY / DISPLAY_H)	//check if this statemnet if correct
+	else if (player->positionY > DISPLAY_H)	//check if this statemnet if correct
 	{
-
+		cameraY -= DISPLAY_H;
+		ScreenY++;
+		player->screenY++;
+		player->positionY = 5;
+	}
+	else if (player->positionY < 0)	//check if this statemnet if correct
+	{
+		cameraY += DISPLAY_H;
+		ScreenY--;
+		player->screenY--;
+		player->positionY = DISPLAY_H - 10;
 	}
 }
 
@@ -175,28 +186,35 @@ void Level::Load_Enemy_SpriteSheets()
 	}
 }
 
-/*Must be called after loading the csv files, enemy type and position is based on transparent tiles in the csv*/
+/*Must be called after loading the csv files, enemy type and position is based on transparent tiles in the csv
+and after creating the grids because some tiles of the grid will be changed*/
 void Level::Load_Enemies()
 {
 	for (unsigned int i = 0; i < TileMapCSV[1].size(); i++)
 	{
 		for (unsigned int j = 0; j < TileMapCSV[1][i].size(); j++)
 		{
+			// i goes through rows == height == Y, j goes through columns == width == X
 			if (TileMapCSV[1][i][j] == STALFOS_ID)
 			{
-				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT);	// i goes through rows == height == Y, j goes through columns == width == X
+				//"spawner" tiles are always place at the bottom so for a stalfos to be drawn correctly we must go 1 tile up
+				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT -TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);	//some transparent tiles that i use for spawn marking are marked as solid which is wrong
 			}
 			else if (TileMapCSV[1][i][j] == PALACE_BOT_ID)
 			{
 				add_PalaceBot(j * TILE_WIDTH, i * TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == WOSU_ID)
 			{
-				add_Wosu(j * TILE_WIDTH, i * TILE_HEIGHT);
+				add_Wosu(j * TILE_WIDTH, i * TILE_HEIGHT - TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == GUMA_ID)
 			{
-				add_Guma(j * TILE_WIDTH, i * TILE_HEIGHT);
+				add_Guma(j * TILE_WIDTH, i * TILE_HEIGHT - TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
 			}
 		}
 	}
@@ -208,8 +226,91 @@ void Level::Load_Object_SpriteSheets()
 
 	if (ObjectSpriteSheet == NULL)
 	{
-		fprintf(stderr, "\nLevel : Failed to initialize PowerUps SpriteSheets (al_load_bitmap() failed).\n");
+		fprintf(stderr, "\nLevel : Failed to initialize Collectable SpriteSheets (al_load_bitmap() failed).\n");
 		exit(-1);
+	}
+
+	/*Remove purple background*/
+	al_lock_bitmap(ObjectSpriteSheet, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READWRITE);
+	al_set_target_bitmap(ObjectSpriteSheet);
+
+	ALLEGRO_COLOR purple = al_get_pixel(ObjectSpriteSheet, 2, 15);
+	ALLEGRO_COLOR c;
+	unsigned char pr, pg, pb;
+	unsigned char r, g, b;
+
+	al_unmap_rgb(purple, &pr, &pg, &pb);
+	for (auto i = 0; i < al_get_bitmap_width(ObjectSpriteSheet); i++)
+	{
+		for (auto j = 0; j <  al_get_bitmap_height(ObjectSpriteSheet); j++)
+		{
+			c = al_get_pixel(ObjectSpriteSheet, i, j);
+			
+			al_unmap_rgb(c, &r, &g, &b);
+
+			if (pr == r && pg == g && pb == b)	//may be a faster comparison if i do !(pr != r || pg != g || pb != b)
+			{
+				al_put_pixel(i, j, al_map_rgba(r, g, b, 0));
+			}
+		}
+	}
+	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
+	al_unlock_bitmap(ObjectSpriteSheet);
+}
+
+void Level::Load_Objects()
+{
+	for (unsigned int i = 0; i < TileMapCSV[1].size(); i++)
+	{
+		for (unsigned int j = 0; j < TileMapCSV[1][i].size(); j++)
+		{
+			// i goes through rows == height == Y, j goes through columns == width == X
+			if (TileMapCSV[1][i][j] == BLUEPOTION1_ID)
+			{
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 30, 1);
+				grids[1]->SetEmptyGridTile(i, j);	//some transparent tiles that i use for spawn marking are marked as solid which is wrong
+			}
+			else if (TileMapCSV[1][i][j] == BLUEPOTION2_ID)
+			{
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 24, 2);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == BLUEPOTION3_ID)
+			{
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 16, 3);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == REDPOTION1_ID)
+			{
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 128, 1);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == REDPOTION2_ID)
+			{
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 96, 2);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == REDPOTION3_ID)
+			{
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 60, 3);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == POINTBAG_ID)
+			{
+				add_PointBag(j * TILE_WIDTH, i * TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == UPDOLL_ID)
+			{
+				add_UpDoll(j * TILE_WIDTH, i * TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+			else if (TileMapCSV[1][i][j] == SIMPLE_KEY_ID)
+			{
+				add_SimpleKey(j * TILE_WIDTH, i * TILE_HEIGHT);
+				grids[1]->SetEmptyGridTile(i, j);
+			}
+		}
 	}
 }
 //End of Class Level
@@ -287,11 +388,6 @@ void GameLogic::Load_Level(unsigned short levelNum)
 		exit(-1);
 	}
 
-	level->Load_Enemy_SpriteSheets();
-	level->Load_Enemies();
-	level->Load_Object_SpriteSheets();
-	
-	add_RedPotion(5 * TILE_WIDTH + 20, 11 * TILE_HEIGHT - 1);
 
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LEVEL_LAYERS; i++) {
@@ -315,7 +411,19 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	level->grids[1]->ComputeTileGridBlocks2(level->TileMapCSV[1], level->TileSet, 64);
 	cout << "Created grid for layer 2\n";
 
+	level->Load_Enemy_SpriteSheets();
+	cout << "Loaded Enemies sprite sheets\n";
+	level->Load_Enemies();
+	cout << "Loaded Enemies\n";
+	level->Load_Object_SpriteSheets();
+	cout << "Loaded Object spritesheet\n";
+	level->Load_Objects();
+	cout << "Loaded Objects\n";
+
 	createElevators();
+
+	//Level loaded play some music
+	//gameObj.Play_Music(LEVEL_1_MUSIC);
 }
 
 void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)
@@ -452,6 +560,81 @@ void createElevators()
 		}
 	}
 }
+
+//Start of class Door
+
+Door::Door(unsigned int _posX, unsigned int _posY) : posX(_posX), posY(_posY)
+{
+	this->Init_Frames();
+}
+
+void Door::Init_Frames()
+{
+	Rect* r = NULL;
+
+	for(unsigned short i = 0; i < 17; i++)
+	{
+		r = new Rect();
+		r->x = 184 - 1 + i + i * OBJECT_SPRITE_WIDTH;
+		if (i > 7)
+			r->x -= OBJECT_SPRITE_WIDTH;	//offset because sprite sheet is bad
+		r->y = 48 - 6;
+		r->w = OBJECT_SPRITE_WIDTH;
+		r->h = 3 * OBJECT_SPRITE_HEIGHT;
+
+		this->UnlockFrames.push_back(r);
+	}
+}
+
+Rect* Door::Get_Frame(unsigned short i)
+{
+	return this->UnlockFrames[i];
+}
+
+void Door::Add_To_Draw_Queue()
+{
+	if (this->DrawObj != NULL)
+		return;
+
+	Rect *r = this->Get_Frame(0);
+	this->DrawObj = new DrawOrder(gameObj.level->ObjectSpriteSheet, r->x, r->y, r->w, r->h, this->posX, this->posY);
+	gameObj.insert_DrawingOrder(this->DrawObj, 1);
+}
+
+/*removes the DrawOrder object from the draw queue, also destroys it*/
+void Door::Remove_From_Draw_Queue()
+{
+	for (unsigned short i = 0; i < gameObj.DrawingOrder[1].size(); i++)
+	{
+		if (gameObj.DrawingOrder[1][i] == this->DrawObj)
+		{
+			gameObj.DrawingOrder[1].erase(gameObj.DrawingOrder[1].begin() + i);
+			delete this->DrawObj;
+			this->DrawObj = NULL;
+			//cout << "Removed door draw obj from queue\n";
+		}
+	}
+}
+
+void Door::Update_Draw_Obj()
+{
+	assert(this->DrawObj != NULL);
+
+	Rect* r = this->Get_Frame(this->DoorSpriteNum);
+	this->DrawObj->sx = r->x;
+}
+
+void Door::SetActive(bool act)
+{
+	this->is_active = act;
+}
+
+bool Door::IsActive()
+{
+	return this->is_active;
+}
+
+//End of class Door
 
 //Class Player functions
 
@@ -751,6 +934,27 @@ void Player::Set_HurtInvicibility(bool hi)
 bool Player::Get_HurtInvicibility()
 {
 	return this->HurtInvicibility;
+}
+
+void Player::Add_Key()
+{
+	this->Keys++;
+}
+
+void Player::Remove_Key()
+{
+	if(this->Keys > 0)
+		this->Keys--;
+}
+
+void Player::Set_Keys(unsigned short keys)
+{
+	this->Keys = keys;
+}
+
+unsigned short Player::Get_Keys()
+{
+	return this->Keys;
 }
 
 //end of class Player functions
@@ -1734,31 +1938,33 @@ void GumaAxe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
 
 //End of Axe Class
 
-//Start of PowerUps
+//Start of Collectable
 
-PowerUps::PowerUps(int posX, int posY)
+Collectable::Collectable(int posX, int posY)
 {
 	positionX = posX;
 	positionY = posY;
 }
 
-PowerUps::~PowerUps()
+Collectable::~Collectable()
 {
 
 }
 
-//End of Class PowerUps
-
+//End of Class Collectable
 
 //Start of RedPotion
-RedPotion::RedPotion(int x, int y) : PowerUps(x, y) {
+
+RedPotion::RedPotion(int x, int y) : Collectable(x, y) 
+{
 	RedPotionFrame.h = 0;
 	RedPotionFrame.w = 0;
 	RedPotionFrame.x = 0;
 	RedPotionFrame.y = 0;
 }
 
-void RedPotion::Init_frames_bounding_boxes() {
+void RedPotion::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 
 	//RedPotionFrames
@@ -1770,23 +1976,65 @@ void RedPotion::Init_frames_bounding_boxes() {
 	r->x = 48 + 2;
 
 	RedPotionFrame = *r;
-	
 }
 
-Rect RedPotion::FrameToDraw(){
+void RedPotion::Init_frames_bounding_boxes(unsigned short id)
+{
+	Rect* r;
+
+	//BluePotionFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	if (id == 1)
+	{
+		r->y = 16 - 5;
+		r->x = 40 + 1;	// 6*8 with tile width 8
+	}
+	else if (id == 2)
+	{
+		r->y = 16 - 5;
+		r->x = 48 + 2;
+	}
+	else
+	{
+		r->y = 16 - 5;
+		r->x = 56 + 3;
+	}
+
+	RedPotionFrame = *r;
+}
+
+Rect RedPotion::FrameToDraw()
+{
 	return RedPotionFrame;
 }
+
+void RedPotion::Set_Restore_Amount(unsigned short amount)
+{
+	this->restore = amount;
+}
+
+unsigned short RedPotion::Get_Restore_Amount()
+{
+	return this->restore;
+}
+
 //End of RedPotion
 
 //Start of BluePotion
-BluePotion::BluePotion(int x, int y) : PowerUps(x, y) {
+
+BluePotion::BluePotion(int x, int y) : Collectable(x, y) 
+{
 	BluePotionFrame.h = 0;
 	BluePotionFrame.w = 0;
 	BluePotionFrame.x = 0;
 	BluePotionFrame.y = 0;
 }
 
-void BluePotion::Init_frames_bounding_boxes() {
+void BluePotion::Init_frames_bounding_boxes()
+{
 	Rect* r;
 
 	//BluePotionFrame
@@ -1798,24 +2046,65 @@ void BluePotion::Init_frames_bounding_boxes() {
 	r->x = 16 + 5;
 
 	BluePotionFrame = *r;
-
 }
 
-Rect BluePotion::FrameToDraw() {
+void BluePotion::Init_frames_bounding_boxes(unsigned short id)
+{
+	Rect* r;
+
+	//BluePotionFrame
+	r = new Rect;
+
+	r->h = OBJECT_SPRITE_HEIGHT;
+	r->w = OBJECT_SPRITE_WIDTH;
+	if (id == 1)
+	{
+		r->y = 16 - 5;
+		r->x = 8 + 4;
+	}
+	else if (id == 2)
+	{
+		r->y = 16 - 5;
+		r->x = 16 + 5;
+	}
+	else
+	{
+		r->y = 16 - 5;
+		r->x = 32 - 2;
+	}
+
+	BluePotionFrame = *r;
+}
+
+Rect BluePotion::FrameToDraw()
+{
 	return BluePotionFrame;
+}
+
+void BluePotion::Set_Restore_Amount(unsigned short amount)
+{
+	this->restore = amount;
+}
+
+unsigned short BluePotion::Get_Restore_Amount()
+{
+	return this->restore;
 }
 
 //End of BluePotion
 
 //Start of PointBag
-PointBag::PointBag(int x, int y) : PowerUps(x, y) {
+
+PointBag::PointBag(int x, int y) : Collectable(x, y) 
+{
 	PointBagFrame.h = 0;
 	PointBagFrame.w = 0;
 	PointBagFrame.x = 0;
 	PointBagFrame.y = 0;
 }
 
-void PointBag::Init_frames_bounding_boxes() {
+void PointBag::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 
 	//PointBagFrame
@@ -1827,23 +2116,27 @@ void PointBag::Init_frames_bounding_boxes() {
 	r->x = 0;
 
 	PointBagFrame = *r;
-
 }
 
-Rect PointBag::FrameToDraw() {
+Rect PointBag::FrameToDraw() 
+{
 	return PointBagFrame;
 }
+
 //End of PointBag
 
-//Start of Key class
-Key::Key(int x, int y) : PowerUps(x, y) {
+//Start of SimpleKey class
+
+SimpleKey::SimpleKey(int x, int y) : Collectable(x, y) 
+{
 	KeyFrame.h = 0;
 	KeyFrame.w = 0;
 	KeyFrame.x = 0;
 	KeyFrame.y = 0;
 }
 
-void Key::Init_frames_bounding_boxes() {
+void SimpleKey::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 
 	//KeyFrame
@@ -1857,20 +2150,24 @@ void Key::Init_frames_bounding_boxes() {
 	KeyFrame = *r;
 }
 
-Rect Key::FrameToDraw() {
+Rect SimpleKey::FrameToDraw() 
+{
 	return KeyFrame;
 }
-//End of Key class
+
+//End of SimpleKey class
 
 //Start of UpDoll class
-UpDoll::UpDoll(int x, int y) : PowerUps(x, y) {
+UpDoll::UpDoll(int x, int y) : Collectable(x, y) 
+{
 	UpDollFrame.h = 0;
 	UpDollFrame.w = 0;
 	UpDollFrame.x = 0;
 	UpDollFrame.y = 0;
 }
 
-void UpDoll::Init_frames_bounding_boxes() {
+void UpDoll::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 
 	//UpDollFrame
@@ -1884,11 +2181,14 @@ void UpDoll::Init_frames_bounding_boxes() {
 	UpDollFrame = *r;
 }
 
-Rect UpDoll::FrameToDraw() {
+Rect UpDoll::FrameToDraw() 
+{
 	return UpDollFrame;
 }
 
 //End of UpDoll class
+
+//Start of global functions
 
 void Init_Player(int PlayerX, int PlayerY)
 {
@@ -1979,6 +2279,8 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 	gameObj.level->grids.push_back(new Grid(layer, Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
+
+
 void add_Stalfos(int x,int y) 
 {
 	Stalfos *stalfos = new Stalfos(x, y);
@@ -2015,32 +2317,47 @@ void add_Guma(int x, int y)
 	Enemies.push_back(guma);
 }
 
-void add_RedPotion(int x,int y) {
+
+
+void add_RedPotion(int x,int y, unsigned short restore_amount, short id) 
+{
 	RedPotion* rpotion = new RedPotion(x,y);
-	rpotion->Init_frames_bounding_boxes();
-	Power_Ups.push_back(rpotion);
+	if (id == -1)
+		rpotion->Init_frames_bounding_boxes();
+	else
+		rpotion->Init_frames_bounding_boxes(id);
+	rpotion->Set_Restore_Amount(restore_amount);
+	Collectables.push_back(rpotion);
 }
 
-void add_BluePotion(int x, int y) {
+void add_BluePotion(int x, int y, unsigned short restore_amount, short id)
+{
 	BluePotion* bpotion = new BluePotion(x,y);
-	bpotion->Init_frames_bounding_boxes();
-	Power_Ups.push_back(bpotion);
+	if(id == -1)
+		bpotion->Init_frames_bounding_boxes();
+	else
+		bpotion->Init_frames_bounding_boxes(id);
+	bpotion->Set_Restore_Amount(restore_amount);
+	Collectables.push_back(bpotion);
 }
 
-void add_PointBag(int x, int y) {
+void add_PointBag(int x, int y)
+{
 	PointBag* pbag = new PointBag(x, y);
 	pbag->Init_frames_bounding_boxes();
-	Power_Ups.push_back(pbag);
+	Collectables.push_back(pbag);
 }
 
-void add_Key(int x, int y) {
-	Key* k = new Key(x, y);
+void add_SimpleKey(int x, int y)
+{
+	SimpleKey* k = new SimpleKey(x, y);
 	k->Init_frames_bounding_boxes();
-	Power_Ups.push_back(k);
+	Collectables.push_back(k);
 }
 
-void add_UpDoll(int x, int y) {
+void add_UpDoll(int x, int y)
+{
 	UpDoll* updoll = new UpDoll(x, y);
 	updoll->Init_frames_bounding_boxes();
-	Power_Ups.push_back(updoll);
+	Collectables.push_back(updoll);
 }
