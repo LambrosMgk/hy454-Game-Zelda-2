@@ -1234,6 +1234,133 @@ void Grid::FilterGridMotionDown(Player* player, int* dy)
 	}
 }
 
+void Grid::FilterEnemyGridMotion(Enemy* Enemy, int* dx, int* dy)
+{
+	assert(abs(*dx) <= Grid_Element_Width && abs(*dy) <= Grid_Element_Height);	//can't have the player pass 2 blocks instead of 1 and bypass some random wall
+
+	// try horizontal move
+	if (*dx < 0)
+		FilterEnemyGridMotionLeft(Enemy, dx);
+	else if (*dx > 0)
+		FilterEnemyGridMotionRight(Enemy, dx);
+
+	// try vertical move
+	if (*dy < 0)
+		FilterEnemyGridMotionUp(Enemy, dy);
+	else if (*dy > 0)
+		FilterEnemyGridMotionDown(Enemy, dy);
+}
+
+void Grid::FilterEnemyGridMotionLeft(Enemy* Enemy, int* dx)
+{
+	auto x1_next = Enemy->positionX + *dx;
+	if (x1_next < 0)
+		*dx = -Enemy->positionX;
+	else
+	{
+		auto newCol = (x1_next) / Grid_Element_Width;
+		auto currCol = (Enemy->positionX) / Grid_Element_Width;
+		if (newCol != currCol)
+		{
+			assert(newCol + 1 == currCol); // we really move left
+			auto startRow = (Enemy->positionY) / Grid_Element_Height;
+			auto endRow = (Enemy->positionY + Enemy->FrameToDraw().h - 1) / Grid_Element_Height;
+			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
+			for (auto row = startRow; row <= endRow; ++row)
+				if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
+				{
+					*dx = Grid_Element_Width * (currCol)-(Enemy->positionX);
+					//cout << "*dx = " << *dx << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterEnemyGridMotionRight(Enemy* Enemy, int* dx)
+{
+	unsigned int x2 = Enemy->positionX + Enemy->FrameToDraw().w - 1;
+	unsigned int x2_next = x2 + *dx;
+	if (x2_next >= MAX_PIXEL_WIDTH)
+		*dx = (MAX_PIXEL_WIDTH - 1) - x2;
+	else
+	{
+		auto newCol = (x2_next) / Grid_Element_Width;
+		auto currCol = (x2) / Grid_Element_Width;
+		if (newCol != currCol)
+		{
+			assert(newCol - 1 == currCol); // we really move right
+			auto startRow = (Enemy->positionY) / Grid_Element_Height;
+			auto endRow = (Enemy->positionY + Enemy->FrameToDraw().h - 1) / Grid_Element_Height;
+			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
+			for (auto row = startRow; row <= endRow; ++row)
+				if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
+				{
+					*dx = (Grid_Element_Width * (newCol)-1) - (x2);
+					//cout << "*dx = " << *dx << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterEnemyGridMotionUp(Enemy* Enemy, int* dy)
+{
+	auto x1_next = Enemy->positionY + *dy;
+	if (x1_next < 0)
+		*dy = -Enemy->positionY;
+	else
+	{
+		auto newRow = (x1_next) / Grid_Element_Height;
+		auto currRow = (Enemy->positionY) / Grid_Element_Height;
+		if (newRow != currRow)
+		{
+			assert(newRow + 1 == currRow); // we really move up
+			auto startCol = (Enemy->positionX ) / Grid_Element_Width;
+			auto endCol = (Enemy->positionX + Enemy->FrameToDraw().w - 1) / Grid_Element_Width;
+			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+			for (auto col = startCol; col <= endCol; ++col)
+				if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
+				{
+					*dy = Grid_Element_Height * (currRow)-(Enemy->positionY);
+					//cout << "*dy = " << *dy << "\n";
+					break;
+				}
+		}
+	}
+}
+
+void Grid::FilterEnemyGridMotionDown(Enemy* Enemy, int* dy)
+{
+	unsigned int x2 = Enemy->positionY + Enemy->FrameToDraw().h - 1;
+	auto x2_next = x2 + *dy;
+	if (x2_next >= MAX_PIXEL_HEIGHT)
+		*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
+	else
+	{
+		auto newRow = (x2_next) / Grid_Element_Height;
+		auto currRow = (x2) / Grid_Element_Height;
+		if (newRow != currRow)
+		{
+			assert(newRow - 1 == currRow); // we really move down
+			auto startCol = (Enemy->positionX) / Grid_Element_Width;
+			auto endCol = (Enemy->positionX + Enemy->FrameToDraw().w - 1) / Grid_Element_Width;
+			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
+			for (auto col = startCol; col <= endCol; ++col) {
+
+				if (!CanPassGridTile(newRow, col, GRID_BOTTOM_SOLID_MASK))
+				{
+					*dy = (Grid_Element_Width * (newRow)-1) - (x2);
+					//cout << "*dy = " << *dy << "\n";
+					break;
+				}
+			}
+
+		}
+	}
+}
+
+
 /*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
 {
 	for (auto row = 0; row < al_get_bitmap_height(map); ++row)
@@ -1589,14 +1716,14 @@ Rect Stalfos::FrameToDraw()
 
 PalaceBot::PalaceBot(int x, int y) : Enemy(x, y)
 {
-
+	this->scrollDistanceY = 6;
 }
 
 void PalaceBot::Init_frames_bounding_boxes() 
 {
 	Rect* r;
-	int i = 0;
 
+	//RIGHT
 	//FramesWalking
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
@@ -1604,7 +1731,7 @@ void PalaceBot::Init_frames_bounding_boxes()
 
 	r->y = 688 + 8;
 	r->x = 160 + 3;
-	FramesWalking.push_back(*r);
+	FramesWalkingRight.push_back(*r);
 	
 
 	//FramesJumping
@@ -1614,15 +1741,36 @@ void PalaceBot::Init_frames_bounding_boxes()
 
 	r->y = 688 + 7;
 	r->x = 176 + 5;
-	FramesJumping.push_back(*r);
-		
+	FramesJumpingRight.push_back(*r);
+
+
+	//LEFT
+	//FramesWalking
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+
+	r->y = 688 + 8;
+	r->x = 432 + 5;
+	FramesWalkingLeft.push_back(*r);
+
+
+	//FramesJumping
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+
+	r->y = 688 + 7;
+	r->x = 416 + 3;
+	FramesJumpingLeft.push_back(*r);
 }
 
 void PalaceBot::Increment_Sprite_Counter()
 {
 	if (this->state == E_State_Walking)
 	{
-		this->EnemySpriteNum = 0;	//1 frame for walking
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//1 frame for walking and 1 frame of falling
+		//to create a nice up and down animation while idle
 	}
 	else if (this->state == E_State_Jumping)
 	{
@@ -1635,32 +1783,79 @@ void PalaceBot::Set_State(Enemy_State state)
 	if (this->state == E_State_Walking && state == E_State_Jumping) //Walking -> Jumping
 	{
 		this->state = state;
+		this->dy = -scrollDistanceY;	//also add upward force (to go up we need to subtract)
 	}
 	else if (this->state == E_State_Jumping && state == E_State_Walking) //Jumping -> Walking
 	{
+		this->dy = 0;
 		this->state = state;
 	}
 }
 
 Rect PalaceBot::FrameToDraw() 
 {
-	if (state == E_State_Walking)
+	if(this->direction == dir_right)
 	{
-		return FramesWalking[EnemySpriteNum];
+		if (EnemySpriteNum == 1)	//this is for the "idle" animation
+		{
+			return FramesJumpingRight[0];
+		}
+
+		if (state == E_State_Walking)
+		{
+			return FramesWalkingRight[EnemySpriteNum];
+		}
+		else if (state == E_State_Jumping)
+		{
+			return FramesJumpingRight[EnemySpriteNum];
+		}
+		else
+		{
+			fprintf(stderr, "Error with PalaceBot state : invalid value %d.\n", this->state);
+			exit(-1);
+		}
 	}
-	else if (state == E_State_Jumping)
+	else if (this->direction == dir_left)
 	{
-		return FramesJumping[EnemySpriteNum];
+		if (EnemySpriteNum == 1)	//this is for the "idle" animation
+			return FramesJumpingLeft[0];
+
+		if (state == E_State_Walking)
+		{
+			return FramesWalkingLeft[EnemySpriteNum];
+		}
+		else if (state == E_State_Jumping)
+		{
+			return FramesJumpingLeft[EnemySpriteNum];
+		}
+		else
+		{
+			fprintf(stderr, "Error with PalaceBot state : invalid value %d.\n", this->state);
+			exit(-1);
+		}
 	}
 	else
 	{
-		fprintf(stderr, "Error with PalaceBot state : invalid value %d.\n", this->state);
+		cout << "Error in palaceBot FrameToDraw()\n";
 		exit(-1);
 	}
 }
 
+short PalaceBot::Get_dy()
+{
+	return this->dy;
+}
+
+
+void PalaceBot::Increment_dy()
+{
+	this->dy++;
+}
+
+
 void PalaceBot::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 {
+	//allowed to move only when jumping
 	if (state == E_State_Jumping)
 	{
 		this->positionX += ScrollDistanceX;

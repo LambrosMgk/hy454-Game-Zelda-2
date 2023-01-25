@@ -29,7 +29,27 @@ void Calculate_AI()
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
 				{
+					PalaceBot* palaceBot = dynamic_cast<PalaceBot*>(Enemies[i]);	//do this to get access to PalaceBot specific functions
+					assert(palaceBot != NULL);
 
+					//if the player enters a 5 tile range, start homing to the player
+					if (palaceBot->Get_State() == E_State_Walking &&
+						DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (palaceBot->positionX))) < 5 &&
+						DIV_TILE_HEIGHT(abs(player->positionY + player->screenY * DISPLAY_H - (palaceBot->positionY))) < 5
+						)
+					{
+						//palaceBots will travel 3 tiles distance while jumping
+						palaceBot->Set_State(E_State_Jumping);
+						//check the direction which the bot will jump towards to
+						if (player->positionX + player->screenX * DISPLAY_W < (palaceBot->positionX))
+						{
+							palaceBot->Set_Direction(dir_left);
+						}
+						else
+						{
+							palaceBot->Set_Direction(dir_right);
+						}
+					}
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(Wosu).name())
 				{

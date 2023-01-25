@@ -136,7 +136,10 @@ void Animator()
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
 				{
+					PalaceBot* palaceBot = dynamic_cast<PalaceBot*>(Enemies[i]);
+					assert(palaceBot != NULL);
 
+					palaceBot->Increment_Sprite_Counter();
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(Wosu).name())
 				{

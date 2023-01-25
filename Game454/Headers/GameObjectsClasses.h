@@ -417,6 +417,17 @@ public:
 
 	void FilterGridMotionDown(Player* player, int* dy);
 
+
+	void FilterEnemyGridMotion(Enemy* Enemy, int* dx, int* dy);
+
+	void FilterEnemyGridMotionLeft(Enemy* Enemy, int* dx);
+
+	void FilterEnemyGridMotionRight(Enemy* Enemy, int* dx);
+
+	void FilterEnemyGridMotionUp(Enemy* Enemy, int* dy);
+
+	void FilterEnemyGridMotionDown(Enemy* Enemy, int* dy);
+
 	/*void ComputeTileGridBlocks1(ALLEGRO_BITMAP* map)
 	{
 		for (auto row = 0; row < al_get_bitmap_height(map); ++row)
@@ -469,13 +480,13 @@ public:
 
 	int Get_Speed_X();
 
-	void Set_Speed_Y(int speedY);
+	virtual void Set_Speed_Y(int speedY);
 
 	void Increment_Speed_Y();
 
-	void Decrement_Speed_Y();
+	virtual void Decrement_Speed_Y();
 
-	int Get_Speed_Y();
+	virtual int Get_Speed_Y();
 
 	void Set_Direction(Direction direction);
 
@@ -526,13 +537,11 @@ public :
 class PalaceBot : public Enemy
 {
 private:
-	std::vector<Rect> FramesWalking;
-	std::vector<Rect> FramesJumping;
-
+	std::vector<Rect> FramesWalkingLeft, FramesWalkingRight;
+	std::vector<Rect> FramesJumpingLeft, FramesJumpingRight;
+	short dy = 0;	//the distance which i want to move
 public:
 	PalaceBot(int x, int y);
-
-	Enemy_State Get_State();
 
 	void Init_frames_bounding_boxes();
 
@@ -543,6 +552,10 @@ public:
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 
 	void Increment_Sprite_Counter();
+
+	short Get_dy();
+
+	void Increment_dy();
 };
 
 class Wosu : public Enemy
@@ -553,8 +566,6 @@ private:
 	short StartPosX = 0, StartPosY = 0;
 public:
 	Wosu(int x, int y);
-
-	Enemy_State Get_State();
 
 	void Init_frames_bounding_boxes();
 
@@ -575,8 +586,6 @@ private:
 
 public:
 	Guma(int x, int y);
-
-	Enemy_State Get_State();
 
 	void Init_frames_bounding_boxes();
 

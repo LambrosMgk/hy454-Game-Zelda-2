@@ -68,9 +68,50 @@ void Calculate_Physics()
 				gameObj.level->Scroll_Bitmap();
 			}
 
-			//al_stop_timer(PhysicsTimer);
-			//scrollUp = false;
-			//scrollDown = true;
+			for (unsigned short i = 0; i < Enemies.size(); i++)
+			{
+				int e_scrollx = 0, e_scrolly = 0;
+
+				if (typeid(*Enemies[i]).name() == typeid(Stalfos).name())
+				{
+
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
+				{
+					PalaceBot* palaceBot = dynamic_cast<PalaceBot*>(Enemies[i]);	//do this to get access to PalaceBot specific functions
+					assert(palaceBot != NULL);
+
+					if (palaceBot->Get_State() == E_State_Jumping)
+					{
+						//palaceBots will travel 3 tiles distance while jumping
+						
+						e_scrollx = palaceBot->Get_Speed_X();
+						e_scrolly = palaceBot->Get_dy();
+						if (palaceBot->Get_Direction() == dir_left)
+							e_scrollx = -e_scrollx;
+						gameObj.level->grids[0]->FilterEnemyGridMotion(palaceBot, &e_scrollx, &e_scrolly);
+						cout << "grid say : e_scrollx = " << e_scrollx << ", e_scrolly = " << e_scrolly << '\n';
+						palaceBot->Scroll_Enemy(e_scrollx, e_scrolly);
+						palaceBot->Increment_dy();	//increment because going up means subtracting so if i want to slow down and go back down i need to start adding
+						
+						//if i hit a solid tile i need to stop (check left, right and down, no need to check up because grid filter will block us from moving and we will eventually fall down)
+						if ((gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(palaceBot->positionY) + 1, DIV_TILE_WIDTH(palaceBot->positionX)) & GRID_SOLID_TILE) ||
+							(gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(palaceBot->positionY), DIV_TILE_WIDTH(palaceBot->positionX) + 1) & GRID_SOLID_TILE) ||
+							(gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(palaceBot->positionY), DIV_TILE_WIDTH(palaceBot->positionX) - 1) & GRID_SOLID_TILE))
+						{
+							palaceBot->Set_State(E_State_Walking);
+						}
+					}
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(Wosu).name())
+				{
+
+				}
+				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
+				{
+
+				}
+			}
 		}
 	}
 }
