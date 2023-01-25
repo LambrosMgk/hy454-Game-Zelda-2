@@ -90,7 +90,7 @@ void Calculate_Physics()
 						if (palaceBot->Get_Direction() == dir_left)
 							e_scrollx = -e_scrollx;
 						gameObj.level->grids[0]->FilterEnemyGridMotion(palaceBot, &e_scrollx, &e_scrolly);
-						cout << "grid say : e_scrollx = " << e_scrollx << ", e_scrolly = " << e_scrolly << '\n';
+						//cout << "grid say : e_scrollx = " << e_scrollx << ", e_scrolly = " << e_scrolly << '\n';
 						palaceBot->Scroll_Enemy(e_scrollx, e_scrolly);
 						palaceBot->Increment_dy();	//increment because going up means subtracting so if i want to slow down and go back down i need to start adding
 						
