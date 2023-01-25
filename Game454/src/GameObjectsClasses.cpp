@@ -936,6 +936,16 @@ bool Player::Get_HurtInvicibility()
 	return this->HurtInvicibility;
 }
 
+void Player::Set_WaitAfterHit(bool hi)
+{
+	this->WaitAfterHit = hi;
+}
+
+bool Player::Get_WaitAfterHit()
+{
+	return this->WaitAfterHit;
+}
+
 void Player::Add_Key()
 {
 	this->Keys++;

@@ -286,6 +286,7 @@ private:
 	float Health = 10;
 	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
+	bool WaitAfterHit = false;
 public:
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
 	int positionX, positionY;
@@ -342,6 +343,10 @@ public:
 	void Set_HurtInvicibility(bool hi);
 
 	bool Get_HurtInvicibility();
+
+	void Set_WaitAfterHit(bool hi);
+
+	bool Get_WaitAfterHit();
 
 	void Add_Key();
 
