@@ -54,10 +54,10 @@ void CheckCollisions()
 				}
 				else if (player->Get_State() == State_Attacking && player->LinkSpriteNum == 1)	/*2nd frame of the attack animation*/
 				{
-					if (!((Enemies[i]->positionX + r.w < player->positionX) ||
-						(player->positionX + rP.w < Enemies[i]->positionX) ||
-						(Enemies[i]->positionY + r.h < player->positionY) ||
-						(player->positionY + rP.h < Enemies[i]->positionY))) /*No overlap condition*/
+					if (!((Enemies[i]->positionX + r.w < player->positionX + player->screenX * DISPLAY_W) ||
+						(player->positionX +player->screenX + rP.w * DISPLAY_W < Enemies[i]->positionX) ||
+						(Enemies[i]->positionY + r.h < player->positionY + +player->screenY * DISPLAY_H) ||
+						(player->positionY + +player->screenY * DISPLAY_H + rP.h < Enemies[i]->positionY))) /*No overlap condition*/
 					{
 						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << '\n';
 
