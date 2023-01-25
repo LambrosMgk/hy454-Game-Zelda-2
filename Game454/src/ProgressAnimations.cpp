@@ -99,12 +99,16 @@ void Animator()
 			else if (event.any.source == al_get_timer_event_source(AttackTimer) && player->Get_State() == State_Attacking)
 			{
 				player->LinkSpriteNum++;
+				if (player->LinkSpriteNum == 1 && player->Get_Direction() == dir_left)
+					player->positionX -= 16;
 
 				if (player->LinkSpriteNum >= 2)
 				{
 					StartAttack = false;
 					al_stop_timer(AttackTimer);
 					player->Set_State(State_Walking);
+					if (player->Get_Direction() == dir_left)
+						player->positionX += 16;
 					player->LinkSpriteNum = 0;
 				}
 			}
