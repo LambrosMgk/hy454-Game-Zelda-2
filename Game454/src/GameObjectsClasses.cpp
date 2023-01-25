@@ -198,7 +198,7 @@ void Level::Load_Enemies()
 			if (TileMapCSV[1][i][j] == STALFOS_ID)
 			{
 				//"spawner" tiles are always place at the bottom so for a stalfos to be drawn correctly we must go 1 tile up
-				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT -TILE_HEIGHT);
+				add_Stalfos(j * TILE_WIDTH, i * TILE_HEIGHT);
 				grids[1]->SetEmptyGridTile(i, j);	//some transparent tiles that i use for spawn marking are marked as solid which is wrong
 			}
 			else if (TileMapCSV[1][i][j] == PALACE_BOT_ID)
@@ -1566,24 +1566,30 @@ int Enemy::Get_Points()
 
 Stalfos::Stalfos(int x, int y) : Enemy(x, y) 
 {
-
+	this->state = E_State_Waiting;
 }
 
-void Stalfos::Init_frames_bounding_boxes() {
+void Stalfos::Init_frames_bounding_boxes() 
+{
 	Rect* r;
 	int i = 0;
 
 	//FramesWalkingRight
-	for (i = 0; i < 2; i++)
-	{
-		r = new Rect;
-		r->h = ENEMY_SPRITE_HEIGHT * 2;
-		r->w = i % 2 == 1 ? ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH/2 : ENEMY_SPRITE_WIDTH * 2;
-		
-		r->y = 448 + 5;
-		r->x = 288 + i* 2 *ENEMY_SPRITE_WIDTH;
-		FramesWalkingRight.push_back(*r);
-	}
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 320 + 4;
+
+	FramesWalkingRight.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 304 - 4;
+
+	FramesWalkingRight.push_back(*r);
 
 	//FramesAttackingRight
 	for (i = 0; i < 3; i++)
@@ -1619,52 +1625,77 @@ void Stalfos::Init_frames_bounding_boxes() {
 	FramesFalling.push_back(*r);
 
 	//FramesWalkingLeft 
-	for (i = 0; i < 2; i++)
-	{
-		r = new Rect;
-		r->h = ENEMY_SPRITE_HEIGHT * 2;
-		r->w = ENEMY_SPRITE_WIDTH;
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 272 + 4;
 
-		r->y = 448 + 5;
-		if (i == 0)
-			r->x = 272 + 3;
-		else
-			r->x = 288 + 12;
-		FramesWalkingLeft.push_back(*r);
-	}
+	FramesWalkingLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 304 - 4;
+
+	FramesWalkingLeft.push_back(*r);
+
 
 	//FramesSlashLeft 
-	for (i = 0; i < 3; i++)
-	{
-		r = new Rect;
-		r->h = ENEMY_SPRITE_HEIGHT * 2;
-		r->y = 448 + 5;
-		if (i == 0) {
-			r->w = ENEMY_SPRITE_WIDTH*2;
-			r->x = 192 - 1;
-		}
-		else {
-			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 2;
-			if (i == 1)
-				r->x = 224 + 3;
-			else
-				r->x = 256 - 3;
-		}
-		FramesSlashLeft.push_back(*r);
-	}
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH * 2;
+	r->y = 448 + 5;
+	r->x = 192 - 1;
+	
+	FramesSlashLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 224 + 4;
+
+	FramesSlashLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 448 + 5;
+	r->x = 256 - 3;
+
+	FramesSlashLeft.push_back(*r);
+	std::reverse(FramesSlashLeft.begin(), FramesSlashLeft.end());
 }
 
 void Stalfos::Increment_Sprite_Counter()
 {
-	if (this->state == E_State_Walking)
+	if (this->state == E_State_Idle)
+	{
+		this->EnemySpriteNum = 0;
+	}
+	else if (this->state == E_State_Walking)
 	{
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking
 	}
 	else if (this->state == E_State_Attacking)
 	{
+		if (this->EnemySpriteNum == 2)
+		{
+			this->state = E_State_Walking;	//change state before resetting the sprite counter
+			if (this->direction == dir_left)
+				this->positionX += 16;
+		}
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 3;	//3 frames for attacking
+		if (this->EnemySpriteNum == 2)
+		{
+			this->damage = 2;	//maybe temporarily change the damage at the last frame of the attack
+			if (this->direction == dir_left)
+				this->positionX -= 16;
+		}
 	}
-	else if (this->state == E_State_Falling)
+	else if (this->state == E_State_Falling || this->state == E_State_Waiting)
 	{
 		this->EnemySpriteNum = 0;	//1 frame for falling
 	}
@@ -1676,7 +1707,23 @@ void Stalfos::Set_State(Enemy_State state)
 	{
 		this->state = state;
 	}
+	else if (this->state == E_State_Walking && state == E_State_Idle) //Walking -> Idle
+	{
+		this->state = state;
+	}
 	else if (this->state == E_State_Attacking && state == E_State_Walking) //Attacking -> Walking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Waiting && state == E_State_Falling) //Waiting(hanging) -> Falling
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Falling && state == E_State_Walking) //Falling -> Walking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Idle && state == E_State_Walking) //Idle -> Walking
 	{
 		this->state = state;
 	}
@@ -1684,7 +1731,7 @@ void Stalfos::Set_State(Enemy_State state)
 
 void Stalfos::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 {
-	if (state == E_State_Walking)
+	if (state == E_State_Walking || state == E_State_Falling)
 	{
 		this->positionX += ScrollDistanceX;
 		this->positionY += ScrollDistanceY;
@@ -1693,15 +1740,15 @@ void Stalfos::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 Rect Stalfos::FrameToDraw() 
 {
-	if (state == E_State_Walking && direction == dir_left) 
+	if ((state == E_State_Walking || state == E_State_Idle) && direction == dir_left)
 	{
 		return FramesWalkingLeft[EnemySpriteNum];
 	}
-	else if (state == E_State_Walking && direction == dir_right)
+	else if ((state == E_State_Walking || state == E_State_Idle) && direction == dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Falling)
+	else if (state == E_State_Falling || state == E_State_Waiting)
 	{
 		return FramesFalling[EnemySpriteNum];
 	}
@@ -1929,9 +1976,9 @@ void Wosu::Init_frames_bounding_boxes()
 		r->y = 768 + 2;
 
 		if (i == 0)
-			r->x = 544 + 5;
+			r->x = 544 + 8;
 		else if (i == 1)
-			r->x = 576;
+			r->x = 576 + 1;
 
 		FramesWalkingLeft.push_back(*r);
 	}

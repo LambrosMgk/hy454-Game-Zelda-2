@@ -25,7 +25,46 @@ void Calculate_AI()
 			{
 				if (typeid(*Enemies[i]).name() == typeid(Stalfos).name())
 				{
+					Stalfos* stalfos = dynamic_cast<Stalfos*>(Enemies[i]);	//do this to get access to Stalfos specific functions
+					assert(stalfos != NULL);
 
+					
+					if (stalfos->Get_State() == E_State_Waiting &&
+						DIV_TILE_WIDTH(player->positionX + player->screenX * DISPLAY_W) == DIV_TILE_WIDTH(stalfos->positionX) &&
+						(player->positionY + player->screenY * DISPLAY_H > stalfos->positionY)	// higher player Y position means lower in the level
+						)
+					{
+						stalfos->Set_State(E_State_Falling);
+					}
+					else if (stalfos->Get_State() == E_State_Walking)
+					{
+						if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - stalfos->positionX)) == 1)
+						{
+							stalfos->Set_State(E_State_Attacking);
+						}
+						else if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (stalfos->positionX))) < 10)
+						{
+							if (player->positionX + player->screenX * DISPLAY_W < (stalfos->positionX))
+							{
+								stalfos->Set_Direction(dir_left);
+								stalfos->Scroll_Enemy(-stalfos->Get_Speed_X(), 0);
+							}
+							else
+							{
+								stalfos->Set_Direction(dir_right);
+								stalfos->Scroll_Enemy(stalfos->Get_Speed_X(), 0);
+							}	
+						}
+						else
+						{
+							stalfos->Set_State(E_State_Idle);
+						}
+					}
+					else if (stalfos->Get_State() == E_State_Idle)
+					{
+						if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (stalfos->positionX))) < 10)
+							stalfos->Set_State(E_State_Walking);
+					}
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
 				{
