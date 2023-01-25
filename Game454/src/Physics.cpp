@@ -74,7 +74,26 @@ void Calculate_Physics()
 
 				if (typeid(*Enemies[i]).name() == typeid(Stalfos).name())
 				{
+					Stalfos* stalfos = dynamic_cast<Stalfos*>(Enemies[i]);	//do this to get access to Stalfos specific functions
+					assert(stalfos != NULL);
 
+					//start scrolling down till you hit a solid block
+					if (stalfos->Get_State() == E_State_Falling)
+					{
+						e_scrollx = 0;
+						e_scrolly = stalfos->Get_Speed_Y();
+						
+						gameObj.level->grids[0]->FilterEnemyGridMotion(stalfos, &e_scrollx, &e_scrolly);
+						//cout << "grid say : e_scrollx = " << e_scrollx << ", e_scrolly = " << e_scrolly << '\n';
+						stalfos->Scroll_Enemy(e_scrollx, e_scrolly);
+						//palaceBot->Increment_dy();	//increment because going up means subtracting so if i want to slow down and go back down i need to start adding
+
+						//if i hit a solid tile i need to stop
+						if ((gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT(stalfos->positionY + stalfos->FrameToDraw().h), DIV_TILE_WIDTH(stalfos->positionX)) & GRID_SOLID_TILE))
+						{
+							stalfos->Set_State(E_State_Walking);
+						}
+					}
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
 				{
@@ -90,7 +109,6 @@ void Calculate_Physics()
 						if (palaceBot->Get_Direction() == dir_left)
 							e_scrollx = -e_scrollx;
 						gameObj.level->grids[0]->FilterEnemyGridMotion(palaceBot, &e_scrollx, &e_scrolly);
-						//cout << "grid say : e_scrollx = " << e_scrollx << ", e_scrolly = " << e_scrolly << '\n';
 						palaceBot->Scroll_Enemy(e_scrollx, e_scrolly);
 						palaceBot->Increment_dy();	//increment because going up means subtracting so if i want to slow down and go back down i need to start adding
 						

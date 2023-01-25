@@ -132,7 +132,10 @@ void Animator()
 			{
 				if (typeid(*Enemies[i]).name() == typeid(Stalfos).name())
 				{
+					Stalfos* stalfos = dynamic_cast<Stalfos*>(Enemies[i]);
+					assert(stalfos != NULL);
 
+					stalfos->Increment_Sprite_Counter();
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(PalaceBot).name())
 				{

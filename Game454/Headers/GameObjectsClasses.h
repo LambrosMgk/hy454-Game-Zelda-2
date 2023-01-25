@@ -107,7 +107,7 @@ struct Point { int x, y; };
 enum Game_State { StartingScreen, PlayingLevel1, Paused , GameFinished};
 enum Direction { dir_left, dir_right };
 enum Player_State { State_Walking, State_Crounching, State_Attacking, State_CrounchAttacking, State_Elevator };
-enum Enemy_State { E_State_Walking, E_State_Attacking,E_State_Falling,E_State_Jumping };
+enum Enemy_State { E_State_Walking, E_State_Attacking, E_State_Falling, E_State_Waiting, E_State_Jumping, E_State_Idle };
 
 
 //forward declaration
@@ -457,7 +457,7 @@ protected:
 	int scrollDistanceX = 1, scrollDistanceY = 3;
 	Direction direction = dir_right;
 
-	float Health = 1.0;
+	float Health = 1.0, damage = 0.0;
 	int Points = 1;
 public:
 	int positionX, positionY;
@@ -520,8 +520,6 @@ private:
 	
 public :
 	Stalfos(int x, int y);
-	
-	Enemy_State Get_State();
 
 	void Init_frames_bounding_boxes();
 
