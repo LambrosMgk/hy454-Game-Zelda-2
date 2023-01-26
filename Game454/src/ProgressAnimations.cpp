@@ -100,11 +100,20 @@ void Animator()
 			{
 				player->LinkSpriteNum++;
 
+				if (player->LinkSpriteNum == 1)
+				{
+					if (player->Get_Direction() == dir_left)
+						player->positionX -= 16;
+				}
+					
+
 				if (player->LinkSpriteNum >= 2)
 				{
 					StartAttack = false;
 					al_stop_timer(AttackTimer);
 					player->Set_State(State_Walking);
+					if (player->Get_Direction() == dir_left)
+						player->positionX += 16;
 					player->LinkSpriteNum = 0;
 				}
 			}

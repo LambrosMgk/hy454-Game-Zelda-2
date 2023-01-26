@@ -1684,14 +1684,14 @@ void Stalfos::Increment_Sprite_Counter()
 		if (this->EnemySpriteNum == 2)
 		{
 			this->state = E_State_Walking;	//change state before resetting the sprite counter
-			if (this->direction == dir_left)
+			if (this->direction == dir_left)	//offset reset
 				this->positionX += 16;
 		}
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 3;	//3 frames for attacking
 		if (this->EnemySpriteNum == 2)
 		{
 			this->damage = 2;	//maybe temporarily change the damage at the last frame of the attack
-			if (this->direction == dir_left)
+			if (this->direction == dir_left)	//offset for a nice animation and accurate hitbox
 				this->positionX -= 16;
 		}
 	}
