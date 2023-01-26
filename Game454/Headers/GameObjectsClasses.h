@@ -8,6 +8,8 @@
 #include <sstream>
 #include <set>
 #include <vector>
+#include <cstdlib>  // for rand()
+#include <ctime>    // for time()
 
 #include "al_init.h"
 
@@ -193,6 +195,8 @@ in case of bad file path exits program with -1*/
 	void Load_Object_SpriteSheets();
 
 	void Load_Objects();
+
+	void Add_Random_Drop(int x, int y);
 };
 
 class GameLogic
@@ -285,10 +289,8 @@ private:
 	Direction direction = dir_right;
 	
 	int scrollDistanceX = 5, scrollDistanceY = 3;
-	int HP = 100;
-	int Points = 0;
-	int Dmg = 10;
-	unsigned short Keys = 1;
+	int HP = 100, Points = 0, Dmg = 10;
+	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 	bool WaitAfterHit = false;
 public:
@@ -362,6 +364,10 @@ public:
 	void Set_Keys(unsigned short keys);
 
 	unsigned short Get_Keys();
+
+	void Add_Score(int score);
+
+	int Get_Score();
 };
 
 class TileColorsHolder final
@@ -469,8 +475,8 @@ protected:
 	int scrollDistanceX = 1, scrollDistanceY = 3;
 	Direction direction = dir_right;
 
-	int HP , dmg;
-	int Points;
+	int HP = 1, dmg = 1;
+	int Points = 1;
 public:
 	int positionX, positionY;
 	
@@ -690,7 +696,7 @@ private:
 	Rect RedPotionFrame;
 	unsigned short restore = 0;
 public:
-	RedPotion(int x, int y);
+	RedPotion(int x, int y, int id);
 
 	void Init_frames_bounding_boxes();
 
@@ -709,7 +715,7 @@ private:
 	Rect BluePotionFrame;
 	unsigned short restore = 0;
 public:
-	BluePotion(int x, int y);
+	BluePotion(int x, int y, int id);
 
 	void Init_frames_bounding_boxes();
 
@@ -726,13 +732,15 @@ class PointBag : public Collectable
 {
 private:
 	Rect PointBagFrame;
-
+	unsigned short value = 0;
 public:
-	PointBag(int x, int y);
+	PointBag(int x, int y, unsigned short value);
 
 	void Init_frames_bounding_boxes();
 
 	Rect FrameToDraw();
+
+	unsigned short Get_Points();
 };
 
 class SimpleKey : public Collectable
@@ -794,9 +802,9 @@ void add_Wosu(int EnemyX, int EnemyY);
 
 void add_Guma(int EnemyX, int EnemyY);
 
-void add_RedPotion(int x, int y, unsigned short restore_amount, short id);
+void add_RedPotion(int x, int y, short id);
 
-void add_BluePotion(int x, int y, unsigned short restore_amount, short id);
+void add_BluePotion(int x, int y, short id);
 
 void add_PointBag(int x, int y);
 

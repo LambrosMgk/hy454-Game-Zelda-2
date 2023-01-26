@@ -79,7 +79,12 @@ void CheckCollisions()
 						Enemies[i]->Take_Damage(player->Get_Damage());
 
 						if(Enemies[i]->Get_Health() <= 0)
+						{
 							cout << typeid(*Enemies[i]).name() << " died \n";
+							gameObj.level->Add_Random_Drop(Enemies[i]->positionX, Enemies[i]->positionY);
+							delete Enemies[i];
+							Enemies.erase(Enemies.begin() + i);
+						}
 							
 
 						player->Set_WaitAfterHit(true);
@@ -96,7 +101,7 @@ void CheckCollisions()
 							(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY)))) // overlap condition
 					{
 						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
-						cout << "Player took " << Enemies[i]->Get_Damage() << " from " << typeid(*Enemies[i]).name() << " from behind \n";
+						cout << "Player got railed for " << Enemies[i]->Get_Damage() << " points from " << typeid(*Enemies[i]).name() << " from behind \n";
 						player->Take_Damage(Enemies[i]->Get_Damage());
 
 						if (player->Get_Health() <= 0) {
@@ -160,6 +165,20 @@ void CheckCollisions()
 						{
 							cout << "Blue potion removed\n";
 							//add effect of potion
+							delete Collectables[i];
+							Collectables.erase(Collectables.begin() + i);
+						}
+						else if (typeid(*Collectables[i]).name() == typeid(PointBag).name())
+						{
+							cout << "PointBag potion removed\n";
+							PointBag* bag = dynamic_cast<PointBag*>(Collectables[i]);
+							if (bag == NULL)
+							{
+								cout << "Error dynamic casting Pointbag, exiting...\n";
+								exit(-1);
+							}
+							player->Add_Score(bag->Get_Points());
+							cout << "Player score now : " << player->Get_Score() << '\n';
 							delete Collectables[i];
 							Collectables.erase(Collectables.begin() + i);
 						}
