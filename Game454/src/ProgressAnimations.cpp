@@ -162,7 +162,10 @@ void Animator()
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
 				{
+					Guma* guma = dynamic_cast<Guma*>(Enemies[i]);
+					assert(guma != NULL);
 
+					guma->Increment_Sprite_Counter();
 				}
 			}
 		}

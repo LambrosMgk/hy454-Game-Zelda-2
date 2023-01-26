@@ -119,6 +119,7 @@ class Grid;
 class Elevator;
 class Collectable;
 class Door;
+class Projectile;
 
 
 
@@ -132,6 +133,7 @@ extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
 extern std::vector<Collectable*> Collectables;
 extern std::vector<Door*> Doors;
+extern std::vector<Projectile*> Projectiles;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -284,7 +286,7 @@ private:
 	
 	int scrollDistanceX = 5, scrollDistanceY = 3;
 	float Health = 10;
-	unsigned short Keys = 0;
+	unsigned short Keys = 1;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 	bool WaitAfterHit = false;
 public:
@@ -297,6 +299,7 @@ public:
 	std::vector<Rect>FramesCrounch;
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 	std::vector<Rect>FramesCrounchSlash;
+	std::vector<Rect>FramesTakingDamageLeft, FramesTakingDamageRight;
 
 	Player(int _positionX, int _positionY);
 
@@ -605,13 +608,14 @@ class Projectile
 {
 protected:
 		unsigned int ProjectileSpriteNum = 0;	//counter for animation
-		int scrollDistanceX = 2, scrollDistanceY = 1;
+		float TimeToLive = 0;	//TTL counter for the life time of the projectile in seconds 
+		float scrollDistanceX = 2, scrollDistanceY = 1;
 		Direction direction = dir_right;
 public:
-	int positionX, positionY;
+	float positionX, positionY;
 	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
 
-	Projectile(int posX, int posY);
+	Projectile(float posX, float posY);
 
 	~Projectile();
 
@@ -619,13 +623,13 @@ public:
 
 	virtual Rect FrameToDraw() = 0;
 
-	void Set_Speed_X(int speedX);
+	void Set_Speed_X(float speedX);
 
-	int Get_Speed_X();
+	float Get_Speed_X();
 
-	void Set_Speed_Y(int speedY);
+	void Set_Speed_Y(float speedY);
 
-	int Get_Speed_Y();
+	float Get_Speed_Y();
 
 	void Load_Projectile_Spritesheet();
 
@@ -638,7 +642,7 @@ private:
 	std::vector<Rect> LungeFrames;
 
 public:
-	GumaAxe(int x, int y);
+	GumaAxe(float x, float y);
 
 	void Init_frames_bounding_boxes();
 

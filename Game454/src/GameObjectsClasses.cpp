@@ -9,6 +9,7 @@ std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
 std::vector<Collectable*> Collectables;
 std::vector<Door*> Doors;
+std::vector<Projectile*> Projectiles;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -852,6 +853,21 @@ void Player::Init_frames_bounding_boxes()
 	r->x = LINK_SPRITE_WIDTH * 18;
 	FramesCrounchSlash.push_back(*r);
 
+	//FramesTakingDamageLeft
+	r = new Rect;
+	r->h = LINK_SPRITE_HEIGHT * 2;
+	r->w = LINK_SPRITE_WIDTH;
+	r->y = 80;
+	r->x = 0 + 8;
+	FramesTakingDamageLeft.push_back(*r);
+
+	//FramesTakingDamageRight
+	r = new Rect;
+	r->h = LINK_SPRITE_HEIGHT * 2;
+	r->w = LINK_SPRITE_WIDTH;
+	r->y = 80;
+	r->x = 288;
+	FramesTakingDamageRight.push_back(*r);
 }
 
 void Player::Load_Player_Spritesheet() 
@@ -2048,7 +2064,9 @@ void Wosu::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 Guma::Guma(int x, int y) : Enemy(x, y)
 {
-
+	this->state = E_State_Idle;
+	if (x < al_get_bitmap_width(gameObj.level->bitmaps[0]))	//assume a level is loaded with bitmaps initialized
+		this->direction = dir_left;
 }
 
 void Guma::Init_frames_bounding_boxes() 
@@ -2073,19 +2091,16 @@ void Guma::Init_frames_bounding_boxes()
 	//FramesAttackingRight
 	for (int i = 0; i < 2; i++) {
 		r = new Rect;
-		
-		
-			r->h = ENEMY_SPRITE_HEIGHT * 2;
-			r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
-			r->y = 816 + 5;
-			if (i == 0)
-				r->x = 432 - 1;
-			else
-				r->x = 464 - 3;
 
+		r->h = ENEMY_SPRITE_HEIGHT * 2;
+		r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
+		r->y = 816 + 5;
+		if (i == 0)
+			r->x = 432 - 1;
+		else
+			r->x = 464 - 3;
 
-
-			FramesAttackingRight.push_back(*r);
+		FramesAttackingRight.push_back(*r);
 	}
 
 	//FramesWalkingLeft
@@ -2098,40 +2113,55 @@ void Guma::Init_frames_bounding_boxes()
 		if (i == 0)
 			r->x = 192 + 3;
 		else if (i == 1)
-			r->x = 208 + 12;
-		FramesWalkingRight.push_back(*r);
+			r->x = 224 - 3;
+		FramesWalkingLeft.push_back(*r);
 	}
 
 	//FramesAttackingLeft
-	for (int i = 0; i < 2; i++) {
-		r = new Rect;
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
 
+	r->y = 816 + 7;
+	r->x = 128 + 6;
+	FramesAttackingLeft.push_back(*r);
 
-		r->h = ENEMY_SPRITE_HEIGHT * 2;
-		r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
-		r->y = 816 + 5;
-		if (i == 0)
-			r->x = 128 + 5;
-		else
-			r->x = 160 + 4;
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT * 2;
+	r->w = ENEMY_SPRITE_WIDTH + ENEMY_SPRITE_WIDTH / 4;
 
-
-
-		FramesAttackingLeft.push_back(*r);
-	}
+	r->y = 816 + 7;
+	r->x = 160 + 5;
+	FramesAttackingLeft.push_back(*r);
 }
 
 void Guma::Increment_Sprite_Counter()
 {
-	if (this->state == E_State_Walking || this->state == E_State_Attacking)
+	if (this->state == E_State_Walking)
 	{
-		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking or attacking
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking
+	}
+	else if (this->state == E_State_Attacking)
+	{
+		if (this->EnemySpriteNum == 1)
+		{
+			this->Set_State(E_State_Idle);
+		}
+		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;
+	}
+	else if (this->state == E_State_Idle)
+	{
+		this->EnemySpriteNum = 0;
 	}
 }
 
 void Guma::Set_State(Enemy_State state) 
 {
-	if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
+	if (this->state == E_State_Idle && state == E_State_Attacking) //Idle -> Attacking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Idle && state == E_State_Walking) //Idle -> Walking
 	{
 		this->state = state;
 	}
@@ -2139,15 +2169,28 @@ void Guma::Set_State(Enemy_State state)
 	{
 		this->state = state;
 	}
+	else if (this->state == E_State_Attacking && state == E_State_Idle) //Attacking -> Idle
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Walking && state == E_State_Attacking) //Walking -> Attacking
+	{
+		this->state = state;
+	}
+	else if (this->state == E_State_Walking && state == E_State_Idle) //Walking -> Idle
+	{
+		this->state = state;
+	}
 }
 
 Rect Guma::FrameToDraw() 
 {
-	if (state == E_State_Walking && direction == dir_right)
+	if ((state == E_State_Walking || state == E_State_Idle) && direction == dir_right)
 	{
 		return FramesWalkingRight[EnemySpriteNum];
 	}
-	else if (state == E_State_Walking && direction == dir_left) {
+	else if ((state == E_State_Walking || state == E_State_Idle) && direction == dir_left)
+	{
 		return FramesWalkingLeft[EnemySpriteNum];
 	}
 	else if (state == E_State_Attacking && direction == dir_right)
@@ -2178,7 +2221,7 @@ void Guma::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 //Start of Projectile Class
 
-Projectile::Projectile(int posX, int posY)
+Projectile::Projectile(float posX, float posY)
 {
 	positionX = posX;
 	positionY = posY;
@@ -2189,22 +2232,22 @@ Projectile::~Projectile()
 
 }
 
-void Projectile::Set_Speed_X(int speedX)
+void Projectile::Set_Speed_X(float speedX)
 {
 	this->scrollDistanceX = speedX;
 }
 
-int Projectile::Get_Speed_X()
+float Projectile::Get_Speed_X()
 {
 	return this->scrollDistanceX;
 }
 
-void Projectile::Set_Speed_Y(int speedY)
+void Projectile::Set_Speed_Y(float speedY)
 {
 	this->scrollDistanceY = speedY;
 }
 
-int Projectile::Get_Speed_Y()
+float Projectile::Get_Speed_Y()
 {
 	return this->scrollDistanceY;
 }
@@ -2224,7 +2267,7 @@ void Projectile::Load_Projectile_Spritesheet()
 
 //Start of Axe Class
 
-GumaAxe::GumaAxe(int x, int y) : Projectile(x, y)
+GumaAxe::GumaAxe(float x, float y) : Projectile(x, y)
 {
 
 }

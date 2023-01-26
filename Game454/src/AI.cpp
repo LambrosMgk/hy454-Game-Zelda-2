@@ -100,7 +100,51 @@ void Calculate_AI()
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
 				{
+					Guma* guma = dynamic_cast<Guma*>(Enemies[i]);
+					assert(guma != NULL);
+					unsigned short tileDistanceX = DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (guma->positionX)));
+					
+					//if walking or idle and on the same height level as the player
+					if ((guma->Get_State() == E_State_Walking || guma->Get_State() == E_State_Idle) &&
+						DIV_TILE_HEIGHT(abs(player->positionY + player->screenY * DISPLAY_H - (guma->positionY))) < 5
+						)
+					{
+						//look at the player
+						if (player->positionX + player->screenX * DISPLAY_W < (guma->positionX))
+						{
+							guma->Set_Direction(dir_left);
+						}
+						else
+						{
+							guma->Set_Direction(dir_right);
+						}
 
+						//if the player enters a 9 tile range but still has at least 6 tiles distance, start attacking the player
+						if (tileDistanceX > 6 && tileDistanceX <= 9)
+						{
+							guma->Set_State(E_State_Attacking);
+							
+						}
+						else if (tileDistanceX <= 6)
+						{
+							//Start walking away
+							guma->Set_State(E_State_Walking);
+							if (guma->Get_Direction() == dir_left)
+							{
+								guma->Set_Direction(dir_right);
+								guma->Scroll_Enemy(guma->Get_Speed_X(), 0);
+							}
+							else
+							{
+								guma->Set_Direction(dir_left);
+								guma->Scroll_Enemy(-guma->Get_Speed_X(), 0);
+							}	
+						}
+						else
+						{
+							guma->Set_State(E_State_Idle);
+						}
+					}
 				}
 			}
 		}
