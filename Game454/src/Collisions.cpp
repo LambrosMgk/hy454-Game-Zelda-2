@@ -75,16 +75,23 @@ void CheckCollisions()
 
 					}
 				}
-				else if (player->Get_State() == State_CrounchAttacking) //while crounching link will not take damage from the front but can be damaged from behind
+				else if ((player->Get_State() == State_Crounching || player->Get_State() == State_CrounchAttacking) && player->Get_HurtInvicibility() == false) //while crounching link will not take damage from the front but can be damaged from behind
 				{
-					if (!((Enemies[i]->positionX + r.w < player->positionX + player->screenX * DISPLAY_W) ||
-						(player->positionX + rP.w + player->screenX * DISPLAY_W < Enemies[i]->positionX) ||
-						(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
-						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY))) /*No overlap condition*/
+					if (((player->Get_Direction() == dir_left && Enemies[i]->Get_Direction() == dir_left) ||
+						(player->Get_Direction() == dir_right && Enemies[i]->Get_Direction() == dir_right)) &&  //looking the same way
+						(!((Enemies[i]->positionX + r.w < player->positionX + player->screenX * DISPLAY_W) ||
+							(player->positionX + rP.w + player->screenX * DISPLAY_W < Enemies[i]->positionX) ||
+							(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
+							(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY)))) // overlap condition
 					{
-
-
+						cout << "Player getting RAILED with " << typeid(*Enemies[i]).name() << " from behind \n";
+						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
+						player->Take_Damage(1);
+						player->Set_HurtInvicibility(true);
+						al_start_timer(PlayerHurtTimer);
+						
 					}
+					
 
 
 				}
