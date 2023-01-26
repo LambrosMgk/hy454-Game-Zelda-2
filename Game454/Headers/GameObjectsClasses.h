@@ -622,6 +622,7 @@ class Projectile
 {
 protected:
 		unsigned int ProjectileSpriteNum = 0;	//counter for animation
+		int damage = 0;
 		float TimeToLive = 0;	//TTL, counter for the life time of the projectile in seconds 
 		float scrollDistanceX = 2, scrollDistanceY = 1;
 		Direction direction = dir_right;
@@ -657,6 +658,8 @@ public:
 	void Add_To_TTL(float time);
 
 	float Get_TTL();
+
+	int Get_Damage();
 };
 
 class GumaBall : public Projectile 

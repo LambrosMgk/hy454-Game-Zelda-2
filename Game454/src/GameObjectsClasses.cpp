@@ -2353,6 +2353,10 @@ float Projectile::Get_TTL()
 	return this->TimeToLive;
 }
 
+int Projectile::Get_Damage()
+{
+	return this->damage;
+}
 
 //End of Projectile Class
 
@@ -2360,6 +2364,7 @@ float Projectile::Get_TTL()
 
 GumaBall::GumaBall(float x, float y, Direction dir) : Projectile(x, y)
 {
+	this->damage = 10;
 	this->direction = dir;
 	this->scrollDistanceY = 0.2;
 	this->scrollDistanceX = 2;
