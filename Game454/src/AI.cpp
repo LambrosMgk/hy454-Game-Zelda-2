@@ -123,7 +123,6 @@ void Calculate_AI()
 						if (tileDistanceX > 6 && tileDistanceX <= 9)
 						{
 							guma->Set_State(E_State_Attacking);
-							
 						}
 						else if (tileDistanceX <= 6)
 						{

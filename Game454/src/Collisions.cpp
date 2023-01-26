@@ -125,9 +125,6 @@ void CheckCollisions()
 						al_start_timer(PlayerHitTimer);
 					
 					}
-					
-
-
 				}
 			}
 

@@ -168,6 +168,12 @@ void Animator()
 					guma->Increment_Sprite_Counter();
 				}
 			}
+
+			//Animation for projectiles
+			for (unsigned int i = 0; i < Projectiles.size(); i++)
+			{
+				Projectiles[i]->Increment_Sprite_Counter();
+			}
 		}
 	}
 }

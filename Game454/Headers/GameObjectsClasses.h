@@ -616,12 +616,11 @@ class Projectile
 {
 protected:
 		unsigned int ProjectileSpriteNum = 0;	//counter for animation
-		float TimeToLive = 0;	//TTL counter for the life time of the projectile in seconds 
+		float TimeToLive = 0;	//TTL, counter for the life time of the projectile in seconds 
 		float scrollDistanceX = 2, scrollDistanceY = 1;
 		Direction direction = dir_right;
+		float positionX, positionY;
 public:
-	float positionX, positionY;
-	ALLEGRO_BITMAP* ProjectileSpriteSheet = NULL;
 
 	Projectile(float posX, float posY);
 
@@ -629,7 +628,17 @@ public:
 
 	virtual void Init_frames_bounding_boxes() = 0;	//pure virtual
 
+	virtual void Increment_Sprite_Counter() = 0;
+
 	virtual Rect FrameToDraw() = 0;
+
+	virtual void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY) = 0;
+
+	Direction Get_Direction();
+
+	float Get_Position_X();
+
+	float Get_Position_Y();
 
 	void Set_Speed_X(float speedX);
 
@@ -639,20 +648,22 @@ public:
 
 	float Get_Speed_Y();
 
-	void Load_Projectile_Spritesheet();
+	void Add_To_TTL(float time);
 
-	virtual void Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY) = 0;
+	float Get_TTL();
 };
 
-class GumaAxe : public Projectile 
+class GumaBall : public Projectile 
 {
 private:
-	std::vector<Rect> LungeFrames;
+	std::vector<Rect> LungeFramesLeft, LungeFramesRight;
 
 public:
-	GumaAxe(float x, float y);
+	GumaBall(float x, float y, Direction dir);
 
 	void Init_frames_bounding_boxes();
+
+	void Increment_Sprite_Counter();
 
 	Rect FrameToDraw();
 
@@ -792,3 +803,6 @@ void add_PointBag(int x, int y);
 void add_SimpleKey(int x, int y);
 
 void add_UpDoll(int x, int y);
+
+//projectiles
+void create_Guma_Ball(int x, int y, Direction dir);

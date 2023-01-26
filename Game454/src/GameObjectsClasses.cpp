@@ -2176,6 +2176,14 @@ void Guma::Increment_Sprite_Counter()
 	{
 		if (this->EnemySpriteNum == 1)
 		{
+			if (this->direction == dir_left)
+			{
+				create_Guma_Ball(this->positionX - 8, this->positionY, this->direction);
+			}
+			else
+			{
+				create_Guma_Ball(this->positionX + 8, this->positionY, this->direction);
+			}
 			this->Set_State(E_State_Idle);
 		}
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;
@@ -2263,6 +2271,21 @@ Projectile::~Projectile()
 
 }
 
+Direction Projectile::Get_Direction()
+{
+	return this->direction;
+}
+
+float Projectile::Get_Position_X()
+{
+	return this->positionX;
+}
+
+float Projectile::Get_Position_Y()
+{
+	return this->positionY;
+}
+
 void Projectile::Set_Speed_X(float speedX)
 {
 	this->scrollDistanceX = speedX;
@@ -2283,64 +2306,93 @@ float Projectile::Get_Speed_Y()
 	return this->scrollDistanceY;
 }
 
-void Projectile::Load_Projectile_Spritesheet()
+void Projectile::Add_To_TTL(float time)
 {
-	this->ProjectileSpriteSheet = al_load_bitmap(ENEMY1_SPRITES_PATH);
-	if (this->ProjectileSpriteSheet == NULL)
-	{
-		fprintf(stderr, "\nFailed to initialize ProjectileSpriteSheet (al_load_bitmap() failed).\n");
-		exit(-1);
-	}
+	this->TimeToLive += time;
+}
+
+float Projectile::Get_TTL()
+{
+	return this->TimeToLive;
 }
 
 
 //End of Projectile Class
 
-//Start of Axe Class
+//Start of GumaBall Class
 
-GumaAxe::GumaAxe(float x, float y) : Projectile(x, y)
+GumaBall::GumaBall(float x, float y, Direction dir) : Projectile(x, y)
 {
-
+	this->direction = dir;
+	this->TimeToLive = 2 * 60;	//in physics every "tick" happens 60 times per second
+	//so for the TTL we have seconds * 60
 }
 
-void GumaAxe::Init_frames_bounding_boxes() 
+//based on the normal enemy1 sprite sheet
+void GumaBall::Init_frames_bounding_boxes() 
 {
 	Rect* r;
-	int i = 0;
 
-	//FramesLunging
-	for (int i = 0; i < 4; i++)
+	//LungeFramesRight
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 496 - 1;
+	LungeFramesRight.push_back(*r);
+
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 528 + 1;
+	LungeFramesRight.push_back(*r);
+
+	//LungeFramesLeft
+	r = new Rect;
+
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 512 - 1;
+	LungeFramesLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 544;
+	LungeFramesLeft.push_back(*r);
+}
+
+void GumaBall::Increment_Sprite_Counter()
+{
+	this->ProjectileSpriteNum = ++this->ProjectileSpriteNum % 2;
+}
+
+Rect GumaBall::FrameToDraw() 
+{
+	if (this->direction == dir_left)
 	{
-		r = new Rect;
-		
-		r->h = ENEMY_SPRITE_HEIGHT;
-		r->w = 2 * ENEMY_SPRITE_WIDTH;
-		r->y = 816 + 13;
-		if (i == 0)
-			r->x = 496 - 1;
-		else if (i == 1)
-			r->x = 512 - 1;
-		else if (i == 2)
-			r->x = 528 + 1;
-		else
-			r->x = 544 + 4;
-		
-		LungeFrames.push_back(*r);
+		return LungeFramesLeft[ProjectileSpriteNum];
+	}
+	else
+	{
+		return LungeFramesRight[ProjectileSpriteNum];
 	}
 }
 
-Rect GumaAxe::FrameToDraw() 
+void GumaBall::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
 {
-	return LungeFrames[ProjectileSpriteNum];
-}
-
-void GumaAxe::Scroll_Projectile(float ScrollDistanceX, float ScrollDistanceY)
-{
-	this->positionX += ScrollDistanceX;
+	if(this->direction == dir_left)
+		this->positionX -= ScrollDistanceX;
+	else
+		this->positionX += ScrollDistanceX;
 	this->positionY += ScrollDistanceY;
 }
 
-//End of Axe Class
+//End of GumaBall Class
 
 //Start of Collectable
 
@@ -2764,4 +2816,12 @@ void add_UpDoll(int x, int y)
 	UpDoll* updoll = new UpDoll(x, y);
 	updoll->Init_frames_bounding_boxes();
 	Collectables.push_back(updoll);
+}
+
+//projectiles
+void create_Guma_Ball(int x, int y, Direction dir)
+{
+	GumaBall* ball = new GumaBall(x, y, dir);
+	ball->Init_frames_bounding_boxes();
+	Projectiles.push_back(ball);
 }

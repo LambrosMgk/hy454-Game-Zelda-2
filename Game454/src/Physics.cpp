@@ -7,7 +7,7 @@ bool scrollUp = false;
 
 void Physics_Init()
 {
-	PhysicsTimer = al_create_timer(1.0 / 60.0);
+	PhysicsTimer = al_create_timer(1.0 / 60.0);	//maybe change this with the FPStimer
 	PhysicsQueue = al_create_event_queue();
 	al_register_event_source(PhysicsQueue, al_get_timer_event_source(PhysicsTimer));
 	al_start_timer(PhysicsTimer);
@@ -68,6 +68,7 @@ void Calculate_Physics()
 				gameObj.level->Scroll_Bitmap();
 			}
 
+			//physics for enemies
 			for (unsigned short i = 0; i < Enemies.size(); i++)
 			{
 				int e_scrollx = 0, e_scrolly = 0;
@@ -128,6 +129,22 @@ void Calculate_Physics()
 				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
 				{
 
+				}
+			}
+
+			//physics for projectiles
+			for (unsigned int i = 0; i < Projectiles.size(); i++)
+			{
+				Projectiles[i]->Add_To_TTL(-1);
+				Projectiles[i]->Scroll_Projectile(Projectiles[i]->Get_Speed_X(), 0);
+				//also check the grid for solid collision
+				
+				
+				if (Projectiles[i]->Get_TTL() <= 0)	//delete projectile
+				{
+					//cout << "Projectile died\n";
+					delete Projectiles[i];	//calls destructor of object
+					Projectiles.erase(Projectiles.begin() + i);
 				}
 			}
 		}

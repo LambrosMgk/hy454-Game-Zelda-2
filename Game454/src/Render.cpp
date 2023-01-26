@@ -38,6 +38,20 @@ void Paint_Collectables_to_Screen()
 	}
 }
 
+//using EnemySpriteSheetRight because there are both left and right directions for projectiles in there
+void Paint_Projectiles_to_Screen()
+{
+	for (unsigned int i = 0; i < Projectiles.size(); i++)
+	{
+		Rect r = Projectiles[i]->FrameToDraw();
+		
+		if ((gameObj.level->ScreenX == (int)Projectiles[i]->Get_Position_X() / DISPLAY_W) && (gameObj.level->ScreenY == (int)Projectiles[i]->Get_Position_Y() / DISPLAY_H))
+		{
+			al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, (int)Projectiles[i]->Get_Position_X() % DISPLAY_W, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H, 0);
+		}
+	}
+}
+
 void Draw_Level(Level *level, unsigned int layer)
 {
 	assert(level != NULL);
@@ -143,6 +157,12 @@ void DisplayGrid(unsigned int grid_num)
 		if ((gameObj.level->ScreenX == Collectables[i]->positionX / DISPLAY_W) && (gameObj.level->ScreenY == Collectables[i]->positionY / DISPLAY_H))
 			al_draw_rectangle(Collectables[i]->positionX % DISPLAY_W, Collectables[i]->positionY % DISPLAY_H, Collectables[i]->positionX % DISPLAY_W + Collectables[i]->FrameToDraw().w, Collectables[i]->positionY % DISPLAY_H + Collectables[i]->FrameToDraw().h, al_map_rgba(0, 0, 255, 64), 2.0);
 	}
+	/*Projectiles hitbox*/
+	for (unsigned int i = 0; i < Projectiles.size(); i++)
+	{
+		if ((gameObj.level->ScreenX == (int)Projectiles[i]->Get_Position_X() / DISPLAY_W) && (gameObj.level->ScreenY == (int)Projectiles[i]->Get_Position_Y() / DISPLAY_H))
+			al_draw_rectangle((int)Projectiles[i]->Get_Position_X() % DISPLAY_W, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H, (int)Projectiles[i]->Get_Position_X() % DISPLAY_W + Projectiles[i]->FrameToDraw().w, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H + Projectiles[i]->FrameToDraw().h, al_map_rgba(255, 165, 0, 64), 2.0);
+	}
 }
 
 void Renderer()
@@ -180,6 +200,7 @@ void Renderer()
 			Paint_Collectables_to_Screen();
 			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
+			Paint_Projectiles_to_Screen();
 
 			if (gameObj.level->Toggle_Grid)
 			{
