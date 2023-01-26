@@ -285,7 +285,9 @@ private:
 	Direction direction = dir_right;
 	
 	int scrollDistanceX = 5, scrollDistanceY = 3;
-	float Health = 10;
+	int HP = 100;
+	int Points = 0;
+	int Dmg = 10;
 	unsigned short Keys = 1;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 	bool WaitAfterHit = false;
@@ -335,13 +337,15 @@ public:
 
 	Rect FrameToDraw();
 
-	float Get_Health();
+	int Get_Health();
 
-	void Set_Health(float health);
+	void Set_Health(int health);
 
-	void Take_Damage(float health_damage);
+	int Get_Damage();
 
-	void Heal(float health_gain);
+	void Take_Damage(int health_damage);
+
+	void Heal(int health_gain);
 
 	void Set_HurtInvicibility(bool hi);
 
@@ -465,8 +469,8 @@ protected:
 	int scrollDistanceX = 1, scrollDistanceY = 3;
 	Direction direction = dir_right;
 
-	float Health = 1.0, damage = 0.0;
-	int Points = 1;
+	int HP , dmg;
+	int Points;
 public:
 	int positionX, positionY;
 	
@@ -506,13 +510,17 @@ public:
 
 	virtual void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY) = 0;
 
-	float Get_Health();
+	int Get_Health();
 
-	void Set_Health(float health);
+	void Set_Health(int health);
 
-	void Take_Damage(float health_damage);
+	int Get_Damage();
 
-	void Heal(float health_gain);
+	void Set_Damage(int dmg);
+
+	void Take_Damage(int health_damage);
+
+	void Heal(int health_gain);
 
 	void Set_Points(int points);
 

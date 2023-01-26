@@ -922,24 +922,29 @@ Rect Player::FrameToDraw()
 	}
 }
 
-float Player::Get_Health()
+int Player::Get_Health()
 {
-	return this->Health;
+	return this->HP;
 }
 
-void Player::Set_Health(float health)
+void Player::Set_Health(int health)
 {
-	this->Health = health;
+	this->HP = health;
 }
 
-void Player::Take_Damage(float health_damage)
+int Player::Get_Damage()
 {
-	this->Health -= health_damage;
+	return this->Dmg;
 }
 
-void Player::Heal(float health_gain)
+void Player::Take_Damage(int health_damage)
 {
-	this->Health += health_gain;
+	this->HP -= health_damage;
+}
+
+void Player::Heal(int health_gain)
+{
+	this->HP += health_gain;
 }
 
 void Player::Set_HurtInvicibility(bool hi)
@@ -1546,24 +1551,24 @@ Enemy_State Enemy::Get_State()
 	return this->state;
 }
 
-float Enemy::Get_Health()
+int Enemy::Get_Health()
 {
-	return this->Health;
+	return this->HP;
 }
 
-void Enemy::Set_Health(float health)
+void Enemy::Set_Health(int health)
 {
-	this->Health = health;
+	this->HP = health;
 }
 
-void Enemy::Take_Damage(float health_damage)
+void Enemy::Take_Damage(int health_damage)
 {
-	this->Health -= health_damage;
+	this->HP -= health_damage;
 }
 
-void Enemy::Heal(float health_gain)
+void Enemy::Heal(int health_gain)
 {
-	this->Health += health_gain;
+	this->HP += health_gain;
 }
 
 void Enemy::Set_Points(int points)
@@ -1576,6 +1581,15 @@ int Enemy::Get_Points()
 	return this->Points;
 }
 
+void Enemy::Set_Damage(int dmg) 
+{
+	this->dmg = dmg;
+}
+
+int Enemy::Get_Damage() 
+{
+	return this->dmg;
+}
 //end of class enemy
 
 //Start of Stalfos Class
@@ -1583,6 +1597,9 @@ int Enemy::Get_Points()
 Stalfos::Stalfos(int x, int y) : Enemy(x, y) 
 {
 	this->state = E_State_Waiting;
+	this->HP = 32;
+	this->Points = 30;
+	this->dmg = 20;
 }
 
 void Stalfos::Init_frames_bounding_boxes() 
@@ -1687,6 +1704,7 @@ void Stalfos::Init_frames_bounding_boxes()
 
 void Stalfos::Increment_Sprite_Counter()
 {
+	this->dmg = 10;
 	if (this->state == E_State_Idle)
 	{
 		this->EnemySpriteNum = 0;
@@ -1699,6 +1717,7 @@ void Stalfos::Increment_Sprite_Counter()
 	{
 		if (this->EnemySpriteNum == 2)
 		{
+			
 			this->state = E_State_Walking;	//change state before resetting the sprite counter
 			if (this->direction == dir_left)	//offset reset
 				this->positionX += 16;
@@ -1706,13 +1725,15 @@ void Stalfos::Increment_Sprite_Counter()
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 3;	//3 frames for attacking
 		if (this->EnemySpriteNum == 2)
 		{
-			this->damage = 2;	//maybe temporarily change the damage at the last frame of the attack
+			this->dmg = 20;
 			if (this->direction == dir_left)	//offset for a nice animation and accurate hitbox
 				this->positionX -= 16;
 		}
 	}
 	else if (this->state == E_State_Falling || this->state == E_State_Waiting)
 	{
+		if(this->state == E_State_Falling)
+			this->dmg = 20;
 		this->EnemySpriteNum = 0;	//1 frame for falling
 	}
 }
@@ -1790,6 +1811,9 @@ Rect Stalfos::FrameToDraw()
 PalaceBot::PalaceBot(int x, int y) : Enemy(x, y)
 {
 	this->scrollDistanceY = 6;
+	this->HP = 16;
+	this->Points = 10;
+	this->dmg = 5;
 }
 
 void PalaceBot::Init_frames_bounding_boxes() 
@@ -1840,6 +1864,7 @@ void PalaceBot::Init_frames_bounding_boxes()
 
 void PalaceBot::Increment_Sprite_Counter()
 {
+	this->dmg = 5;
 	if (this->state == E_State_Walking)
 	{
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//1 frame for walking and 1 frame of falling
@@ -1941,6 +1966,8 @@ void PalaceBot::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 //Start of Wosu Class
 Wosu::Wosu(int x, int y) : Enemy(x, y)
 {
+	this->HP = 8;
+	this->Points = 0;
 	StartPosX = positionX;
 	StartPosY = positionY;
 	//check the tiles in the direction wosu is looking at and if there is any solid tiles or screen changing
@@ -2002,6 +2029,7 @@ void Wosu::Init_frames_bounding_boxes()
 
 void Wosu::Increment_Sprite_Counter()
 {
+	this->dmg = 10;
 	if (this->state == E_State_Walking)
 	{
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking
@@ -2064,6 +2092,8 @@ void Wosu::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 
 Guma::Guma(int x, int y) : Enemy(x, y)
 {
+	this->HP = 64;
+	this->Points = 50;
 	this->state = E_State_Idle;
 	if (x < al_get_bitmap_width(gameObj.level->bitmaps[0]))	//assume a level is loaded with bitmaps initialized
 		this->direction = dir_left;
@@ -2137,6 +2167,7 @@ void Guma::Init_frames_bounding_boxes()
 
 void Guma::Increment_Sprite_Counter()
 {
+	this->dmg = 10;
 	if (this->state == E_State_Walking)
 	{
 		this->EnemySpriteNum = ++this->EnemySpriteNum % 2;	//2 frames for walking

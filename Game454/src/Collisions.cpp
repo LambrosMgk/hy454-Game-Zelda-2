@@ -52,9 +52,15 @@ void CheckCollisions()
 						(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
 						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY))) /*No overlap condition*/
 					{
-						cout << "Player Collision with " << typeid(*Enemies[i]).name() << '\n';
 						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
-						player->Take_Damage(1);
+						cout << "Player took " << Enemies[i]->Get_Damage() << " from " << typeid(*Enemies[i]).name() << '\n';
+						player->Take_Damage(Enemies[i]->Get_Damage());
+						
+
+						if (player->Get_Health() <= 0) {
+							cout << "Player died \n" ;
+						}
+						
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 
@@ -69,7 +75,13 @@ void CheckCollisions()
 						(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
 						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY))) /*No overlap condition*/
 					{
-						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << '\n';
+						cout << typeid(*Enemies[i]).name() << "took "<< player->Get_Damage() << " damage from player \n";
+						Enemies[i]->Take_Damage(player->Get_Damage());
+
+						if(Enemies[i]->Get_Health() <= 0)
+							cout << typeid(*Enemies[i]).name() << " died \n";
+							
+
 						player->Set_WaitAfterHit(true);
 						al_start_timer(PlayerHitTimer);
 					}
@@ -83,9 +95,15 @@ void CheckCollisions()
 							(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
 							(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY)))) // overlap condition
 					{
-						cout << "Player getting RAILED with " << typeid(*Enemies[i]).name() << " from behind \n";
 						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
-						player->Take_Damage(1);
+						cout << "Player took " << Enemies[i]->Get_Damage() << " from " << typeid(*Enemies[i]).name() << " from behind \n";
+						player->Take_Damage(Enemies[i]->Get_Damage());
+
+						if (player->Get_Health() <= 0) {
+							cout << "Player died \n";
+						}
+
+
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 					}
@@ -97,7 +115,12 @@ void CheckCollisions()
 						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY)))) 
 					{
 					
-						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << " while crouching\n";
+						cout << typeid(*Enemies[i]).name() << "took " << player->Get_Damage() << " damage from player while crounching\n";
+						Enemies[i]->Take_Damage(player->Get_Damage());
+
+						if (Enemies[i]->Get_Health() <= 0)
+							cout << typeid(*Enemies[i]).name() << " died \n";
+
 						player->Set_WaitAfterHit(true);
 						al_start_timer(PlayerHitTimer);
 					
