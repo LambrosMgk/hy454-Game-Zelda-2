@@ -131,12 +131,10 @@ void Calculate_AI()
 							if (guma->Get_Direction() == dir_left)
 							{
 								guma->Set_Direction(dir_right);
-								guma->Scroll_Enemy(guma->Get_Speed_X(), 0);
 							}
 							else
 							{
 								guma->Set_Direction(dir_left);
-								guma->Scroll_Enemy(-guma->Get_Speed_X(), 0);
 							}	
 						}
 						else

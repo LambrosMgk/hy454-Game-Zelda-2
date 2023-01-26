@@ -2324,6 +2324,8 @@ float Projectile::Get_TTL()
 GumaBall::GumaBall(float x, float y, Direction dir) : Projectile(x, y)
 {
 	this->direction = dir;
+	this->scrollDistanceY = 0.2;
+	this->scrollDistanceX = 2;
 	this->TimeToLive = 2 * 60;	//in physics every "tick" happens 60 times per second
 	//so for the TTL we have seconds * 60
 }
@@ -2335,12 +2337,26 @@ void GumaBall::Init_frames_bounding_boxes()
 
 	//LungeFramesRight
 	r = new Rect;
+
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 512 - 1;
+	LungeFramesRight.push_back(*r);
+
+	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
 	r->x = 496 - 1;
 	LungeFramesRight.push_back(*r);
 
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 544;
+	LungeFramesRight.push_back(*r);
 
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
@@ -2355,20 +2371,34 @@ void GumaBall::Init_frames_bounding_boxes()
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
-	r->x = 512 - 1;
+	r->x = 96;
 	LungeFramesLeft.push_back(*r);
 
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
-	r->x = 544;
+	r->x = 112;
+	LungeFramesLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 64 - 4;
+	LungeFramesLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 80 - 2;
 	LungeFramesLeft.push_back(*r);
 }
 
 void GumaBall::Increment_Sprite_Counter()
 {
-	this->ProjectileSpriteNum = ++this->ProjectileSpriteNum % 2;
+	this->ProjectileSpriteNum = ++this->ProjectileSpriteNum % 4;
 }
 
 Rect GumaBall::FrameToDraw() 
