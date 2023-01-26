@@ -72,7 +72,6 @@ void CheckCollisions()
 						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << '\n';
 						player->Set_WaitAfterHit(true);
 						al_start_timer(PlayerHitTimer);
-
 					}
 				}
 				else if ((player->Get_State() == State_Crounching || player->Get_State() == State_CrounchAttacking) && player->Get_HurtInvicibility() == false) //while crounching link will not take damage from the front but can be damaged from behind
@@ -89,7 +88,6 @@ void CheckCollisions()
 						player->Take_Damage(1);
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
-						
 					}
 
 					if ((player->Get_State() == State_CrounchAttacking && player->Get_WaitAfterHit() == false) && 
