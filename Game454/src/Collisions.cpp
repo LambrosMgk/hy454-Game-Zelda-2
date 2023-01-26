@@ -91,6 +91,19 @@ void CheckCollisions()
 						al_start_timer(PlayerHurtTimer);
 						
 					}
+
+					if ((player->Get_State() == State_CrounchAttacking && player->Get_WaitAfterHit() == false) && 
+						(!((Enemies[i]->positionX + r.w < player->positionX + player->screenX * DISPLAY_W) ||
+						(player->positionX + rP.w + player->screenX * DISPLAY_W < Enemies[i]->positionX) ||
+						(Enemies[i]->positionY + r.h < player->positionY + player->screenY * DISPLAY_H) ||
+						(player->positionY + rP.h + player->screenY * DISPLAY_H < Enemies[i]->positionY)))) 
+					{
+					
+						cout << "Sword Collision with " << typeid(*Enemies[i]).name() << " while crouching\n";
+						player->Set_WaitAfterHit(true);
+						al_start_timer(PlayerHitTimer);
+					
+					}
 					
 
 
