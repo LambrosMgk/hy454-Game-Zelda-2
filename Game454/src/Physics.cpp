@@ -128,19 +128,42 @@ void Calculate_Physics()
 				}
 				else if (typeid(*Enemies[i]).name() == typeid(Guma).name())
 				{
+					Guma* guma = dynamic_cast<Guma*>(Enemies[i]);
+					assert(guma != NULL);
 
+					if (guma->Get_State() == E_State_Walking)
+					{
+						e_scrollx = guma->Get_Speed_X();
+						e_scrolly = 0;
+						if (guma->Get_Direction() == dir_left)
+							e_scrollx = -e_scrollx;
+
+						gameObj.level->grids[0]->FilterEnemyGridMotion(guma, &e_scrollx, &e_scrolly);
+						guma->Scroll_Enemy(e_scrollx, e_scrolly);
+					}
 				}
 			}
 
 			//physics for projectiles
 			for (unsigned int i = 0; i < Projectiles.size(); i++)
 			{
+				bool hitSolid = false;
 				Projectiles[i]->Add_To_TTL(-1);
-				Projectiles[i]->Scroll_Projectile(Projectiles[i]->Get_Speed_X(), 0);
+				Projectiles[i]->Scroll_Projectile(Projectiles[i]->Get_Speed_X(), Projectiles[i]->Get_Speed_Y());
 				//also check the grid for solid collision
+				if ((Projectiles[i]->Get_Direction() == dir_left) &&
+					(gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT((int)Projectiles[i]->Get_Position_Y()) + 1, DIV_TILE_WIDTH((int)Projectiles[i]->Get_Position_X())) & GRID_SOLID_TILE) ||
+					(gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT((int)Projectiles[i]->Get_Position_Y()), DIV_TILE_WIDTH((int)Projectiles[i]->Get_Position_X()) - 1) & GRID_SOLID_TILE))
+				{
+					hitSolid = true;
+				}
+				else if((gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT((int)Projectiles[i]->Get_Position_Y()), DIV_TILE_WIDTH((int)Projectiles[i]->Get_Position_X()) + 1) & GRID_SOLID_TILE) ||
+					(gameObj.level->grids[0]->GetGridTile(DIV_TILE_HEIGHT((int)Projectiles[i]->Get_Position_Y()) + 1, DIV_TILE_WIDTH((int)Projectiles[i]->Get_Position_X())) & GRID_SOLID_TILE))
+				{
+					hitSolid = true;
+				}
 				
-				
-				if (Projectiles[i]->Get_TTL() <= 0)	//delete projectile
+				if (Projectiles[i]->Get_TTL() <= 0 || hitSolid == true)	//delete projectile
 				{
 					//cout << "Projectile died\n";
 					delete Projectiles[i];	//calls destructor of object

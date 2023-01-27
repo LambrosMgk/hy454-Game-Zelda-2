@@ -268,32 +268,32 @@ void Level::Load_Objects()
 			// i goes through rows == height == Y, j goes through columns == width == X
 			if (TileMapCSV[1][i][j] == BLUEPOTION1_ID)
 			{
-				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 30, 1);
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, BLUEPOTION1_ID);
 				grids[1]->SetEmptyGridTile(i, j);	//some transparent tiles that i use for spawn marking are marked as solid which is wrong
 			}
 			else if (TileMapCSV[1][i][j] == BLUEPOTION2_ID)
 			{
-				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 24, 2);
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, BLUEPOTION2_ID);
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == BLUEPOTION3_ID)
 			{
-				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, 16, 3);
+				add_BluePotion(j * TILE_WIDTH, i * TILE_HEIGHT, BLUEPOTION3_ID);
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == REDPOTION1_ID)
 			{
-				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 128, 1);
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, REDPOTION1_ID);
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == REDPOTION2_ID)
 			{
-				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 96, 2);
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, REDPOTION2_ID);
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == REDPOTION3_ID)
 			{
-				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, 60, 3);
+				add_RedPotion(j * TILE_WIDTH, i * TILE_HEIGHT, REDPOTION3_ID);
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 			else if (TileMapCSV[1][i][j] == POINTBAG_ID)
@@ -312,6 +312,30 @@ void Level::Load_Objects()
 				grids[1]->SetEmptyGridTile(i, j);
 			}
 		}
+	}
+}
+
+void Level::Add_Random_Drop(int x, int y)
+{
+	int LowerBound = 0, UpperBound = 3;
+	int choice = rand() % (UpperBound + 1 - LowerBound) + LowerBound;
+
+	if (this->grids[0]->GetGridTile(DIV_TILE_HEIGHT(y), DIV_TILE_HEIGHT(x)) == 0)	//0 == empty tile
+	{
+		y += TILE_HEIGHT;
+	}
+
+	switch (choice)
+	{
+	case 0:
+		add_RedPotion(x, y, REDPOTION2_ID);
+		break;
+	case 1:
+		add_BluePotion(x, y, BLUEPOTION2_ID);
+		break;
+	case 2:
+		add_PointBag(x, y);
+		break;
 	}
 }
 //End of Class Level
@@ -375,6 +399,9 @@ void GameLogic::End_Game()
 
 void GameLogic::Load_Level(unsigned short levelNum)
 {
+	// Seed the random number generator (will be used for looting)
+	srand(time(0));
+
 	Init_Player(StartPlayerPositionX, StartPlayerPositionY);
 	
 	Level* level = new Level();
@@ -986,6 +1013,16 @@ void Player::Set_Keys(unsigned short keys)
 unsigned short Player::Get_Keys()
 {
 	return this->Keys;
+}
+
+void Player::Add_Score(int score)
+{
+	this->Points += score;
+}
+
+int Player::Get_Score()
+{
+	return this->Points;
 }
 
 //end of class Player functions
@@ -2316,6 +2353,10 @@ float Projectile::Get_TTL()
 	return this->TimeToLive;
 }
 
+int Projectile::Get_Damage()
+{
+	return this->damage;
+}
 
 //End of Projectile Class
 
@@ -2323,7 +2364,10 @@ float Projectile::Get_TTL()
 
 GumaBall::GumaBall(float x, float y, Direction dir) : Projectile(x, y)
 {
+	this->damage = 10;
 	this->direction = dir;
+	this->scrollDistanceY = 0.2;
+	this->scrollDistanceX = 2;
 	this->TimeToLive = 2 * 60;	//in physics every "tick" happens 60 times per second
 	//so for the TTL we have seconds * 60
 }
@@ -2335,12 +2379,26 @@ void GumaBall::Init_frames_bounding_boxes()
 
 	//LungeFramesRight
 	r = new Rect;
+
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 512 - 1;
+	LungeFramesRight.push_back(*r);
+
+	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
 	r->x = 496 - 1;
 	LungeFramesRight.push_back(*r);
 
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 544;
+	LungeFramesRight.push_back(*r);
 
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
@@ -2355,20 +2413,34 @@ void GumaBall::Init_frames_bounding_boxes()
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
-	r->x = 512 - 1;
+	r->x = 96;
 	LungeFramesLeft.push_back(*r);
 
 	r = new Rect;
 	r->h = ENEMY_SPRITE_HEIGHT;
 	r->w = ENEMY_SPRITE_WIDTH;
 	r->y = 832 - 3;
-	r->x = 544;
+	r->x = 112;
+	LungeFramesLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 64 - 4;
+	LungeFramesLeft.push_back(*r);
+
+	r = new Rect;
+	r->h = ENEMY_SPRITE_HEIGHT;
+	r->w = ENEMY_SPRITE_WIDTH;
+	r->y = 832 - 3;
+	r->x = 80 - 2;
 	LungeFramesLeft.push_back(*r);
 }
 
 void GumaBall::Increment_Sprite_Counter()
 {
-	this->ProjectileSpriteNum = ++this->ProjectileSpriteNum % 2;
+	this->ProjectileSpriteNum = ++this->ProjectileSpriteNum % 4;
 }
 
 Rect GumaBall::FrameToDraw() 
@@ -2411,12 +2483,25 @@ Collectable::~Collectable()
 
 //Start of RedPotion
 
-RedPotion::RedPotion(int x, int y) : Collectable(x, y) 
+RedPotion::RedPotion(int x, int y, int id) : Collectable(x, y) 
 {
 	RedPotionFrame.h = 0;
 	RedPotionFrame.w = 0;
 	RedPotionFrame.x = 0;
 	RedPotionFrame.y = 0;
+
+	if (id == REDPOTION1_ID)
+	{
+		this->restore = 128;
+	}
+	else if (id == REDPOTION2_ID)
+	{
+		this->restore = 96;
+	}
+	else if (id == REDPOTION3_ID)
+	{
+		this->restore = 60;
+	}
 }
 
 void RedPotion::Init_frames_bounding_boxes() 
@@ -2443,12 +2528,12 @@ void RedPotion::Init_frames_bounding_boxes(unsigned short id)
 
 	r->h = OBJECT_SPRITE_HEIGHT;
 	r->w = OBJECT_SPRITE_WIDTH;
-	if (id == 1)
+	if (id == REDPOTION1_ID)
 	{
 		r->y = 16 - 5;
 		r->x = 40 + 1;	// 6*8 with tile width 8
 	}
-	else if (id == 2)
+	else if (id == REDPOTION2_ID)
 	{
 		r->y = 16 - 5;
 		r->x = 48 + 2;
@@ -2481,12 +2566,25 @@ unsigned short RedPotion::Get_Restore_Amount()
 
 //Start of BluePotion
 
-BluePotion::BluePotion(int x, int y) : Collectable(x, y) 
+BluePotion::BluePotion(int x, int y, int id) : Collectable(x, y) 
 {
 	BluePotionFrame.h = 0;
 	BluePotionFrame.w = 0;
 	BluePotionFrame.x = 0;
 	BluePotionFrame.y = 0;
+
+	if (id == BLUEPOTION1_ID)
+	{
+		this->restore = 30;
+	}
+	else if (id == BLUEPOTION2_ID)
+	{
+		this->restore = 24;
+	}
+	else if (id == BLUEPOTION3_ID)
+	{
+		this->restore = 16;
+	}
 }
 
 void BluePotion::Init_frames_bounding_boxes()
@@ -2513,12 +2611,12 @@ void BluePotion::Init_frames_bounding_boxes(unsigned short id)
 
 	r->h = OBJECT_SPRITE_HEIGHT;
 	r->w = OBJECT_SPRITE_WIDTH;
-	if (id == 1)
+	if (id == BLUEPOTION1_ID)
 	{
 		r->y = 16 - 5;
 		r->x = 8 + 4;
 	}
-	else if (id == 2)
+	else if (id == BLUEPOTION2_ID)
 	{
 		r->y = 16 - 5;
 		r->x = 16 + 5;
@@ -2551,12 +2649,14 @@ unsigned short BluePotion::Get_Restore_Amount()
 
 //Start of PointBag
 
-PointBag::PointBag(int x, int y) : Collectable(x, y) 
+PointBag::PointBag(int x, int y, unsigned short value) : Collectable(x, y) 
 {
 	PointBagFrame.h = 0;
 	PointBagFrame.w = 0;
 	PointBagFrame.x = 0;
 	PointBagFrame.y = 0;
+
+	this->value = value;
 }
 
 void PointBag::Init_frames_bounding_boxes() 
@@ -2569,7 +2669,7 @@ void PointBag::Init_frames_bounding_boxes()
 	r->h = OBJECT_SPRITE_HEIGHT;
 	r->w = OBJECT_SPRITE_WIDTH;
 	r->y = 16 - 5;
-	r->x = 0;
+	r->x = 1;
 
 	PointBagFrame = *r;
 }
@@ -2577,6 +2677,11 @@ void PointBag::Init_frames_bounding_boxes()
 Rect PointBag::FrameToDraw() 
 {
 	return PointBagFrame;
+}
+
+unsigned short PointBag::Get_Points()
+{
+	return this->value;
 }
 
 //End of PointBag
@@ -2735,7 +2840,7 @@ void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int 
 	gameObj.level->grids.push_back(new Grid(layer, Grid_Element_Width, Grid_Element_Height, bitmapNumTilesWidth, bitmapNumTilesHeight));
 }
 
-
+//Add enemies
 
 void add_Stalfos(int x,int y) 
 {
@@ -2773,33 +2878,33 @@ void add_Guma(int x, int y)
 	Enemies.push_back(guma);
 }
 
+//Add collectables
 
-
-void add_RedPotion(int x,int y, unsigned short restore_amount, short id) 
+void add_RedPotion(int x,int y, short id) 
 {
-	RedPotion* rpotion = new RedPotion(x,y);
+	RedPotion* rpotion = new RedPotion(x, y, id);
 	if (id == -1)
 		rpotion->Init_frames_bounding_boxes();
 	else
 		rpotion->Init_frames_bounding_boxes(id);
-	rpotion->Set_Restore_Amount(restore_amount);
+	
 	Collectables.push_back(rpotion);
 }
 
-void add_BluePotion(int x, int y, unsigned short restore_amount, short id)
+void add_BluePotion(int x, int y, short id)
 {
-	BluePotion* bpotion = new BluePotion(x,y);
+	BluePotion* bpotion = new BluePotion(x, y, id);
 	if(id == -1)
 		bpotion->Init_frames_bounding_boxes();
 	else
 		bpotion->Init_frames_bounding_boxes(id);
-	bpotion->Set_Restore_Amount(restore_amount);
+	
 	Collectables.push_back(bpotion);
 }
 
 void add_PointBag(int x, int y)
 {
-	PointBag* pbag = new PointBag(x, y);
+	PointBag* pbag = new PointBag(x, y, 50);
 	pbag->Init_frames_bounding_boxes();
 	Collectables.push_back(pbag);
 }

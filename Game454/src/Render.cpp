@@ -47,7 +47,10 @@ void Paint_Projectiles_to_Screen()
 		
 		if ((gameObj.level->ScreenX == (int)Projectiles[i]->Get_Position_X() / DISPLAY_W) && (gameObj.level->ScreenY == (int)Projectiles[i]->Get_Position_Y() / DISPLAY_H))
 		{
-			al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, (int)Projectiles[i]->Get_Position_X() % DISPLAY_W, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H, 0);
+			if (Projectiles[i]->Get_Direction() == dir_left)
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetLeft, r.x, r.y, r.w, r.h, (int)Projectiles[i]->Get_Position_X() % DISPLAY_W, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H, 0);
+			else
+				al_draw_bitmap_region(gameObj.level->EnemySpriteSheetRight, r.x, r.y, r.w, r.h, (int)Projectiles[i]->Get_Position_X() % DISPLAY_W, (int)Projectiles[i]->Get_Position_Y() % DISPLAY_H, 0);
 		}
 	}
 }
