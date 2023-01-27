@@ -159,11 +159,6 @@ public:
 	//setters getters
 };
 
-class UI
-{
-private:
-	int xPos, yPos;
-};
 
 class Level
 {
@@ -793,6 +788,32 @@ public:
 	void Init_frames_bounding_boxes();
 
 	Rect FrameToDraw();
+};
+
+
+class UI
+{
+protected:
+	int xPos, yPos;
+public:
+	UI(int xPos, int Ypos);
+};
+
+class Font : UI
+{
+private:
+	std::vector<Rect>LettersFrames, NumbersFrames;
+	std::vector<Rect>WordFrames;
+public:
+	Font(int xPos, int Ypos);
+
+	void Make_Word(std::string word);
+};
+
+class Image_UI : UI
+{
+public:
+	Image_UI();
 };
 
 void createElevators();

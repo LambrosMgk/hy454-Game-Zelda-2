@@ -2807,6 +2807,96 @@ Rect UpDoll::FrameToDraw()
 
 //End of UpDoll class
 
+//Start of UI class
+
+UI::UI(int xPos, int Ypos)
+{
+	this->xPos = xPos;
+	this->yPos = Ypos;
+}
+
+//End of UI class
+
+//Start of Font class
+
+Font::Font(int xPos, int Ypos) : UI(xPos, Ypos)
+{
+	Rect* r = NULL;
+	for (unsigned short i = 0; i < 11; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT/2;
+		r->w = TILE_WIDTH /2;
+		r->y = 0 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		LettersFrames.push_back(*r);
+	}
+
+	for (unsigned short i = 0; i < 11; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 16 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		LettersFrames.push_back(*r);
+	}
+
+	for (unsigned short i = 0; i < 6; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 32 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		LettersFrames.push_back(*r);
+	}
+
+	for (unsigned short i = 0; i < 10; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 48 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		NumbersFrames.push_back(*r);
+	}
+}
+
+void Font::Make_Word(std::string word)
+{
+	Rect* r = NULL;
+	for (unsigned short i = 0; i < word.size(); i++)
+	{
+		r = new Rect;
+		//if word[i] letter
+		r->x = LettersFrames[65 - word[i]].x;
+		r->y = LettersFrames[65 - word[i]].y;
+		r->h = LettersFrames[65 - word[i]].h;
+		r->w = LettersFrames[65 - word[i]].w;
+
+		//else if word[i] number
+
+		r->x = NumbersFrames[48 - word[i]].x;
+		r->y = NumbersFrames[48 - word[i]].y;
+		r->h = NumbersFrames[48 - word[i]].h;
+		r->w = NumbersFrames[48 - word[i]].w;
+		WordFrames.push_back(*r);
+	}
+}
+
+//End of Font class
+
+//Start of Image_UI class
+
+
+
+//End of Image_UI class
+
 //Start of global functions
 
 void Init_Player(int PlayerX, int PlayerY)
