@@ -138,27 +138,58 @@ void CheckCollisions()
 
 				Rect r = Projectiles[i]->FrameToDraw();
 
-				if (player->Get_State() == State_Walking && player->Get_HurtInvicibility() == false)
+				if ((player->Get_State() == State_Walking || player->Get_State() == State_Attacking) && player->Get_HurtInvicibility() == false)
 				{
 					if (!((Projectiles[i]->Get_Position_X() + r.w < player->positionX + player->screenX * DISPLAY_W) ||
 						(player->positionX + rP.w + player->screenX * DISPLAY_W < Projectiles[i]->Get_Position_X()) ||
 						(Projectiles[i]->Get_Position_Y() + r.h < player->positionY + player->screenY * DISPLAY_H) ||
 						(player->positionY + rP.h + player->screenY * DISPLAY_H < Projectiles[i]->Get_Position_Y()))) /*No overlap condition*/
 					{
-						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
-						cout << "Player took " << Enemies[i]->Get_Damage() << " from " << typeid(*Projectiles[i]).name() << '\n';
-						//player->Take_Damage(Projectiles[i]->Get_Damage());
 
+						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
+						cout << "Player took " << Projectiles[i]->Get_Damage() << " from " << typeid(*Projectiles[i]).name() << '\n';
+						player->Take_Damage(Projectiles[i]->Get_Damage());
+
+						//cout << "Projectile died\n";
+						delete Projectiles[i];	//calls destructor of object
+						Projectiles.erase(Projectiles.begin() + i);
 
 						if (player->Get_Health() <= 0) {
 							cout << "Player died \n";
 						}
-
+					
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 
 						//add damage animation and change player color temporarily
 						//scroll the player to simulate push because of damage taken
+					}
+				}
+				else if ((player->Get_State() == State_Crounching || player->Get_State() == State_CrounchAttacking) && player->Get_HurtInvicibility() == false) //while crounching link will not take damage from the front but can be damaged from behind
+				{
+					if (((player->Get_Direction() == dir_left && Projectiles[i]->Get_Direction() == dir_left) ||
+						(player->Get_Direction() == dir_right && Projectiles[i]->Get_Direction() == dir_right)) &&  //looking the same way
+						(!((Projectiles[i]->Get_Position_X() + r.w < player->positionX + player->screenX * DISPLAY_W) ||
+							(player->positionX + rP.w + player->screenX * DISPLAY_W < Projectiles[i]->Get_Position_X()) ||
+							(Projectiles[i]->Get_Position_Y() + r.h < player->positionY + player->screenY * DISPLAY_H) ||
+							(player->positionY + rP.h + player->screenY * DISPLAY_H < Projectiles[i]->Get_Position_Y())))) // overlap condition
+					{
+						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
+						cout << "Player got pounded for " << Projectiles[i]->Get_Damage() << " points from " << typeid(*Projectiles[i]).name() << " from behind \n";
+						player->Take_Damage(Projectiles[i]->Get_Damage());
+
+						//cout << "Projectile died\n";
+						delete Projectiles[i];	//calls destructor of object
+						Projectiles.erase(Projectiles.begin() + i);
+
+						if (player->Get_Health() <= 0) {
+							cout << "Player died \n";
+						}
+
+
+
+						player->Set_HurtInvicibility(true);
+						al_start_timer(PlayerHurtTimer);
 					}
 				}
 			}

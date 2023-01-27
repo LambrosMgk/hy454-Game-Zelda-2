@@ -103,7 +103,15 @@ void Calculate_AI()
 					Guma* guma = dynamic_cast<Guma*>(Enemies[i]);
 					assert(guma != NULL);
 					unsigned short tileDistanceX = DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (guma->positionX)));
+
+					if(guma->canAttack == false)
+						guma->add_to_Attack_Interval(-1);
+
+					if (guma->get_Interval() <= 0) {
+						guma->canAttack = true;
 					
+					}
+
 					//if walking or idle and on the same height level as the player
 					if ((guma->Get_State() == E_State_Walking || guma->Get_State() == E_State_Idle) &&
 						DIV_TILE_HEIGHT(abs(player->positionY + player->screenY * DISPLAY_H - (guma->positionY))) < 5
@@ -120,9 +128,11 @@ void Calculate_AI()
 						}
 
 						//if the player enters a 9 tile range but still has at least 6 tiles distance, start attacking the player
-						if (tileDistanceX > 6 && tileDistanceX <= 9)
+						if (tileDistanceX > 6 && tileDistanceX <= 9 && guma->canAttack)
 						{
 							guma->Set_State(E_State_Attacking);
+							guma->canAttack = false;
+							guma->reset_Interval();
 						}
 						else if (tileDistanceX <= 6)
 						{

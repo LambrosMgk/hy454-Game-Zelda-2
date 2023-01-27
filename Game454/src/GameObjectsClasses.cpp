@@ -2336,6 +2336,21 @@ void Guma::Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY)
 	}
 }
 
+void Guma::add_to_Attack_Interval(float time) 
+{
+	this->attack_interval += time;
+}
+
+float Guma::get_Interval() 
+{
+	return this->attack_interval;
+}
+
+void Guma::reset_Interval() 
+{
+	this->attack_interval = this->starting_interval;
+}
+
 //End of Guma Class
 
 //Start of Projectile Class

@@ -616,8 +616,12 @@ class Guma : public Enemy
 private:
 	std::vector<Rect> FramesWalkingLeft, FramesWalkingRight;
 	std::vector<Rect> FramesAttackingLeft, FramesAttackingRight;
-
+	float attack_interval = 0;
+	float starting_interval = 1 * 60;
 public:
+	bool canAttack = true;
+	
+
 	Guma(int x, int y);
 
 	void Init_frames_bounding_boxes();
@@ -629,6 +633,12 @@ public:
 	void Scroll_Enemy(float ScrollDistanceX, float ScrollDistanceY);
 
 	void Increment_Sprite_Counter();
+
+	void add_to_Attack_Interval(float time);
+
+	float get_Interval();
+
+	void reset_Interval();
 };
 
 class Projectile
