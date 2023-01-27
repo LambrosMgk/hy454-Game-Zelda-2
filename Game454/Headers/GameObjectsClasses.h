@@ -13,15 +13,21 @@
 
 #include "al_init.h"
 
-#define START_SCREEN_PATH "UnitTests\\Media\\Start_Screen.png"
-#define TILESET_PATH "UnitTests\\Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
-#define ASSUMED_EMPTY_LAYER_PATH "UnitTests\\Media\\Level_1\\Assumed_Empty_indices_Layer"
-#define LINK_SPRITES_PATH "UnitTests\\Media\\link-sprites.png"
-#define ENEMY1_SPRITES_PATH "UnitTests\\Media\\enemies-sprites-1.gif"
-#define ENEMY1_SPRITES_FLIPPED_PATH "UnitTests\\Media\\enemies-sprites-1-flipped.gif"
-#define ITEMS_OBJECTS_PATH "UnitTests\\Media\\items-objects-sprites.png"
-#define START_SCREEN_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
-#define LEVEL_1_MUSIC "UnitTests\\Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
+#define START_SCREEN_PATH "Media\\Start_Screen.png"
+
+#define TILESET_PATH "Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
+#define ASSUMED_EMPTY_LAYER_PATH "Media\\Level_1\\Assumed_Empty_indices_Layer"
+#define LEVEL1_LAYER1_SCV "Media\\Level_1\\Level_1_Tile Layer 1.csv"
+#define LEVEL1_LAYER2_SCV "Media\\Level_1\\Level_1_Tile Layer 2.csv"
+
+#define LINK_SPRITES_PATH "Media\\Sprites and UI\\link-sprites.png"
+#define ENEMY1_SPRITES_PATH "Media\\Sprites and UI\\enemies-sprites-1.gif"
+#define ENEMY1_SPRITES_FLIPPED_PATH "Media\\Sprites and UI\\enemies-sprites-1-flipped.gif"
+#define ITEMS_OBJECTS_PATH "Media\\Sprites and UI\\items-objects-sprites.png"
+#define LIFE_AND_FONT_PATH "Media\\Sprites and UI\\NES - Life and Font.png"
+
+#define START_SCREEN_MUSIC "Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
+#define LEVEL_1_MUSIC "Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -153,13 +159,18 @@ public:
 	//setters getters
 };
 
+class UI
+{
+private:
+	int xPos, yPos;
+};
 
 class Level
 {
 public:
 	ALLEGRO_BITMAP* TileSet = NULL;
 	ALLEGRO_BITMAP* EnemySpriteSheetLeft = NULL, * EnemySpriteSheetRight = NULL;
-	ALLEGRO_BITMAP* ObjectSpriteSheet = NULL;
+	ALLEGRO_BITMAP* ObjectSpriteSheet = NULL, *LifeFontSpriteSheet = NULL;
 	std::vector<ALLEGRO_BITMAP*> bitmaps;	//bitmaps vector has the bitmaps of all the layers of the map
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
@@ -195,6 +206,8 @@ in case of bad file path exits program with -1*/
 	void Load_Object_SpriteSheets();
 
 	void Load_Objects();
+
+	void Load_Life_Font_SpriteSheet();
 
 	void Add_Random_Drop(int x, int y);
 };

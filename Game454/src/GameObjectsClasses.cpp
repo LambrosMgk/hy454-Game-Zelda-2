@@ -315,6 +315,47 @@ void Level::Load_Objects()
 	}
 }
 
+void Level::Load_Life_Font_SpriteSheet()
+{
+	LifeFontSpriteSheet = al_load_bitmap(LIFE_AND_FONT_PATH);
+
+	if (LifeFontSpriteSheet == NULL)
+	{
+		fprintf(stderr, "\nLevel : Failed to initialize SpriteSheet in Load_Life_Font_SpriteSheet().\n");
+		exit(-1);
+	}
+
+	/*Remove blue and black background*/
+	al_lock_bitmap(LifeFontSpriteSheet, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READWRITE);
+	al_set_target_bitmap(LifeFontSpriteSheet);
+
+	ALLEGRO_COLOR blue = al_get_pixel(LifeFontSpriteSheet, 0, 0);
+	ALLEGRO_COLOR black = al_get_pixel(LifeFontSpriteSheet, 48, 80);
+	ALLEGRO_COLOR c;
+	unsigned char br, bg, bb;
+	unsigned char blr, blg, blb;
+	unsigned char r, g, b;
+
+	al_unmap_rgb(blue, &br, &bg, &bb);
+	al_unmap_rgb(black, &blr, &blg, &blb);
+	for (auto i = 0; i < al_get_bitmap_width(LifeFontSpriteSheet); i++)
+	{
+		for (auto j = 0; j < al_get_bitmap_height(LifeFontSpriteSheet); j++)
+		{
+			c = al_get_pixel(LifeFontSpriteSheet, i, j);
+
+			al_unmap_rgb(c, &r, &g, &b);
+
+			if ((br == r && bg == g && bb == b) || (blr == r && blg == g && blb == b))	//may be a faster comparison if i do !(pr != r || pg != g || pb != b)
+			{
+				al_put_pixel(i, j, al_map_rgba(r, g, b, 0));
+			}
+		}
+	}
+	al_set_target_bitmap(al_get_backbuffer(gameObj.display));
+	al_unlock_bitmap(LifeFontSpriteSheet);
+}
+
 void Level::Add_Random_Drop(int x, int y)
 {
 	int LowerBound = 0, UpperBound = 3;
@@ -408,8 +449,8 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	gameObj.level = level;
 	level->load_tileset(TILESET_PATH);
 	level->Calculate_Tileset_Indexes();//pre-caching
-	level->TileMapCSV.push_back(level->ReadTextMap("UnitTests\\Media\\Level_1\\Level_1_Tile Layer 1.csv"));
-	level->TileMapCSV.push_back(level->ReadTextMap("UnitTests\\Media\\Level_1\\Level_1_Tile Layer 2.csv"));
+	level->TileMapCSV.push_back(level->ReadTextMap(LEVEL1_LAYER1_SCV));
+	level->TileMapCSV.push_back(level->ReadTextMap(LEVEL1_LAYER2_SCV));
 	if (level->TileMapCSV.size() == 0)
 	{
 		fprintf(stderr, "ReadTextMap returned empty vector.\n");
@@ -447,6 +488,8 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	cout << "Loaded Object spritesheet\n";
 	level->Load_Objects();
 	cout << "Loaded Objects\n";
+	level->Load_Life_Font_SpriteSheet();
+	cout << "Loaded Font sprite sheet\n";
 
 	createElevators();
 
