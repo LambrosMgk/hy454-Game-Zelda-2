@@ -67,6 +67,7 @@ void CheckCollisions()
 						//add damage animation and change player color temporarily
 						//scroll the player to simulate push because of damage taken
 					}
+
 				}
 				else if (player->Get_State() == State_Attacking && player->LinkSpriteNum == 1 && player->Get_WaitAfterHit() == false)	/*2nd frame of the attack animation*/
 				{
@@ -124,6 +125,35 @@ void CheckCollisions()
 						player->Set_WaitAfterHit(true);
 						al_start_timer(PlayerHitTimer);
 					
+					}
+				}
+			}
+
+			for (unsigned int i = 0; i < Projectiles.size(); i++ ) {
+
+				Rect r = Projectiles[i]->FrameToDraw();
+
+				if (player->Get_State() == State_Walking && player->Get_HurtInvicibility() == false)
+				{
+					if (!((Projectiles[i]->Get_Position_X() + r.w < player->positionX + player->screenX * DISPLAY_W) ||
+						(player->positionX + rP.w + player->screenX * DISPLAY_W < Projectiles[i]->Get_Position_X()) ||
+						(Projectiles[i]->Get_Position_Y() + r.h < player->positionY + player->screenY * DISPLAY_H) ||
+						(player->positionY + rP.h + player->screenY * DISPLAY_H < Projectiles[i]->Get_Position_Y()))) /*No overlap condition*/
+					{
+						//take damage and start an invicibility timer to prevent "damage stacking" from multiple collisions
+						cout << "Player took " << Enemies[i]->Get_Damage() << " from " << typeid(*Projectiles[i]).name() << '\n';
+						//player->Take_Damage(Projectiles[i]->Get_Damage());
+
+
+						if (player->Get_Health() <= 0) {
+							cout << "Player died \n";
+						}
+
+						player->Set_HurtInvicibility(true);
+						al_start_timer(PlayerHurtTimer);
+
+						//add damage animation and change player color temporarily
+						//scroll the player to simulate push because of damage taken
 					}
 				}
 			}
