@@ -46,7 +46,7 @@ void UserInput(void)
 			switch (event.keyboard.keycode)
 			{
 			case ALLEGRO_KEY_ESCAPE:
-				gameObj.End_Game();		//ends the game for now
+				gameObj.End_Game();		//ends the game
 				break;
 			case ALLEGRO_KEY_DOWN:
 			{
@@ -104,13 +104,15 @@ void UserInput(void)
 				player->Set_State(State_Attacking);
 				break;
 			case ALLEGRO_KEY_G:			// L_Ctrl + G combination
-				ALLEGRO_KEYBOARD_STATE KbState;
-
-				al_get_keyboard_state(&KbState);
-				if (al_key_down(&KbState, ALLEGRO_KEY_LCTRL))
 				{
-					gameObj.level->Toggle_Grid = gameObj.level->Toggle_Grid ? false : true;
-					std::cout << "Grid toggled\n";
+					ALLEGRO_KEYBOARD_STATE KbState;
+
+					al_get_keyboard_state(&KbState);
+					if (al_key_down(&KbState, ALLEGRO_KEY_LCTRL))
+					{
+						gameObj.level->Toggle_Grid = gameObj.level->Toggle_Grid ? false : true;
+						std::cout << "Grid toggled\n";
+					}
 				}
 				break;
 			}

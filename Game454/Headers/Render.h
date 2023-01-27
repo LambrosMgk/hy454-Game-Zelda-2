@@ -31,6 +31,10 @@ void Draw_Level(Level* level, unsigned int layer);
 
 void Load_Start_Screen();
 
+void Load_Loading_Screen();
+
+void Load_Credits();
+
 void Render_init();
 
 // use this to render grid (toggle on / off), used only for development time testing -

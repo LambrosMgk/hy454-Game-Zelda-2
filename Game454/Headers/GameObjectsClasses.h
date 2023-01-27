@@ -14,6 +14,8 @@
 #include "al_init.h"
 
 #define START_SCREEN_PATH "Media\\Start_Screen.png"
+#define LOADING_SCREEN_PATH "Media\\Loading_Screen.png"
+#define END_SCREEN_PATH ""
 
 #define TILESET_PATH "Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
 #define ASSUMED_EMPTY_LAYER_PATH "Media\\Level_1\\Assumed_Empty_indices_Layer"
@@ -145,6 +147,7 @@ extern std::vector<Collectable*> Collectables;
 extern std::vector<Door*> Doors;
 extern std::vector<Projectile*> Projectiles;
 extern std::vector<Rect> UI_Letters, UI_Numbers;
+extern Rect UI_Life_Box;
 extern std::vector<std::vector<UI*>> UI_objects;
 
 //used in render
@@ -212,6 +215,8 @@ in case of bad file path exits program with -1*/
 
 	std::vector<UI*> Create_Font_UI(int x, int y, std::string word);
 
+	std::vector<UI*> Create_Box_UI(int x, int y, char c);
+
 	void Change_UI_Element(UI* ui, char c);
 
 	void Add_Random_Drop(int x, int y);
@@ -229,7 +234,7 @@ public:
 	its like getting a priority, layer 2 is basically 2.1 (first) and the elevator is 2.2 (second)*/
 	std::vector<DrawOrder*> DrawingOrder[LEVEL_LAYERS];
 	ALLEGRO_DISPLAY* display = NULL;
-	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL;
+	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL, * End_Screen_bitmap = NULL;
 	Level *level = NULL;
 
 	void Play_Music(const char* path);
@@ -323,7 +328,7 @@ public:
 	std::vector<Rect>FramesCrounch;
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 	std::vector<Rect>FramesCrounchSlash;
-	std::vector<Rect>FramesTakingDamageLeft, FramesTakingDamageRight;
+	std::vector<Rect>FramesTakingDamageLeftEnd, FramesTakingDamageRightEnd;
 
 	Player(int _positionX, int _positionY);
 

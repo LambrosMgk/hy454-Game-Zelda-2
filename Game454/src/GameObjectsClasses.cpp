@@ -11,6 +11,7 @@ std::vector<Collectable*> Collectables;
 std::vector<Door*> Doors;
 std::vector<Projectile*> Projectiles;
 std::vector<Rect> UI_Letters, UI_Numbers;
+Rect UI_Life_Box;
 std::vector<std::vector<UI*>> UI_objects;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
@@ -411,6 +412,34 @@ std::vector<UI*> Level::Create_Font_UI(int x, int y, std::string word)
 	return v_ui;
 }
 
+/*char can be R = red_box, W = white_box, add more*/
+std::vector<UI*> Level::Create_Box_UI(int x, int y, char c)
+{
+	Rect* r = NULL;
+	UI* ui = NULL;
+	std::vector<UI*> v_ui;
+	
+	ui = new UI(x, y);
+	r = new Rect;
+	if (c == 'R')
+	{
+		r->x = UI_Life_Box.x;
+		r->y = UI_Life_Box.y;
+		r->h = UI_Life_Box.h;
+		r->w = UI_Life_Box.w;
+	}
+	else if (c == 'W')	//implement...
+	{
+		
+	}
+	ui->Frame = r;
+	v_ui.push_back(ui);
+	
+
+	UI_objects.push_back(v_ui);
+	return v_ui;
+}
+
 /*Parameters : a pointer to the UI element that needs to be changed, char to replace previous UI element*/
 void Level::Change_UI_Element(UI* ui, char c)
 {
@@ -498,6 +527,11 @@ void Level::Initialize_UI()
 		r->x = 80 + 2 + i * TILE_WIDTH;
 		UI_Numbers.push_back(*r);
 	}
+
+	UI_Life_Box.x = 224;
+	UI_Life_Box.y = 112;
+	UI_Life_Box.h = TILE_HEIGHT;
+	UI_Life_Box.w = TILE_WIDTH;
 }
 
 void Level::Add_Random_Drop(int x, int y)
@@ -1076,21 +1110,21 @@ void Player::Init_frames_bounding_boxes()
 	r->x = LINK_SPRITE_WIDTH * 18;
 	FramesCrounchSlash.push_back(*r);
 
-	//FramesTakingDamageLeft
+	//FramesTakingDamageLeftEnd
 	r = new Rect;
 	r->h = LINK_SPRITE_HEIGHT * 2;
 	r->w = LINK_SPRITE_WIDTH;
 	r->y = 80;
 	r->x = 0 + 8;
-	FramesTakingDamageLeft.push_back(*r);
+	FramesTakingDamageLeftEnd.push_back(*r);
 
-	//FramesTakingDamageRight
+	//FramesTakingDamageRightEnd
 	r = new Rect;
 	r->h = LINK_SPRITE_HEIGHT * 2;
 	r->w = LINK_SPRITE_WIDTH;
 	r->y = 80;
 	r->x = 288;
-	FramesTakingDamageRight.push_back(*r);
+	FramesTakingDamageRightEnd.push_back(*r);
 }
 
 void Player::Load_Player_Spritesheet() 

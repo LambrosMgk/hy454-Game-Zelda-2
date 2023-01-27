@@ -89,6 +89,34 @@ void Load_Start_Screen()
 	//cout << "Drawing " << filepath << '\n';
 }
 
+void Load_Loading_Screen()
+{
+	gameObj.Loading_Screen_bitmap = al_load_bitmap(LOADING_SCREEN_PATH);
+	if (gameObj.Loading_Screen_bitmap == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize Loading_Screen_bitmap (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_draw_bitmap(gameObj.Loading_Screen_bitmap, 0, 0, 0);
+	al_flip_display();
+}
+
+void Load_Credits()
+{
+	gameObj.End_Screen_bitmap = al_load_bitmap(END_SCREEN_PATH);
+	if (gameObj.End_Screen_bitmap == NULL)
+	{
+		fprintf(stderr, "\nFailed to initialize End_Screen_bitmap (al_load_bitmap() failed).\n");
+		exit(-1);
+	}
+
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_draw_bitmap(gameObj.End_Screen_bitmap, 0, 0, 0);
+	al_flip_display();
+}
+
 void Render_init()
 {
 	FPStimer = al_create_timer(1.0 / FPS);
@@ -199,6 +227,7 @@ void Renderer()
 			al_clear_to_color(al_map_rgb(0, 0, 0));	//Clear the complete target bitmap, but confined by the clipping rectangle.
 			if (gameObj.level == NULL)
 			{
+				Load_Loading_Screen();
 				gameObj.Load_Level(1);
 			}
 
@@ -218,6 +247,8 @@ void Renderer()
 			Paint_Player_to_Screen(player->FrameToDraw());
 			Paint_Projectiles_to_Screen();
 			Paint_UI_to_Screen();
+			//if paused maybe draw in the last layer a total black but half transparent color to the whole screen
+			//to make it look like most games do when a game is paused
 
 			if (gameObj.level->Toggle_Grid)
 			{
