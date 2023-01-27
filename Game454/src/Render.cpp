@@ -55,6 +55,19 @@ void Paint_Projectiles_to_Screen()
 	}
 }
 
+void Paint_UI_to_Screen()
+{
+	for (unsigned int i = 0; i < UI_objects.size(); i++)
+	{
+		for(unsigned int j = 0; j < UI_objects[i].size(); j++)
+		{
+			//Rect r = UI_objects[i][j]->FrameToDraw();
+
+			//al_draw_bitmap_region(gameObj.level->LifeFontSpriteSheet, r.x, r.y, r.w, r.h, UI_objects[i][j]->Get_Pos_X(), UI_objects[i][j]->Get_Pos_Y(), 0);
+		}
+	}
+}
+
 void Draw_Level(Level *level, unsigned int layer)
 {
 	assert(level != NULL);
@@ -204,6 +217,7 @@ void Renderer()
 			Paint_Enemies_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
 			Paint_Projectiles_to_Screen();
+			Paint_UI_to_Screen();
 
 			if (gameObj.level->Toggle_Grid)
 			{

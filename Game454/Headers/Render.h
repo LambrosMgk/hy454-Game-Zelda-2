@@ -25,6 +25,8 @@ void Paint_Collectables_to_Screen();
 
 void Paint_Projectiles_to_Screen();
 
+void Paint_UI_to_Screen();
+
 void Draw_Level(Level* level, unsigned int layer);
 
 void Load_Start_Screen();

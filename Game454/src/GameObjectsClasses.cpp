@@ -5,11 +5,13 @@
 std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
+UI Letters, Numbers;
 std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
 std::vector<Collectable*> Collectables;
 std::vector<Door*> Doors;
 std::vector<Projectile*> Projectiles;
+std::vector<std::vector<UI*>> UI_objects;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
 
@@ -356,6 +358,85 @@ void Level::Load_Life_Font_SpriteSheet()
 	al_unlock_bitmap(LifeFontSpriteSheet);
 }
 
+std::vector<UI*> Level::Create_Font_UI(int x, int y, std::string word)
+{
+	Rect* r = NULL;
+	std::vector<UI*> v_ui;
+	UI* ui;
+	for (unsigned short i = 0; i < word.size(); i++)
+	{
+		ui = new UI(x + i*8, y);
+		r = new Rect;
+		if (word[i] >= 'A' && word[i] <= 'Z')
+		{
+			r->x = Letters.Frames[65 - word[i]].x;
+			r->y = Letters.Frames[65 - word[i]].y;
+			r->h = Letters.Frames[65 - word[i]].h;
+			r->w = Letters.Frames[65 - word[i]].w;
+		}
+		else if (word[i] >= '0' && word[i] <= '9')
+		{
+			r->x = Numbers.Frames[48 - word[i]].x;
+			r->y = Numbers.Frames[48 - word[i]].y;
+			r->h = Numbers.Frames[48 - word[i]].h;
+			r->w = Numbers.Frames[48 - word[i]].w;
+		}
+		ui->Frames.push_back(*r);
+		v_ui.push_back(ui);
+	}
+
+	return v_ui;
+}
+
+void Level::Initialize_UI()
+{
+	Rect* r = NULL;
+	for (unsigned short i = 0; i < 11; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 0 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		Letters.Frames.push_back(*r);
+	}
+
+	for (unsigned short i = 0; i < 11; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 16 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		Letters.Frames.push_back(*r);
+	}
+	//Last letters and punctuation
+	for (unsigned short i = 0; i < 6; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 32 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		Letters.Frames.push_back(*r);
+	}
+
+	//Digits
+	for (unsigned short i = 0; i < 10; i++)
+	{
+		r = new Rect;
+
+		r->h = TILE_HEIGHT / 2;
+		r->w = TILE_WIDTH / 2;
+		r->y = 48 + 8;
+		r->x = 80 + 2 + i * TILE_WIDTH;
+		Numbers.Frames.push_back(*r);
+	}
+}
+
 void Level::Add_Random_Drop(int x, int y)
 {
 	int LowerBound = 0, UpperBound = 3;
@@ -379,6 +460,7 @@ void Level::Add_Random_Drop(int x, int y)
 		break;
 	}
 }
+
 //End of Class Level
 
 //Start of Class GameLogic
@@ -2815,87 +2897,22 @@ UI::UI(int xPos, int Ypos)
 	this->yPos = Ypos;
 }
 
+int UI::Get_Pos_X()
+{
+	return this->xPos;
+}
+
+int UI::Get_Pos_Y()
+{
+	return this->yPos;
+}
+
+Rect UI::FrameToDraw()
+{
+
+}
+
 //End of UI class
-
-//Start of Font class
-
-Font::Font(int xPos, int Ypos) : UI(xPos, Ypos)
-{
-	Rect* r = NULL;
-	for (unsigned short i = 0; i < 11; i++)
-	{
-		r = new Rect;
-
-		r->h = TILE_HEIGHT/2;
-		r->w = TILE_WIDTH /2;
-		r->y = 0 + 8;
-		r->x = 80 + 2 + i * TILE_WIDTH;
-		LettersFrames.push_back(*r);
-	}
-
-	for (unsigned short i = 0; i < 11; i++)
-	{
-		r = new Rect;
-
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 16 + 8;
-		r->x = 80 + 2 + i * TILE_WIDTH;
-		LettersFrames.push_back(*r);
-	}
-
-	for (unsigned short i = 0; i < 6; i++)
-	{
-		r = new Rect;
-
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 32 + 8;
-		r->x = 80 + 2 + i * TILE_WIDTH;
-		LettersFrames.push_back(*r);
-	}
-
-	for (unsigned short i = 0; i < 10; i++)
-	{
-		r = new Rect;
-
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 48 + 8;
-		r->x = 80 + 2 + i * TILE_WIDTH;
-		NumbersFrames.push_back(*r);
-	}
-}
-
-void Font::Make_Word(std::string word)
-{
-	Rect* r = NULL;
-	for (unsigned short i = 0; i < word.size(); i++)
-	{
-		r = new Rect;
-		//if word[i] letter
-		r->x = LettersFrames[65 - word[i]].x;
-		r->y = LettersFrames[65 - word[i]].y;
-		r->h = LettersFrames[65 - word[i]].h;
-		r->w = LettersFrames[65 - word[i]].w;
-
-		//else if word[i] number
-
-		r->x = NumbersFrames[48 - word[i]].x;
-		r->y = NumbersFrames[48 - word[i]].y;
-		r->h = NumbersFrames[48 - word[i]].h;
-		r->w = NumbersFrames[48 - word[i]].w;
-		WordFrames.push_back(*r);
-	}
-}
-
-//End of Font class
-
-//Start of Image_UI class
-
-
-
-//End of Image_UI class
 
 //Start of global functions
 

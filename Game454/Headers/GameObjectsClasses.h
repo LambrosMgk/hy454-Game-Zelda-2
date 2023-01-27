@@ -128,6 +128,7 @@ class Elevator;
 class Collectable;
 class Door;
 class Projectile;
+class UI;
 
 
 
@@ -137,11 +138,14 @@ extern ALLEGRO_TIMER* DoorTimer;
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
+extern UI Letters, Numbers;
+
 extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
 extern std::vector<Collectable*> Collectables;
 extern std::vector<Door*> Doors;
 extern std::vector<Projectile*> Projectiles;
+extern std::vector<std::vector<UI*>> UI_objects;
 
 //used in render
 extern bool keyboardUp, scrollDown, scrollLeft, scrollRight; //omit these later, maybe not left and right? useful for animation?
@@ -203,6 +207,10 @@ in case of bad file path exits program with -1*/
 	void Load_Objects();
 
 	void Load_Life_Font_SpriteSheet();
+
+	void Initialize_UI();
+
+	std::vector<UI*> Create_Font_UI(int x, int y, std::string word);
 
 	void Add_Random_Drop(int x, int y);
 };
@@ -796,24 +804,15 @@ class UI
 protected:
 	int xPos, yPos;
 public:
+	std::vector<Rect>Frames;
+
 	UI(int xPos, int Ypos);
-};
 
-class Font : UI
-{
-private:
-	std::vector<Rect>LettersFrames, NumbersFrames;
-	std::vector<Rect>WordFrames;
-public:
-	Font(int xPos, int Ypos);
+	int Get_Pos_X();
 
-	void Make_Word(std::string word);
-};
+	int Get_Pos_Y();
 
-class Image_UI : UI
-{
-public:
-	Image_UI();
+	Rect FrameToDraw();
 };
 
 void createElevators();
