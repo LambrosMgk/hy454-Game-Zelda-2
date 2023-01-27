@@ -307,6 +307,7 @@ private:
 	Direction direction = dir_right;
 	
 	int scrollDistanceX = 5, scrollDistanceY = 3;
+	unsigned short MAX_HP = 100, MAX_MP = 100;
 	int HP = 100, MP = 100, Points = 0, Dmg = 10;
 	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
@@ -362,11 +363,17 @@ public:
 
 	void Set_Health(int health);
 
+	void Heal(int health_gain);
+
+	int Get_Magic();
+
+	void Set_Magic(int magic);
+
+	void Restore_magic(int magic);
+
 	int Get_Damage();
 
 	void Take_Damage(int health_damage);
-
-	void Heal(int health_gain);
 
 	void Set_HurtInvicibility(bool hi);
 

@@ -1155,6 +1155,30 @@ void Player::Set_Health(int health)
 	this->HP = health;
 }
 
+void Player::Heal(int health_gain)
+{
+	this->HP += health_gain;
+	if (HP > MAX_HP)
+		HP = MAX_HP;
+}
+
+int Player::Get_Magic()
+{
+	return this->MP;
+}
+
+void Player::Set_Magic(int magic)
+{
+	this->MP = magic;
+}
+
+void Player::Restore_magic(int magic)
+{
+	this->MP += magic;
+	if (MP > MAX_MP)
+		MP = MAX_MP;
+}
+
 int Player::Get_Damage()
 {
 	return this->Dmg;
@@ -1170,11 +1194,6 @@ void Player::Take_Damage(int health_damage)
 	{
 		this->HP -= health_damage;
 	}
-}
-
-void Player::Heal(int health_gain)
-{
-	this->HP += health_gain;
 }
 
 void Player::Set_HurtInvicibility(bool hi)

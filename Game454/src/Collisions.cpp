@@ -220,14 +220,28 @@ void CheckCollisions()
 						else if (typeid(*Collectables[i]).name() == typeid(RedPotion).name())
 						{
 							cout << "Red potion removed\n";
-							//add effect of potion
+							RedPotion* potion = dynamic_cast<RedPotion*>(Collectables[i]);
+							if (potion == NULL)
+							{
+								cout << "Error dynamic casting RedPotion, exiting...\n";
+								exit(-1);
+							}
+
+							player->Heal(potion->Get_Restore_Amount());
 							delete Collectables[i];
 							Collectables.erase(Collectables.begin() + i);
 						}
 						else if (typeid(*Collectables[i]).name() == typeid(BluePotion).name())
 						{
 							cout << "Blue potion removed\n";
-							//add effect of potion
+							BluePotion* potion = dynamic_cast<BluePotion*>(Collectables[i]);
+							if (potion == NULL)
+							{
+								cout << "Error dynamic casting BluePotion, exiting...\n";
+								exit(-1);
+							}
+
+							player->Restore_magic(potion->Get_Restore_Amount());
 							delete Collectables[i];
 							Collectables.erase(Collectables.begin() + i);
 						}
@@ -240,6 +254,7 @@ void CheckCollisions()
 								cout << "Error dynamic casting Pointbag, exiting...\n";
 								exit(-1);
 							}
+
 							player->Add_Score(bag->Get_Points());
 							cout << "Player score now : " << player->Get_Score() << '\n';
 							delete Collectables[i];
