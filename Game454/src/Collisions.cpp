@@ -61,6 +61,7 @@ void CheckCollisions()
 							cout << "Player died \n" ;
 						}
 						
+						player->Update_UI();
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 
@@ -158,6 +159,7 @@ void CheckCollisions()
 							cout << "Player died \n";
 						}
 					
+						player->Update_UI();
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 
@@ -187,7 +189,7 @@ void CheckCollisions()
 						}
 
 
-
+						player->Update_UI();
 						player->Set_HurtInvicibility(true);
 						al_start_timer(PlayerHurtTimer);
 					}
@@ -245,6 +247,7 @@ void CheckCollisions()
 						}
 					}
 				}
+				player->Update_UI();
 			}
 
 			//check for door collisions

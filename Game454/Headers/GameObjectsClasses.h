@@ -138,13 +138,13 @@ extern ALLEGRO_TIMER* DoorTimer;
 extern std::vector<TileColorsHolder> emptyTileColors;
 extern GameLogic gameObj;	//object that holds the game state and other useful information
 extern Player* player;
-extern UI Letters, Numbers;
 
 extern std::vector<Elevator> elevators;
 extern std::vector<Enemy*> Enemies;
 extern std::vector<Collectable*> Collectables;
 extern std::vector<Door*> Doors;
 extern std::vector<Projectile*> Projectiles;
+extern std::vector<Rect> UI_Letters, UI_Numbers;
 extern std::vector<std::vector<UI*>> UI_objects;
 
 //used in render
@@ -211,6 +211,8 @@ in case of bad file path exits program with -1*/
 	void Initialize_UI();
 
 	std::vector<UI*> Create_Font_UI(int x, int y, std::string word);
+
+	void Change_UI_Element(UI* ui, char c);
 
 	void Add_Random_Drop(int x, int y);
 };
@@ -305,11 +307,12 @@ private:
 	Direction direction = dir_right;
 	
 	int scrollDistanceX = 5, scrollDistanceY = 3;
-	int HP = 100, Points = 0, Dmg = 10;
+	int HP = 100, MP = 100, Points = 0, Dmg = 10;
 	unsigned short Keys = 0;
 	bool HurtInvicibility = false;	//if the player took damage set this to true for a while to prevent damage stacking from the frame rate
 	bool WaitAfterHit = false;
 public:
+	std::vector<UI*> UI_Magic_Points, UI_Health_Points, UI_Points;
 	ALLEGRO_BITMAP* PlayerSpriteSheet = NULL;
 	int positionX, positionY;
 	int screenX, screenY;	//measures screens/rooms
@@ -384,6 +387,8 @@ public:
 	void Add_Score(int score);
 
 	int Get_Score();
+
+	void Update_UI();
 };
 
 class TileColorsHolder final
@@ -804,15 +809,13 @@ class UI
 protected:
 	int xPos, yPos;
 public:
-	std::vector<Rect>Frames;
+	Rect *Frame;
 
 	UI(int xPos, int Ypos);
 
 	int Get_Pos_X();
 
 	int Get_Pos_Y();
-
-	Rect FrameToDraw();
 };
 
 void createElevators();

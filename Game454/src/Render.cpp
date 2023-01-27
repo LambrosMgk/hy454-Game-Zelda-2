@@ -61,9 +61,9 @@ void Paint_UI_to_Screen()
 	{
 		for(unsigned int j = 0; j < UI_objects[i].size(); j++)
 		{
-			//Rect r = UI_objects[i][j]->FrameToDraw();
+			Rect *r = UI_objects[i][j]->Frame;
 
-			//al_draw_bitmap_region(gameObj.level->LifeFontSpriteSheet, r.x, r.y, r.w, r.h, UI_objects[i][j]->Get_Pos_X(), UI_objects[i][j]->Get_Pos_Y(), 0);
+			al_draw_bitmap_region(gameObj.level->LifeFontSpriteSheet, r->x, r->y, r->w, r->h, UI_objects[i][j]->Get_Pos_X(), UI_objects[i][j]->Get_Pos_Y(), 0);
 		}
 	}
 }

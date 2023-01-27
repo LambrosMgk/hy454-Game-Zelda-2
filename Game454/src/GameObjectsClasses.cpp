@@ -5,12 +5,12 @@
 std::vector<TileColorsHolder> emptyTileColors;
 GameLogic gameObj;
 Player* player = NULL;
-UI Letters, Numbers;
 std::vector<Elevator> elevators;
 std::vector<Enemy*> Enemies;
 std::vector<Collectable*> Collectables;
 std::vector<Door*> Doors;
 std::vector<Projectile*> Projectiles;
+std::vector<Rect> UI_Letters, UI_Numbers;
 std::vector<std::vector<UI*>> UI_objects;
 
 bool keyboardUp = false, scrollDown = true, scrollLeft = false, scrollRight = false;
@@ -358,34 +358,97 @@ void Level::Load_Life_Font_SpriteSheet()
 	al_unlock_bitmap(LifeFontSpriteSheet);
 }
 
+/*String must only contain : "A-Z" , "0-9" , '-', '.' and ' '*/
 std::vector<UI*> Level::Create_Font_UI(int x, int y, std::string word)
 {
 	Rect* r = NULL;
+	UI* ui = NULL;
 	std::vector<UI*> v_ui;
-	UI* ui;
 	for (unsigned short i = 0; i < word.size(); i++)
 	{
-		ui = new UI(x + i*8, y);
+		ui = new UI(x + i*8, y);	//8 pixel offset between the UI elements
 		r = new Rect;
 		if (word[i] >= 'A' && word[i] <= 'Z')
 		{
-			r->x = Letters.Frames[65 - word[i]].x;
-			r->y = Letters.Frames[65 - word[i]].y;
-			r->h = Letters.Frames[65 - word[i]].h;
-			r->w = Letters.Frames[65 - word[i]].w;
+			r->x = UI_Letters[word[i] - 65].x;
+			r->y = UI_Letters[word[i] - 65].y;
+			r->h = UI_Letters[word[i] - 65].h;
+			r->w = UI_Letters[word[i] - 65].w;
 		}
 		else if (word[i] >= '0' && word[i] <= '9')
 		{
-			r->x = Numbers.Frames[48 - word[i]].x;
-			r->y = Numbers.Frames[48 - word[i]].y;
-			r->h = Numbers.Frames[48 - word[i]].h;
-			r->w = Numbers.Frames[48 - word[i]].w;
+			r->x = UI_Numbers[word[i] - 48].x;
+			r->y = UI_Numbers[word[i] - 48].y;
+			r->h = UI_Numbers[word[i] - 48].h;
+			r->w = UI_Numbers[word[i] - 48].w;
 		}
-		ui->Frames.push_back(*r);
+		else if (word[i] == '-')
+		{
+			r->x = UI_Letters[UI_Letters.size() - 2].x;
+			r->y = UI_Letters[UI_Letters.size() - 2].y;
+			r->h = UI_Letters[UI_Letters.size() - 2].h;
+			r->w = UI_Letters[UI_Letters.size() - 2].w;
+		}
+		else if (word[i] == '.')
+		{
+			r->x = UI_Letters[UI_Letters.size() - 1].x;
+			r->y = UI_Letters[UI_Letters.size() - 1].y;
+			r->h = UI_Letters[UI_Letters.size() - 1].h;
+			r->w = UI_Letters[UI_Letters.size() - 1].w;
+		}
+		else if (word[i] == ' ')	//empty spot in the sprite sheet
+		{
+			r->x = 0;
+			r->y = 0;
+			r->h = TILE_HEIGHT;
+			r->w = TILE_WIDTH;
+		}
+		ui->Frame = r;
 		v_ui.push_back(ui);
 	}
 
+	UI_objects.push_back(v_ui);
 	return v_ui;
+}
+
+/*Parameters : a pointer to the UI element that needs to be changed, char to replace previous UI element*/
+void Level::Change_UI_Element(UI* ui, char c)
+{
+	if (c >= 'A' && c <= 'Z')
+	{
+		ui->Frame->x = UI_Letters[c - 65].x;
+		ui->Frame->y = UI_Letters[c - 65].y;
+		ui->Frame->h = UI_Letters[c - 65].h;
+		ui->Frame->w = UI_Letters[c - 65].w;
+	}
+	else if (c >= '0' && c <= '9')
+	{
+		ui->Frame->x = UI_Numbers[c - 48].x;
+		ui->Frame->y = UI_Numbers[c - 48].y;
+		ui->Frame->h = UI_Numbers[c - 48].h;
+		ui->Frame->w = UI_Numbers[c - 48].w;
+	}
+	else if (c == '-')
+	{
+		ui->Frame->x = UI_Letters[UI_Letters.size() - 2].x;
+		ui->Frame->y = UI_Letters[UI_Letters.size() - 2].y;
+		ui->Frame->h = UI_Letters[UI_Letters.size() - 2].h;
+		ui->Frame->w = UI_Letters[UI_Letters.size() - 2].w;
+	}
+	else if (c == '.')
+	{
+		ui->Frame->x = UI_Letters[UI_Letters.size() - 1].x;
+		ui->Frame->y = UI_Letters[UI_Letters.size() - 1].y;
+		ui->Frame->h = UI_Letters[UI_Letters.size() - 1].h;
+		ui->Frame->w = UI_Letters[UI_Letters.size() - 1].w;
+	}
+	else if (c == ' ')	//empty spot in the sprite sheet
+	{
+		ui->Frame->x = 0;
+		ui->Frame->y = 0;
+		ui->Frame->h = TILE_HEIGHT;
+		ui->Frame->w = TILE_WIDTH;
+	}
 }
 
 void Level::Initialize_UI()
@@ -395,33 +458,33 @@ void Level::Initialize_UI()
 	{
 		r = new Rect;
 
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 0 + 8;
+		r->h = TILE_HEIGHT;
+		r->w = TILE_WIDTH;
+		r->y = 0 + 5;
 		r->x = 80 + 2 + i * TILE_WIDTH;
-		Letters.Frames.push_back(*r);
+		UI_Letters.push_back(*r);
 	}
 
 	for (unsigned short i = 0; i < 11; i++)
 	{
 		r = new Rect;
 
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 16 + 8;
+		r->h = TILE_HEIGHT;
+		r->w = TILE_WIDTH;
+		r->y = 16 + 5;
 		r->x = 80 + 2 + i * TILE_WIDTH;
-		Letters.Frames.push_back(*r);
+		UI_Letters.push_back(*r);
 	}
 	//Last letters and punctuation
 	for (unsigned short i = 0; i < 6; i++)
 	{
 		r = new Rect;
 
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 32 + 8;
+		r->h = TILE_HEIGHT;
+		r->w = TILE_WIDTH;
+		r->y = 32 + 5;
 		r->x = 80 + 2 + i * TILE_WIDTH;
-		Letters.Frames.push_back(*r);
+		UI_Letters.push_back(*r);
 	}
 
 	//Digits
@@ -429,17 +492,17 @@ void Level::Initialize_UI()
 	{
 		r = new Rect;
 
-		r->h = TILE_HEIGHT / 2;
-		r->w = TILE_WIDTH / 2;
-		r->y = 48 + 8;
+		r->h = TILE_HEIGHT;
+		r->w = TILE_WIDTH;
+		r->y = 48 + 5;
 		r->x = 80 + 2 + i * TILE_WIDTH;
-		Numbers.Frames.push_back(*r);
+		UI_Numbers.push_back(*r);
 	}
 }
 
 void Level::Add_Random_Drop(int x, int y)
 {
-	int LowerBound = 0, UpperBound = 3;
+	int LowerBound = 0, UpperBound = 2;
 	int choice = rand() % (UpperBound + 1 - LowerBound) + LowerBound;
 
 	if (this->grids[0]->GetGridTile(DIV_TILE_HEIGHT(y), DIV_TILE_HEIGHT(x)) == 0)	//0 == empty tile
@@ -572,9 +635,17 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	cout << "Loaded Objects\n";
 	level->Load_Life_Font_SpriteSheet();
 	cout << "Loaded Font sprite sheet\n";
+	level->Initialize_UI();
+	cout << "Initialized UI\n";
 
 	createElevators();
 
+	level->Create_Font_UI(2 * TILE_WIDTH, 0, "HEALTH - ");
+	player->UI_Health_Points = level->Create_Font_UI(6 * TILE_WIDTH + TILE_WIDTH / 2, 0, "100");
+	level->Create_Font_UI(9 * TILE_WIDTH, 0, "MAGIC - ");
+	player->UI_Magic_Points = level->Create_Font_UI(13 * TILE_WIDTH + TILE_WIDTH / 2, 0, "100");
+	level->Create_Font_UI(16 * TILE_WIDTH, 0, "SCORE - ");
+	player->UI_Points = level->Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH / 2, 0, "0000");
 	//Level loaded play some music
 	//gameObj.Play_Music(LEVEL_1_MUSIC);
 }
@@ -1091,7 +1162,14 @@ int Player::Get_Damage()
 
 void Player::Take_Damage(int health_damage)
 {
-	this->HP -= health_damage;
+	if (this->HP - health_damage <= 0)
+	{
+		this->HP = 0;
+	}
+	else
+	{
+		this->HP -= health_damage;
+	}
 }
 
 void Player::Heal(int health_gain)
@@ -1148,6 +1226,77 @@ void Player::Add_Score(int score)
 int Player::Get_Score()
 {
 	return this->Points;
+}
+
+void Player::Update_UI()
+{
+	char hp[4] = {0}, mp[4] = {0}, points[5] = {0};	//health and magic have 3 digits (but points have 4) so one more char to add the '\0'
+	//HEALTH POINTS
+	_itoa_s(this->HP, hp, 10);	//convert int HP to string
+	//cout << "hp[0] = " << hp[0] << " hp[1] = " << hp[1] << " hp[2] = " << hp[2] << " hp[3] = " << hp[3] << '\n';
+	if (hp[2] == '\0')	//HP less that 100, no need to 3 digits, make them 2
+	{
+		gameObj.level->Change_UI_Element(UI_Health_Points[0], ' ');
+		gameObj.level->Change_UI_Element(UI_Health_Points[1], hp[0]);
+		gameObj.level->Change_UI_Element(UI_Health_Points[2], hp[1]);
+	}
+	else if (hp[1] == '\0')	//HP less than 10, only 1 digit needed
+	{
+		gameObj.level->Change_UI_Element(UI_Health_Points[0], ' ');
+		gameObj.level->Change_UI_Element(UI_Health_Points[1], ' ');
+		gameObj.level->Change_UI_Element(UI_Health_Points[2], hp[0]);
+	}
+	else
+	{
+		for (unsigned short i = 0; i < UI_Health_Points.size(); i++)
+			gameObj.level->Change_UI_Element(UI_Health_Points[i], hp[i]);
+	}
+
+	//MAGIC
+	_itoa_s(this->MP, mp, 10);
+	if (mp[2] == '\0')	//HP less that 100, no need to 3 digits, make them 2
+	{
+		gameObj.level->Change_UI_Element(UI_Magic_Points[0], ' ');
+		gameObj.level->Change_UI_Element(UI_Magic_Points[1], mp[0]);
+		gameObj.level->Change_UI_Element(UI_Magic_Points[2], mp[1]);
+	}
+	else if (mp[1] == '\0')	//HP less than 10, only 1 digit needed
+	{
+		gameObj.level->Change_UI_Element(UI_Magic_Points[0], ' ');
+		gameObj.level->Change_UI_Element(UI_Magic_Points[1], ' ');
+		gameObj.level->Change_UI_Element(UI_Magic_Points[2], mp[0]);
+	}
+	else
+	{
+		for (unsigned short i = 0; i < UI_Magic_Points.size(); i++)
+			gameObj.level->Change_UI_Element(UI_Magic_Points[i], mp[i]);
+	}
+
+	//POINTS
+	_itoa_s(this->Points, points, 10);
+	//cout << "points[0] = " << points[0] << " points[1] = " << points[1] << " points[2] = " << points[2] << " points[3] = " << points[3] << '\n';
+	if (points[1] == '\0')	//points less than 10, only 1 digit needed
+	{
+		memmove(points + 3, points, 4);
+		points[0] = points[1] = points[2] = 0;
+	}
+	else if (points[2] == '\0')	//points less than 100, only 2 digits needed
+	{
+		memmove(points + 2, points, 4);
+		points[0] = points[1] = 0;
+	}
+	else if (points[3] == '\0')	//points less than 1000, only 3 digits needed
+	{
+		memmove(points + 1, points, 4);
+		points[0] = 0;
+	}
+
+	for (unsigned short i = 0; i < UI_Points.size(); i++)
+	{
+		if(points[i] == '\0')
+			gameObj.level->Change_UI_Element(UI_Points[i], '0');
+		gameObj.level->Change_UI_Element(UI_Points[i], points[i]);
+	}
 }
 
 //end of class Player functions
@@ -2895,6 +3044,8 @@ UI::UI(int xPos, int Ypos)
 {
 	this->xPos = xPos;
 	this->yPos = Ypos;
+
+	this->Frame = NULL;
 }
 
 int UI::Get_Pos_X()
@@ -2905,11 +3056,6 @@ int UI::Get_Pos_X()
 int UI::Get_Pos_Y()
 {
 	return this->yPos;
-}
-
-Rect UI::FrameToDraw()
-{
-
 }
 
 //End of UI class
