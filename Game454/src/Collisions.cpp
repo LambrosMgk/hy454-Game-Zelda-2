@@ -126,7 +126,12 @@ void CheckCollisions()
 						Enemies[i]->Take_Damage(player->Get_Damage());
 
 						if (Enemies[i]->Get_Health() <= 0)
+						{
 							cout << typeid(*Enemies[i]).name() << " died \n";
+							gameObj.level->Add_Random_Drop(Enemies[i]->positionX, Enemies[i]->positionY);
+							delete Enemies[i];
+							Enemies.erase(Enemies.begin() + i);
+						}
 
 						player->Set_WaitAfterHit(true);
 						al_start_timer(PlayerHitTimer);
@@ -263,6 +268,14 @@ void CheckCollisions()
 					}
 				}
 				player->Update_UI();
+			}
+
+			if (!((gameObj.level->princess_X + gameObj.level->princess_r.w < player->positionX + player->screenX * DISPLAY_W) ||
+				(player->positionX + rP.w + player->screenX * DISPLAY_W < gameObj.level->princess_X) ||
+				(gameObj.level->princess_Y + gameObj.level->princess_r.h < player->positionY + player->screenY * DISPLAY_H) ||
+				(player->positionY + rP.h + player->screenY * DISPLAY_H < gameObj.level->princess_Y))) /*No overlap condition*/ 
+			{
+			//collision with princess
 			}
 
 			//check for door collisions
