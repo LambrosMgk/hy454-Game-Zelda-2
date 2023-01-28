@@ -92,6 +92,8 @@
 
 //these ids are transparent tiles from the parapa tileset which will help us "paint" enemies in Tiled
 //and read the layer 2 csv to know where to spawn them
+#define PRINCESS_ID	48
+
 #define STALFOS_ID 56
 #define PALACE_BOT_ID 57
 #define WOSU_ID 58
