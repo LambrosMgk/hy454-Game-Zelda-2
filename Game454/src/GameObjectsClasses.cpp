@@ -1110,21 +1110,54 @@ void Player::Init_frames_bounding_boxes()
 	r->x = LINK_SPRITE_WIDTH * 18;
 	FramesCrounchSlash.push_back(*r);
 
-	//FramesTakingDamageLeftEnd
+	//FramesTakingDamageLeft
+	for (int i = 0; i < 3; i++) {
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH;
+		r->y = 368 - 7;
+		switch (i) {
+			case 0:
+				r->x = 48;
+			case 1:
+				r->x = 96 - 8;
+			case 2:
+				r->x = 128;
+		}	
+		FramesTakingDamageLeft.push_back(*r);
+	}
+	
 	r = new Rect;
 	r->h = LINK_SPRITE_HEIGHT * 2;
 	r->w = LINK_SPRITE_WIDTH;
 	r->y = 80;
 	r->x = 0 + 8;
-	FramesTakingDamageLeftEnd.push_back(*r);
+	FramesTakingDamageLeft.push_back(*r);
 
-	//FramesTakingDamageRightEnd
+	//FramesTakingDamageRight
+	for (int i = 0; i < 3; i++) {
+		r = new Rect;
+		r->h = LINK_SPRITE_HEIGHT * 2;
+		r->w = LINK_SPRITE_WIDTH;
+		r->y = 368 - 7;
+		switch (i) {
+		case 0:
+			r->x = 256-4;
+		case 1:
+			r->x = 208;
+		case 2:
+			r->x = 176-8;
+		}
+		FramesTakingDamageRight.push_back(*r);
+	}
+
+
 	r = new Rect;
 	r->h = LINK_SPRITE_HEIGHT * 2;
 	r->w = LINK_SPRITE_WIDTH;
 	r->y = 80;
 	r->x = 288;
-	FramesTakingDamageRightEnd.push_back(*r);
+	FramesTakingDamageRight.push_back(*r);
 }
 
 void Player::Load_Player_Spritesheet() 

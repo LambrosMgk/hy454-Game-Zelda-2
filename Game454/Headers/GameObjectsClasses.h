@@ -328,7 +328,7 @@ public:
 	std::vector<Rect>FramesCrounch;
 	std::vector<Rect>FramesSlashLeft, FramesSlashRight;
 	std::vector<Rect>FramesCrounchSlash;
-	std::vector<Rect>FramesTakingDamageLeftEnd, FramesTakingDamageRightEnd;
+	std::vector<Rect>FramesTakingDamageLeft, FramesTakingDamageRight;
 
 	Player(int _positionX, int _positionY);
 
