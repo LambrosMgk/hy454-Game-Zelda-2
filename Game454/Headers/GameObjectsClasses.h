@@ -10,6 +10,7 @@
 #include <vector>
 #include <cstdlib>  // for rand()
 #include <ctime>    // for time()
+#include <chrono>	//for std::chrono::system_clock::now();
 
 #include "al_init.h"
 
@@ -172,7 +173,7 @@ class Level
 public:
 	ALLEGRO_BITMAP* TileSet = NULL;
 	ALLEGRO_BITMAP* EnemySpriteSheetLeft = NULL, * EnemySpriteSheetRight = NULL;
-	ALLEGRO_BITMAP* ObjectSpriteSheet = NULL, *LifeFontSpriteSheet = NULL;
+	ALLEGRO_BITMAP* ObjectSpriteSheet = NULL;
 	std::vector<ALLEGRO_BITMAP*> bitmaps;	//bitmaps vector has the bitmaps of all the layers of the map
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
@@ -209,16 +210,6 @@ in case of bad file path exits program with -1*/
 
 	void Load_Objects();
 
-	void Load_Life_Font_SpriteSheet();
-
-	void Initialize_UI();
-
-	std::vector<UI*> Create_Font_UI(int x, int y, std::string word);
-
-	std::vector<UI*> Create_Box_UI(int x, int y, char c);
-
-	void Change_UI_Element(UI* ui, char c);
-
 	void Add_Random_Drop(int x, int y);
 };
 
@@ -228,14 +219,22 @@ private:
 	Game_State GameState = StartingScreen;
 	ALLEGRO_SAMPLE* song = NULL;
 	ALLEGRO_SAMPLE_INSTANCE* songInstance = NULL;
+
+	bool isPaused = false;
+	std::chrono::steady_clock::time_point PauseTime;
 public:
 	/*Allows me to draw in order stuff from the same layer e.g. i want to draw layer 2 but layer 2 has a moving elevator which must
 	be drawn without changing the layer 2 bitmap, so it must be drawn after layer 2 but before layer 3 (if we add a layer 3)
 	its like getting a priority, layer 2 is basically 2.1 (first) and the elevator is 2.2 (second)*/
 	std::vector<DrawOrder*> DrawingOrder[LEVEL_LAYERS];
+	ALLEGRO_BITMAP* pause_veil = NULL;
+	std::vector<UI*> time_font_UI, time_paused_UI;
 	ALLEGRO_DISPLAY* display = NULL;
 	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL, * End_Screen_bitmap = NULL;
+	ALLEGRO_BITMAP* LifeFontSpriteSheet = NULL;
 	Level *level = NULL;
+
+	void Init_GameObj();
 
 	void Play_Music(const char* path);
 
@@ -252,6 +251,30 @@ public:
 	void Load_Level(unsigned short levelNum);
 
 	void insert_DrawingOrder(DrawOrder *dro, unsigned int layer);
+
+	void Load_Life_Font_SpriteSheet();
+
+	void Initialize_UI();
+
+	string Convert_Time_To_UI_String(int time, unsigned int str_size);
+
+	std::vector<UI*> Create_Font_UI(int x, int y, std::string word);
+
+	std::vector<UI*> Create_Box_UI(int x, int y, char c);
+
+	void Change_UI_Element(UI* ui, char c);
+
+	//void SetOnPauseResume(const Action& f);
+
+	void Pause();
+
+	void Resume();
+
+	bool IsPaused();
+
+	std::chrono::steady_clock::time_point GetPauseTime();
+
+	void Update_Pause_UI();
 };
 
 class Elevator
@@ -833,10 +856,6 @@ public:
 void createElevators();
 
 void Init_Player(int PlayerX, int PlayerY);
-
-void Load_Player_Spiresheet();
-
-void Load_Enemy_SpriteSheet();
 
 void add_Grid(unsigned int layer, unsigned int Grid_Element_Width, unsigned int Grid_Element_Height, unsigned int bitmapNumTilesWidth, unsigned int bitmapNumTilesHeight);
 

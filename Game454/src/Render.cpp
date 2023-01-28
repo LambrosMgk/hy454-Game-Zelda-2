@@ -63,8 +63,25 @@ void Paint_UI_to_Screen()
 		{
 			Rect *r = UI_objects[i][j]->Frame;
 
-			al_draw_bitmap_region(gameObj.level->LifeFontSpriteSheet, r->x, r->y, r->w, r->h, UI_objects[i][j]->Get_Pos_X(), UI_objects[i][j]->Get_Pos_Y(), 0);
+			al_draw_bitmap_region(gameObj.LifeFontSpriteSheet, r->x, r->y, r->w, r->h, UI_objects[i][j]->Get_Pos_X(), UI_objects[i][j]->Get_Pos_Y(), 0);
 		}
+	}
+}
+
+void Paint_Paused_UI_to_Screen()
+{
+	for (unsigned int i = 0; i < gameObj.time_font_UI.size(); i++)
+	{
+		Rect* r = gameObj.time_font_UI[i]->Frame;
+		
+		al_draw_bitmap_region(gameObj.LifeFontSpriteSheet, r->x, r->y, r->w, r->h, gameObj.time_font_UI[i]->Get_Pos_X(), gameObj.time_font_UI[i]->Get_Pos_Y(), 0);
+	}
+
+	for (unsigned int i = 0; i < gameObj.time_paused_UI.size(); i++)
+	{
+		Rect* r = gameObj.time_paused_UI[i]->Frame;
+
+		al_draw_bitmap_region(gameObj.LifeFontSpriteSheet, r->x, r->y, r->w, r->h, gameObj.time_paused_UI[i]->Get_Pos_X(), gameObj.time_paused_UI[i]->Get_Pos_Y(), 0);
 	}
 }
 
@@ -247,13 +264,18 @@ void Renderer()
 			Paint_Player_to_Screen(player->FrameToDraw());
 			Paint_Projectiles_to_Screen();
 			Paint_UI_to_Screen();
-			//if paused maybe draw in the last layer a total black but half transparent color to the whole screen
-			//to make it look like most games do when a game is paused
 
 			if (gameObj.level->Toggle_Grid)
 			{
 				DisplayGrid(0);	//change to for loop if we add more
 				DisplayGrid(1);
+			}
+
+			if (gameObj.IsPaused())
+			{
+				gameObj.Update_Pause_UI();
+				al_draw_bitmap(gameObj.pause_veil, 0, 0, 0);
+				Paint_Paused_UI_to_Screen();
 			}
 
 			al_flip_display(); //Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible on screen.
