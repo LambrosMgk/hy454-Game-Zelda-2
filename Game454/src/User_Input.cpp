@@ -45,8 +45,11 @@ void UserInput(void)
 		{
 			switch (event.keyboard.keycode)
 			{
-			case ALLEGRO_KEY_ESCAPE:
-				gameObj.End_Game();		//ends the game
+			case ALLEGRO_KEY_ESCAPE:	//Pause / Resume
+				if (gameObj.IsPaused())
+					gameObj.Resume();
+				else
+					gameObj.Pause();
 				break;
 			case ALLEGRO_KEY_DOWN:
 			{

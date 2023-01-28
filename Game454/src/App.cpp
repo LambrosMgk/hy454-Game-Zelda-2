@@ -64,7 +64,7 @@ void app::Game::Initialise()
 	Collisions_init();
 	AI_Init();
 
-
+	gameObj.Init_GameObj();
 	Game::done = isDone;
 	game = this;
 }
@@ -92,10 +92,14 @@ void app::Game::MainLoopIteration(void)
 {
 	Render();
 	Input();
-	ProgressAnimations();
-	AI();
-	Physics();
-	CollisionChecking();
+	if (!gameObj.IsPaused())
+	{
+		ProgressAnimations();
+		AI();
+		Physics();
+		CollisionChecking();
+		//CommitDestructions();
+	}
+	
 	//UserCode(); // hook for custom code at end
-	//CommitDestructions();
 }
