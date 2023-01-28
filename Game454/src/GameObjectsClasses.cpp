@@ -444,6 +444,23 @@ void GameLogic::Load_Level(unsigned short levelNum)
 		exit(-1);
 	}
 
+	//search for the princess in layer 2
+	for (unsigned int i = 0; i < level->TileMapCSV[1].size(); i++)
+	{
+		for (unsigned int j = 0; j < level->TileMapCSV[1][i].size(); j++)
+		{
+			if (level->TileMapCSV[0][i][j] == PRINCESS_ID)
+			{
+				level->princess_r.h = TILE_HEIGHT;
+				level->princess_r.w = 2 * TILE_WIDTH;
+				level->princess_r.x = 0;
+				level->princess_r.y = 400;
+				level->princess_X = MUL_TILE_WIDTH(j);
+				level->princess_Y = MUL_TILE_HEIGHT(i);
+				break;
+			}
+		}
+	}
 
 	//initalize the empty colors of the tileset
 	for (int i = 0; i < LEVEL_LAYERS; i++) {
@@ -478,12 +495,12 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	
 	createElevators();
 
-	Create_Font_UI(2 * TILE_WIDTH, 0, "HEALTH - ");
-	player->UI_Health_Points = Create_Font_UI(6 * TILE_WIDTH + TILE_WIDTH / 2, 0, "100");
-	Create_Font_UI(9 * TILE_WIDTH, 0, "MAGIC - ");
-	player->UI_Magic_Points = Create_Font_UI(13 * TILE_WIDTH + TILE_WIDTH / 2, 0, "100");
-	Create_Font_UI(16 * TILE_WIDTH, 0, "SCORE - ");
-	player->UI_Points = Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH / 2, 0, "0000");
+	Create_Font_UI(2 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "HEALTH - ");
+	player->UI_Health_Points = Create_Font_UI(6 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "100");
+	Create_Font_UI(9 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "MAGIC - ");
+	player->UI_Magic_Points = Create_Font_UI(13 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "100");
+	Create_Font_UI(16 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "SCORE - ");
+	player->UI_Points = Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "0000");
 	//Level loaded play some music
 	//gameObj.Play_Music(LEVEL_1_MUSIC);
 }

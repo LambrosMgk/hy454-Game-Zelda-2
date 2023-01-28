@@ -180,6 +180,8 @@ public:
 	std::vector<std::vector<std::vector<int>>>TileMapCSV;		//vector of layers, each layer made by 2d array of indices (vector<vector<int>>)
 	std::vector<Grid*> grids;
 	unsigned int active_elevator = -1;	//index for the elevators vector showing which elevator is being used by the player
+	Rect princess_r;
+	int princess_X = 0, princess_Y = 0;
 
 	bool Toggle_Grid = false;
 	unsigned char* divIndex = NULL, * modIndex = NULL;

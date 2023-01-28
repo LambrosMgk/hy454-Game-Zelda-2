@@ -38,6 +38,16 @@ void Paint_Collectables_to_Screen()
 	}
 }
 
+void Paint_Princess_to_Screen()
+{
+	Rect r = gameObj.level->princess_r;
+
+	if ((gameObj.level->ScreenX == gameObj.level->princess_X / DISPLAY_W) && (gameObj.level->ScreenY == gameObj.level->princess_Y / DISPLAY_H))
+	{
+		al_draw_bitmap_region(player->PlayerSpriteSheet, r.x, r.y, r.w, r.h, gameObj.level->princess_X % DISPLAY_W, gameObj.level->princess_Y % DISPLAY_H, 0);
+	}
+}
+
 //using EnemySpriteSheetRight because there are both left and right directions for projectiles in there
 void Paint_Projectiles_to_Screen()
 {
@@ -261,6 +271,7 @@ void Renderer()
 			}
 			Paint_Collectables_to_Screen();
 			Paint_Enemies_to_Screen();
+			Paint_Princess_to_Screen();
 			Paint_Player_to_Screen(player->FrameToDraw());
 			Paint_Projectiles_to_Screen();
 			Paint_UI_to_Screen();

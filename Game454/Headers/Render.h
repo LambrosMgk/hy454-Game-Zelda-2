@@ -23,6 +23,8 @@ void Paint_Enemies_to_Screen();
 
 void Paint_Collectables_to_Screen();
 
+void Paint_Princess_to_Screen();
+
 void Paint_Projectiles_to_Screen();
 
 void Paint_UI_to_Screen();
