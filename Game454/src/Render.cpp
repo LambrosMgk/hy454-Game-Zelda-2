@@ -132,12 +132,13 @@ void Load_Loading_Screen()
 
 void Load_Credits()
 {
-	for (unsigned short i = 0; i < gameObj.End_Screen_bitmap.size(); i++)
-	{
-		al_clear_to_color(al_map_rgb(0, 0, 0));
-		al_draw_bitmap(gameObj.End_Screen_bitmap[i], 0, 0, 0);
-		al_flip_display();
-	}
+	
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	al_draw_bitmap(gameObj.End_Screen_bitmap[gameObj.End_Screen_Num], 0, 0, 0);
+	al_draw_bitmap(gameObj.End_Credits_bitmap, 0, 0, 0);
+	gameObj.End_Screen_Num = ++gameObj.End_Screen_Num % 8;
+	al_flip_display();
+	
 }
 
 void Render_init()
@@ -289,8 +290,9 @@ void Renderer()
 		}
 		else if (gameObj.Get_State() == GameFinished)
 		{
-			Load_Credits();
+			//cout << "Loading credits\n";
 			//show credit scene
+			Load_Credits();
 		}
 	}
 }

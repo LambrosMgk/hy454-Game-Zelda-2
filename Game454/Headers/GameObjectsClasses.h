@@ -30,7 +30,13 @@
 #define LIFE_AND_FONT_PATH "Media\\Sprites and UI\\NES - Life and Font.png"
 
 #define START_SCREEN_MUSIC "Media\\Zelda II The Adventure of Link OST\\01.-Title-Screen-Prologue.ogg"
-#define LEVEL_1_MUSIC "Media\\Zelda II The Adventure of Link OST\\02.-Overworld.ogg"
+#define LEVEL_1_MUSIC "Media\\Zelda II The Adventure of Link OST\\12.-Palace-Theme-1.ogg"
+#define END_SCREEN_MUSIC "Media\\Zelda II The Adventure of Link OST\\21.-Ending.ogg"
+
+#define SOUND_EFFECTS_health_magic_potion_PATH "Media\\Sound Effects\\health_magic_potion.ogg"
+#define SOUND_EFFECTS_door_unlock_PATH "Media\\Sound Effects\\door_unlock.ogg"
+#define SOUND_EFFECTS_Point_Bag_PATH "Media\\Sound Effects\\Point_Bag_sound.ogg"
+#define SOUND_EFFECTS_attack_sound_PATH "Media\\Sound Effects\\attack_sound.ogg"
 
 #define DISPLAY_W 640
 #define DISPLAY_H 480
@@ -234,8 +240,9 @@ public:
 	ALLEGRO_BITMAP* pause_veil = NULL;
 	std::vector<UI*> time_font_UI, time_paused_UI;
 	ALLEGRO_DISPLAY* display = NULL;
-	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL;
+	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL, * End_Credits_bitmap = NULL;
 	std::vector<ALLEGRO_BITMAP*> End_Screen_bitmap;
+	unsigned short End_Screen_Num = 0;
 	ALLEGRO_BITMAP* LifeFontSpriteSheet = NULL;
 	Level *level = NULL;
 
@@ -248,6 +255,8 @@ public:
 	void Play_Music(const char* path);
 
 	void Stop_Music();
+
+	void Play_Effect(const char* path);
 
 	void Clear();
 
@@ -343,7 +352,7 @@ private:
 	Player_State state = State_Walking;
 	Direction direction = dir_right;
 	
-	int scrollDistanceX = 5, scrollDistanceY = 3;
+	int scrollDistanceX = 2, scrollDistanceY = 3;
 	unsigned short MAX_HP = 100, MAX_MP = 100;
 	int HP = 100, MP = 100, Points = 0, Dmg = 10;
 	unsigned short Keys = 0;

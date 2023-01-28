@@ -59,13 +59,17 @@ void Calculate_Physics()
 				jumpCountPixels = 0;
 			}
 
-			if (scrollx != 0 || scrolly != 0)
+			if (scrollx != 0 || scrolly != 0 && player->Get_HurtInvicibility() == false)
 			{
 				//first check grid if i can scroll where i want to
 				gameObj.level->grids[0]->FilterGridMotion(player, &scrollx, &scrolly);
 				gameObj.level->grids[1]->FilterGridMotion(player, &scrollx, &scrolly);
 				player->Scroll_Player(scrollx, scrolly);
 				gameObj.level->Scroll_Bitmap();
+			}
+			else if (player->Get_HurtInvicibility() == true)
+			{
+				//scroll the player backwards because of the hit he took
 			}
 
 			//physics for enemies

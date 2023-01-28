@@ -217,8 +217,8 @@ void CheckCollisions()
 						cout << "Sword collision with " << typeid(*Collectables[i]).name() << '\n';
 						if (typeid(*Collectables[i]).name() == typeid(SimpleKey).name())
 						{
-							cout << "Key removed\n";
 							player->Add_Key();
+							cout << "Key removed player now has " << player->Get_Keys() << " keys\n";
 							delete Collectables[i];	//calls destructor of object
 							Collectables.erase(Collectables.begin() + i);
 						}
@@ -232,6 +232,7 @@ void CheckCollisions()
 								exit(-1);
 							}
 
+							gameObj.Play_Effect(SOUND_EFFECTS_health_magic_potion_PATH);
 							player->Heal(potion->Get_Restore_Amount());
 							delete Collectables[i];
 							Collectables.erase(Collectables.begin() + i);
@@ -246,6 +247,7 @@ void CheckCollisions()
 								exit(-1);
 							}
 
+							gameObj.Play_Effect(SOUND_EFFECTS_health_magic_potion_PATH);
 							player->Restore_magic(potion->Get_Restore_Amount());
 							delete Collectables[i];
 							Collectables.erase(Collectables.begin() + i);
@@ -259,7 +261,7 @@ void CheckCollisions()
 								cout << "Error dynamic casting Pointbag, exiting...\n";
 								exit(-1);
 							}
-
+							gameObj.Play_Effect(SOUND_EFFECTS_Point_Bag_PATH);
 							player->Add_Score(bag->Get_Points());
 							cout << "Player score now : " << player->Get_Score() << '\n';
 							delete Collectables[i];
@@ -275,17 +277,19 @@ void CheckCollisions()
 				(gameObj.level->princess_Y + gameObj.level->princess_r.h < player->positionY + player->screenY * DISPLAY_H) ||
 				(player->positionY + rP.h + player->screenY * DISPLAY_H < gameObj.level->princess_Y))) /*No overlap condition*/ 
 			{
+				gameObj.Play_Music(END_SCREEN_MUSIC);
 				gameObj.End_Game();
 			}
 
 			//check for door collisions
 			Grid *grid = gameObj.level->grids[1];
 			/*if link has key && is close to the door*/
-			if (player->Get_Keys() != 0 && 
+			if (player->Get_Keys() > 0 && 
 				(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) - 1, grid->getPlayerLeftCol(player) - 1) == DOOR_MIDDLE_ID) ||
 				(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) - 1, grid->getPlayerRightCol(player) + 2) == DOOR_MIDDLE_ID))
 			{
 				cout << "Door unlocked!\n";
+				gameObj.Play_Effect(SOUND_EFFECTS_door_unlock_PATH);
 				player->Remove_Key();
 				cout << "Player now has " << player->Get_Keys() << " keys.\n";
 				

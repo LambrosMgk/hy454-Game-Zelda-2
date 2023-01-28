@@ -38,11 +38,13 @@ void Calculate_AI()
 					}
 					else if (stalfos->Get_State() == E_State_Walking)
 					{
-						if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - stalfos->positionX)) == 1)
+						if ((DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - stalfos->positionX)) == 1) &&
+							abs(DIV_TILE_HEIGHT(player->positionY + player->screenY) - DIV_TILE_HEIGHT(stalfos->positionY)) < 5)
 						{
 							stalfos->Set_State(E_State_Attacking);
 						}
-						else if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (stalfos->positionX))) < 10)
+						else if (DIV_TILE_WIDTH(abs(player->positionX + player->screenX * DISPLAY_W - (stalfos->positionX))) < 10 &&
+							abs(DIV_TILE_HEIGHT(player->positionY + player->screenY) - DIV_TILE_HEIGHT(stalfos->positionY)) < 5)
 						{
 							if (player->positionX + player->screenX * DISPLAY_W < (stalfos->positionX))
 							{

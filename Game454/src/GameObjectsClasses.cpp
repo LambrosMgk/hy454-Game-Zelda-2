@@ -349,6 +349,8 @@ void Level::Add_Random_Drop(int x, int y)
 
 void GameLogic::Init_GameObj()
 {
+	al_reserve_samples(5);	//up to 5 sounds at the same time
+
 	//create the pause_veil bitmap
 	gameObj.pause_veil = al_create_bitmap(DISPLAY_W, DISPLAY_H);
 	al_set_target_bitmap(pause_veil);
@@ -368,13 +370,30 @@ void GameLogic::Init_GameObj()
 	UI_objects.erase(UI_objects.begin());
 	UI_objects.erase(UI_objects.begin());
 	//Create_Font_UI also adds the objects to the vector for drawing and we don't want that
-
-	for (unsigned short i = 0; i < 8; i++)	//8 ending screens
+	string tmp;
+	ALLEGRO_BITMAP* b_tmp;
+	for (unsigned short i = 1; i < 9; i++)	//8 ending screens
 	{
-		string tmp = END_SCREEN_PATH;
+		tmp = END_SCREEN_PATH;
 		tmp += "End_Screen(" + std::to_string(i) + ").png";
-		this->End_Screen_bitmap.push_back(al_load_bitmap(tmp.c_str()));
+		//cout << "trying to load = " << tmp << '\n';
+		b_tmp = al_load_bitmap(tmp.c_str());
+		if (b_tmp == NULL)
+		{
+			cout << "Error loading End screens in initialize object\n";
+			exit(-1);
+		}
+		this->End_Screen_bitmap.push_back(b_tmp);
 	}
+	tmp = END_SCREEN_PATH; 
+	tmp += "End_Credits.png";
+	b_tmp = al_load_bitmap(tmp.c_str());
+	if (b_tmp == NULL)
+	{
+		cout << "Error loading End screens in initialize object\n";
+		exit(-1);
+	}
+	this->End_Credits_bitmap = b_tmp;
 }
 
 bool GameLogic::hasEnded()
@@ -419,6 +438,18 @@ void GameLogic::Play_Music(const char* path)
 void GameLogic::Stop_Music()
 {
 	al_stop_sample_instance(songInstance);
+}
+
+void GameLogic::Play_Effect(const char* path)
+{
+	ALLEGRO_SAMPLE* sample = al_load_sample(path);
+	if (!sample) 
+	{
+		fprintf(stderr, "Failed to load sample\n");
+		exit(-1);
+	}
+
+	al_play_sample(sample, 1.0, 0.0, 1.0, ALLEGRO_PLAYMODE_ONCE, NULL);
 }
 
 void GameLogic::Clear()
@@ -522,7 +553,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	Create_Font_UI(16 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "SCORE - ");
 	player->UI_Points = Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "0000");
 	//Level loaded play some music
-	//gameObj.Play_Music(LEVEL_1_MUSIC);
+	gameObj.Play_Music(LEVEL_1_MUSIC);
 }
 
 void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)

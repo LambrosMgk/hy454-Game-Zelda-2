@@ -108,6 +108,7 @@ void UserInput(void)
 				break;
 			case ALLEGRO_KEY_B:			// Slash
 				player->LinkSpriteNum = 0;
+				gameObj.Play_Effect(SOUND_EFFECTS_attack_sound_PATH);
 				player->Set_State(State_Attacking);
 				break;
 			case ALLEGRO_KEY_G:			// L_Ctrl + G combination
