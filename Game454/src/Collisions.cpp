@@ -275,7 +275,7 @@ void CheckCollisions()
 				(gameObj.level->princess_Y + gameObj.level->princess_r.h < player->positionY + player->screenY * DISPLAY_H) ||
 				(player->positionY + rP.h + player->screenY * DISPLAY_H < gameObj.level->princess_Y))) /*No overlap condition*/ 
 			{
-			//collision with princess
+				gameObj.End_Game();
 			}
 
 			//check for door collisions
@@ -283,7 +283,7 @@ void CheckCollisions()
 			/*if link has key && is close to the door*/
 			if (player->Get_Keys() != 0 && 
 				(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) - 1, grid->getPlayerLeftCol(player) - 1) == DOOR_MIDDLE_ID) ||
-				(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) - 1, grid->getPlayerRightCol(player) + 1) == DOOR_MIDDLE_ID))
+				(grid->GetIndexFromLayer(grid->getPlayerBottomRow(player) - 1, grid->getPlayerRightCol(player) + 2) == DOOR_MIDDLE_ID))
 			{
 				cout << "Door unlocked!\n";
 				player->Remove_Key();
@@ -302,13 +302,13 @@ void CheckCollisions()
 				}
 				else
 				{
-					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player), grid->getPlayerRightCol(player) + 1);
-					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player) - 1, grid->getPlayerRightCol(player) + 1);
-					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player) - 2, grid->getPlayerRightCol(player) + 1);
+					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player), grid->getPlayerRightCol(player) + 2);
+					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player) - 1, grid->getPlayerRightCol(player) + 2);
+					grid->SetEmptyGridTile(grid->getPlayerBottomRow(player) - 2, grid->getPlayerRightCol(player) + 2);
 
-					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player)][grid->getPlayerRightCol(player) + 1] = -1;
-					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player) - 1][grid->getPlayerRightCol(player) + 1] = -1;
-					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player) - 2][grid->getPlayerRightCol(player) + 1] = -1;
+					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player)][grid->getPlayerRightCol(player) + 2] = -1;
+					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player) - 1][grid->getPlayerRightCol(player) + 2] = -1;
+					gameObj.level->TileMapCSV[1][grid->getPlayerBottomRow(player) - 2][grid->getPlayerRightCol(player) + 2] = -1;
 				}
 				
 				//Hide door tiles
@@ -321,7 +321,7 @@ void CheckCollisions()
 				if (player->Get_Direction() == dir_left)
 					col = MUL_TILE_WIDTH(grid->getPlayerLeftCol(player) - 1);
 				else
-					col = MUL_TILE_WIDTH(grid->getPlayerRightCol(player) + 1);
+					col = MUL_TILE_WIDTH(grid->getPlayerRightCol(player) + 2);
 
 				for (unsigned int y = row; y < row + 3 * TILE_HEIGHT; y++)
 				{
@@ -342,7 +342,7 @@ void CheckCollisions()
 				if(player->Get_Direction() == dir_left)
 					Doors.push_back(new Door(MUL_TILE_WIDTH(grid->getPlayerLeftCol(player) - 1), MUL_TILE_HEIGHT(grid->getPlayerBottomRow(player) - 2)));
 				else	
-					Doors.push_back(new Door(MUL_TILE_WIDTH(grid->getPlayerRightCol(player) + 1), MUL_TILE_HEIGHT(grid->getPlayerBottomRow(player) - 2)));
+					Doors.push_back(new Door(MUL_TILE_WIDTH(grid->getPlayerRightCol(player) + 2), MUL_TILE_HEIGHT(grid->getPlayerBottomRow(player) - 2)));
 				Doors[Doors.size() - 1]->Add_To_Draw_Queue();
 				Doors[Doors.size() - 1]->SetActive(true);
 

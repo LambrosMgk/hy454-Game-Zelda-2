@@ -11,7 +11,7 @@ void User_Input_init()
 
 bool isDone()
 {
-	if (gameObj.Get_State() == GameFinished)
+	if (gameObj.hasEnded())
 		return true;
 	return false;
 }
@@ -100,6 +100,10 @@ void UserInput(void)
 				scrollRight = true;
 				break;
 			case ALLEGRO_KEY_A:			// Jump
+				if (gameObj.Get_State() == GameFinished)	//player has to press A to close the game after ending
+				{
+					gameObj.Set_EndGame(true);
+				}
 				keyboardUp = true;
 				break;
 			case ALLEGRO_KEY_B:			// Slash

@@ -368,6 +368,23 @@ void GameLogic::Init_GameObj()
 	UI_objects.erase(UI_objects.begin());
 	UI_objects.erase(UI_objects.begin());
 	//Create_Font_UI also adds the objects to the vector for drawing and we don't want that
+
+	for (unsigned short i = 0; i < 8; i++)	//8 ending screens
+	{
+		string tmp = END_SCREEN_PATH;
+		tmp += "End_Screen(" + std::to_string(i) + ").png";
+		this->End_Screen_bitmap.push_back(al_load_bitmap(tmp.c_str()));
+	}
+}
+
+bool GameLogic::hasEnded()
+{
+	return this->endGame;
+}
+
+void GameLogic::Set_EndGame(bool end)
+{
+	this->endGame = end;
 }
 
 void GameLogic::Play_Music(const char* path)
@@ -422,6 +439,8 @@ void GameLogic::Set_State(Game_State state)
 
 void GameLogic::End_Game()
 {
+	//Show credit scene
+	//wait for a bit and then close the game
 	this->GameState = GameFinished;
 }
 
@@ -449,7 +468,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	{
 		for (unsigned int j = 0; j < level->TileMapCSV[1][i].size(); j++)
 		{
-			if (level->TileMapCSV[0][i][j] == PRINCESS_ID)
+			if (level->TileMapCSV[1][i][j] == PRINCESS_ID)
 			{
 				level->princess_r.h = TILE_HEIGHT;
 				level->princess_r.w = 2 * TILE_WIDTH;
@@ -457,6 +476,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 				level->princess_r.y = 400;
 				level->princess_X = MUL_TILE_WIDTH(j);
 				level->princess_Y = MUL_TILE_HEIGHT(i);
+				cout << "Sleeping beauty located at x = " << MUL_TILE_WIDTH(j) << " and y = " << MUL_TILE_HEIGHT(i) << endl;
 				break;
 			}
 		}

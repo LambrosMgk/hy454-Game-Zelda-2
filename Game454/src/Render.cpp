@@ -132,16 +132,12 @@ void Load_Loading_Screen()
 
 void Load_Credits()
 {
-	gameObj.End_Screen_bitmap = al_load_bitmap(END_SCREEN_PATH);
-	if (gameObj.End_Screen_bitmap == NULL)
+	for (unsigned short i = 0; i < gameObj.End_Screen_bitmap.size(); i++)
 	{
-		fprintf(stderr, "\nFailed to initialize End_Screen_bitmap (al_load_bitmap() failed).\n");
-		exit(-1);
+		al_clear_to_color(al_map_rgb(0, 0, 0));
+		al_draw_bitmap(gameObj.End_Screen_bitmap[i], 0, 0, 0);
+		al_flip_display();
 	}
-
-	al_clear_to_color(al_map_rgb(0, 0, 0));
-	al_draw_bitmap(gameObj.End_Screen_bitmap, 0, 0, 0);
-	al_flip_display();
 }
 
 void Render_init()
@@ -290,6 +286,11 @@ void Renderer()
 			}
 
 			al_flip_display(); //Copies or updates the front and back buffers so that what has been drawn previously on the currently selected display becomes visible on screen.
+		}
+		else if (gameObj.Get_State() == GameFinished)
+		{
+			Load_Credits();
+			//show credit scene
 		}
 	}
 }

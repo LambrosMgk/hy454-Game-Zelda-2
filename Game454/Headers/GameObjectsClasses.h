@@ -16,7 +16,7 @@
 
 #define START_SCREEN_PATH "Media\\Start_Screen.png"
 #define LOADING_SCREEN_PATH "Media\\Loading_Screen.png"
-#define END_SCREEN_PATH ""
+#define END_SCREEN_PATH "Media\\Ending_Screen\\"
 
 #define TILESET_PATH "Media\\Level_1\\Zelda-II-Parapa-Palace-Tileset.png"
 #define ASSUMED_EMPTY_LAYER_PATH "Media\\Level_1\\Assumed_Empty_indices_Layer"
@@ -224,7 +224,7 @@ private:
 	ALLEGRO_SAMPLE* song = NULL;
 	ALLEGRO_SAMPLE_INSTANCE* songInstance = NULL;
 
-	bool isPaused = false;
+	bool isPaused = false, endGame = false;
 	std::chrono::steady_clock::time_point PauseTime;
 public:
 	/*Allows me to draw in order stuff from the same layer e.g. i want to draw layer 2 but layer 2 has a moving elevator which must
@@ -234,11 +234,16 @@ public:
 	ALLEGRO_BITMAP* pause_veil = NULL;
 	std::vector<UI*> time_font_UI, time_paused_UI;
 	ALLEGRO_DISPLAY* display = NULL;
-	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL, * End_Screen_bitmap = NULL;
+	ALLEGRO_BITMAP* Start_Screen_bitmap = NULL, * Loading_Screen_bitmap = NULL;
+	std::vector<ALLEGRO_BITMAP*> End_Screen_bitmap;
 	ALLEGRO_BITMAP* LifeFontSpriteSheet = NULL;
 	Level *level = NULL;
 
 	void Init_GameObj();
+
+	bool hasEnded();
+
+	void Set_EndGame(bool end);
 
 	void Play_Music(const char* path);
 
