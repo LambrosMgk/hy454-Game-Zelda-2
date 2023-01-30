@@ -51,6 +51,18 @@ void UserInput(void)
 				else
 					gameObj.Pause();
 				break;
+			case ALLEGRO_KEY_F4:
+			{
+				ALLEGRO_KEYBOARD_STATE KbState;
+
+				al_get_keyboard_state(&KbState);
+				if (al_key_down(&KbState, ALLEGRO_KEY_ALT))
+				{
+					cout << "Closing game...\n";
+					Sleep(2);
+					exit(0);
+				}
+			}
 			case ALLEGRO_KEY_DOWN:
 			{
 				Grid* grid = gameObj.level->grids[1];
