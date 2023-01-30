@@ -272,7 +272,7 @@ void CheckCollisions()
 				player->Update_UI();
 			}
 
-			if (!((gameObj.level->princess_X + gameObj.level->princess_r.w < player->positionX + player->screenX * DISPLAY_W) ||
+			if (!((gameObj.Get_State() != GameFinished) && (gameObj.level->princess_X + gameObj.level->princess_r.w < player->positionX + player->screenX * DISPLAY_W) ||
 				(player->positionX + rP.w + player->screenX * DISPLAY_W < gameObj.level->princess_X) ||
 				(gameObj.level->princess_Y + gameObj.level->princess_r.h < player->positionY + player->screenY * DISPLAY_H) ||
 				(player->positionY + rP.h + player->screenY * DISPLAY_H < gameObj.level->princess_Y))) /*No overlap condition*/ 
