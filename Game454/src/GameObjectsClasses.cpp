@@ -553,7 +553,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	Create_Font_UI(16 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "SCORE - ");
 	player->UI_Points = Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "0000");
 	//Level loaded play some music
-	gameObj.Play_Music(LEVEL_1_MUSIC);
+	//gameObj.Play_Music(LEVEL_1_MUSIC);
 }
 
 void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)
@@ -1689,7 +1689,7 @@ void Grid::FilterGridMotionLeft(Player* player, int* dx)
 		{
 			assert(newCol + 1 == currCol); // we really move left
 			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
-			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
+			auto endRow = (player->positionY + player->screenY * DISPLAY_H + player->FrameToDraw().h - 1) / Grid_Element_Height;
 			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 			for (auto row = startRow; row <= endRow; ++row)
 				if (!CanPassGridTile(row, newCol, GRID_LEFT_SOLID_MASK))
@@ -1704,7 +1704,7 @@ void Grid::FilterGridMotionLeft(Player* player, int* dx)
 
 void Grid::FilterGridMotionRight(Player* player, int* dx)
 {
-	unsigned int x2 = player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1;
+	unsigned int x2 = player->positionX + player->screenX * DISPLAY_W + player->FrameToDraw().w - 1;
 	unsigned int x2_next = x2 + *dx;
 	if (x2_next >= MAX_PIXEL_WIDTH)
 		*dx = (MAX_PIXEL_WIDTH - 1) - x2;
@@ -1716,7 +1716,7 @@ void Grid::FilterGridMotionRight(Player* player, int* dx)
 		{
 			assert(newCol - 1 == currCol); // we really move right
 			auto startRow = (player->positionY + player->screenY * DISPLAY_H) / Grid_Element_Height;
-			auto endRow = (player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1) / Grid_Element_Height;
+			auto endRow = (player->positionY + player->screenY * DISPLAY_H + player->FrameToDraw().h - 1) / Grid_Element_Height;
 			//cout << "newCol : " << newCol << ", currCol : " << currCol << ", startRow : " << startRow << ", endrow : " << endRow << '\n';
 			for (auto row = startRow; row <= endRow; ++row)
 				if (!CanPassGridTile(row, newCol, GRID_RIGHT_SOLID_MASK))
@@ -1742,7 +1742,7 @@ void Grid::FilterGridMotionUp(Player* player, int* dy)
 		{
 			assert(newRow + 1 == currRow); // we really move up
 			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
+			auto endCol = (player->positionX + player->screenX * DISPLAY_W + player->FrameToDraw().w - 1) / Grid_Element_Width;
 			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
 			for (auto col = startCol; col <= endCol; ++col)
 				if (!CanPassGridTile(newRow, col, GRID_TOP_SOLID_MASK))
@@ -1757,7 +1757,7 @@ void Grid::FilterGridMotionUp(Player* player, int* dy)
 
 void Grid::FilterGridMotionDown(Player* player, int* dy)
 {
-	unsigned int x2 = player->positionY + player->screenY * DISPLAY_H + LINK_SPRITE_HEIGHT * 2 - 1;
+	unsigned int x2 = player->positionY + player->screenY * DISPLAY_H + player->FrameToDraw().h - 1;
 	auto x2_next = x2 + *dy;
 	if (x2_next >= MAX_PIXEL_HEIGHT)
 		*dy = (MAX_PIXEL_HEIGHT - 1) - x2;
@@ -1769,7 +1769,7 @@ void Grid::FilterGridMotionDown(Player* player, int* dy)
 		{
 			assert(newRow - 1 == currRow); // we really move down
 			auto startCol = (player->positionX + player->screenX * DISPLAY_W) / Grid_Element_Width;
-			auto endCol = (player->positionX + player->screenX * DISPLAY_W + LINK_SPRITE_WIDTH * 2 - 1) / Grid_Element_Width;
+			auto endCol = (player->positionX + player->screenX * DISPLAY_W + player->FrameToDraw().w - 1) / Grid_Element_Width;
 			//cout << "newRow : " << newRow << ", currRow : " << currRow << ", startCol : " << startCol << ", endCol : " << endCol << '\n';
 			for (auto col = startCol; col <= endCol; ++col) {
 

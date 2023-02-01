@@ -352,7 +352,7 @@ private:
 	Player_State state = State_Walking;
 	Direction direction = dir_right;
 	
-	int scrollDistanceX = 2, scrollDistanceY = 3;
+	int scrollDistanceX = 6, scrollDistanceY = 3;
 	unsigned short MAX_HP = 100, MAX_MP = 100;
 	int HP = 100, MP = 100, Points = 0, Dmg = 10;
 	unsigned short Keys = 0;
