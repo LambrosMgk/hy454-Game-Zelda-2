@@ -349,6 +349,16 @@ void Level::Add_Random_Drop(int x, int y)
 
 void GameLogic::Init_GameObj()
 {
+	al_set_new_display_flags(ALLEGRO_RESIZABLE);
+	gameObj.display = al_create_display(DISPLAY_W, DISPLAY_H);
+	if (!gameObj.display)
+	{
+		fprintf(stderr, "failed to create display!\n");
+		exit(-1);
+	}
+	al_set_window_title(gameObj.display, "Zelda II: The Adventure of Link");
+	
+
 	al_reserve_samples(5);	//up to 5 sounds at the same time
 
 	//create the pause_veil bitmap
@@ -553,7 +563,7 @@ void GameLogic::Load_Level(unsigned short levelNum)
 	Create_Font_UI(16 * TILE_WIDTH + TILE_WIDTH / 2, TILE_HEIGHT, "SCORE - ");
 	player->UI_Points = Create_Font_UI(20 * TILE_WIDTH + TILE_WIDTH, TILE_HEIGHT, "0000");
 	//Level loaded play some music
-	//gameObj.Play_Music(LEVEL_1_MUSIC);
+	gameObj.Play_Music(LEVEL_1_MUSIC);
 }
 
 void GameLogic::insert_DrawingOrder(DrawOrder *dro, unsigned int layer)

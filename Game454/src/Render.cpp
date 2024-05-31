@@ -147,15 +147,6 @@ void Render_init()
 	RenderTimerQueue = al_create_event_queue();
 	al_register_event_source(RenderTimerQueue, al_get_timer_event_source(FPStimer));
 	al_start_timer(FPStimer);	//a video said not to initialize any variables after this cuz it might mess up the timer, we'll see
-
-	al_set_new_display_flags(ALLEGRO_WINDOWED);
-	gameObj.display = al_create_display(DISPLAY_W, DISPLAY_H);
-	if (!gameObj.display)
-	{
-		fprintf(stderr, "failed to create display!\n");
-		exit(-1);
-	}
-	al_set_window_title(gameObj.display, "Zelda II: The Adventure of Link");
 }
 
 // use this to render grid (toggle on / off), used only for development time testing -
