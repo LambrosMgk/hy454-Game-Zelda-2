@@ -1,4 +1,5 @@
-Project for class hy454 of UOC Computer Science Department
+# hy454-Game-Zelda-2
+Project for course hy454 of UOC Computer Science Department
 
 Goal is to create a game engine and a game similar to Zelda II.
 We used "Tiled 1.9.2(stable)" as a tile map editor.
